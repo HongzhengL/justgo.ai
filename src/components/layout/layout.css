@@ -1,0 +1,234 @@
+/* AppLayout Grid System */
+.app-layout {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    grid-template-areas: "sidebar main";
+    height: 100vh;
+    overflow: hidden;
+}
+
+.main-content {
+    grid-area: main;
+    overflow: auto;
+    background-color: #f8f9fa;
+}
+
+/* Sidebar Styling */
+.sidebar {
+    grid-area: sidebar;
+    background-color: #2c3e50;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    width: 250px;
+    height: 100vh;
+    z-index: 100;
+}
+
+.sidebar-header {
+    padding: 1.5rem 1rem;
+    border-bottom: 1px solid #34495e;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.sidebar-brand {
+    font-size: 1.25rem;
+    font-weight: bold;
+    margin: 0;
+    color: #ecf0f1;
+}
+
+.sidebar-nav {
+    flex: 1;
+    padding: 1rem 0;
+}
+
+.sidebar-footer {
+    padding: 1rem;
+    border-top: 1px solid #34495e;
+}
+
+/* Navigation Links */
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    color: #bdc3c7;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    font-size: 0.95rem;
+}
+
+.nav-link:hover {
+    background-color: #34495e;
+    color: #ecf0f1;
+}
+
+.nav-link.active {
+    background-color: #3498db;
+    color: white;
+    font-weight: 500;
+}
+
+.nav-link-icon {
+    font-size: 1.1rem;
+    width: 20px;
+    text-align: center;
+}
+
+/* User Info Section */
+.user-info {
+    padding: 0.75rem 1rem;
+    font-size: 0.85rem;
+    color: #95a5a6;
+    border-bottom: 1px solid #34495e;
+    margin-bottom: 0.5rem;
+}
+
+.user-email {
+    font-weight: 500;
+    color: #ecf0f1;
+}
+
+/* Logout Button */
+.logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.2s ease;
+    width: 100%;
+}
+
+.logout-btn:hover {
+    background-color: #c0392b;
+}
+
+/* Mobile Navigation */
+.mobile-navigation {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 280px;
+    height: 100vh;
+    background-color: #2c3e50;
+    color: white;
+    z-index: 200;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+}
+
+.mobile-navigation.open {
+    transform: translateX(0);
+}
+
+.mobile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid #34495e;
+}
+
+.mobile-close-btn {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.25rem;
+}
+
+.mobile-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 150;
+}
+
+.hamburger-btn {
+    display: none;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 768px) {
+    .app-layout {
+        grid-template-columns: 1fr;
+        grid-template-areas: "main";
+    }
+
+    .sidebar {
+        display: none;
+    }
+
+    .mobile-navigation {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .hamburger-btn {
+        display: block;
+    }
+
+    .main-content {
+        padding-top: 60px;
+        /* Space for mobile header */
+    }
+}
+
+@media (min-width: 769px) {
+    .mobile-navigation {
+        display: none !important;
+    }
+
+    .mobile-overlay {
+        display: none !important;
+    }
+}
+
+/* Mobile Header for Main Content */
+.mobile-header-bar {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background-color: #2c3e50;
+    color: white;
+    align-items: center;
+    padding: 0 1rem;
+    z-index: 50;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 768px) {
+    .mobile-header-bar {
+        display: flex;
+    }
+}
