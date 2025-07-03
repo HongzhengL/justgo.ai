@@ -1,5 +1,6 @@
 import { VerifyEmailForm } from "wasp/client/auth";
 import { Link } from "wasp/client/router";
+import "../auth.css";
 
 export function EmailVerificationPage() {
     return (

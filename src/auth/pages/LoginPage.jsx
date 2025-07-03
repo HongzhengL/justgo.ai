@@ -1,5 +1,6 @@
 import { LoginForm } from "wasp/client/auth";
 import { Link } from "wasp/client/router";
+import "../auth.css";
 
 export function LoginPage() {
     return (

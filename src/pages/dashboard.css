@@ -1,0 +1,319 @@
+/* ====================================
+   AI Travel Planner - Dashboard Chat Interface Styling
+   ====================================*/
+
+/* CSS Reset and Base Styles for Chat Interface */
+.chat-container *,
+.chat-container *::before,
+.chat-container *::after {
+    box-sizing: border-box;
+}
+
+/* Item 3: Chat container with flexbox layout and height: 100% */
+.chat-container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    width: 90%;
+    margin: 0 auto;
+}
+
+/* Item 4: Messages area with flex: 1 and proper scrolling */
+.chat-messages {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    overflow-y: auto;
+    min-height: 1; /* Critical for flex scrolling */
+    padding: 1rem 0;
+}
+
+/* Item 5: Input area with fixed bottom positioning */
+.chat-input-area {
+    padding: 1rem 0;
+    border-top: 1px solid #dee2e6;
+    background-color: inherit; /* Inherit from main-content */
+}
+
+/* Item 7: Input styling classes */
+.chat-input-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-end;
+}
+
+.chat-input {
+    flex: 1;
+    padding: 0.75rem;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+        "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+        sans-serif;
+    resize: none;
+    min-height: 60px;
+    max-height: 120px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    background-color: #ffffff;
+}
+
+.chat-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.125rem rgba(0, 123, 255, 0.25);
+}
+
+.chat-input:disabled {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    cursor: not-allowed;
+}
+
+.chat-send-button {
+    padding: 0.75rem 1.5rem;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    white-space: nowrap;
+}
+
+.chat-send-button:hover:not(:disabled) {
+    background-color: #0056b3;
+}
+
+.chat-send-button:active:not(:disabled) {
+    transform: translateY(1px);
+}
+
+.chat-send-button:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Item 6: Message bubble classes */
+.message-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.message-container--user {
+    align-items: flex-end;
+}
+
+.message-container--ai {
+    align-items: flex-start;
+}
+
+.message-bubble {
+    max-width: 70%;
+    padding: 0.75rem 1rem;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    white-space: pre-line;
+    word-wrap: break-word;
+    hyphens: auto;
+}
+
+.message-bubble--user {
+    background-color: #007bff;
+    color: white;
+}
+
+.message-bubble--ai {
+    background-color: #f8f9fa;
+    color: #333;
+    border: 1px solid #e9ecef;
+}
+
+/* Cards integration styling */
+.message-cards {
+    width: 100%;
+    max-width: 600px;
+    margin-top: 0.5rem;
+}
+
+/* Item 10: Typing indicator and loading state classes */
+.typing-indicator {
+    display: flex;
+    gap: 4px;
+    padding: 0.75rem 1rem;
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    align-self: flex-start;
+    max-width: 70%;
+}
+
+.typing-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #999;
+    animation: pulse 1.5s infinite;
+}
+
+.typing-dot:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.typing-dot:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+/* Helper text styling */
+.chat-helper-text {
+    font-size: 0.8rem;
+    color: #666;
+    margin-top: 0.5rem;
+    text-align: center;
+}
+
+/* Item 8: Responsive design rules for mobile devices (max-width: 768px) */
+@media (max-width: 768px) {
+    .chat-container {
+        padding: 1rem;
+        height: calc(100% - 60px); /* Account for mobile header */
+    }
+    
+    .message-bubble {
+        max-width: 85%;
+        font-size: 0.9rem;
+        padding: 0.625rem 0.875rem;
+    }
+    
+    .chat-input {
+        font-size: 16px; /* Prevent zoom on iOS */
+        min-height: 50px;
+        padding: 0.625rem;
+    }
+    
+    .chat-send-button {
+        padding: 0.625rem 1.25rem;
+        font-size: 0.9rem;
+    }
+    
+    .chat-input-row {
+        gap: 0.375rem;
+    }
+    
+    .typing-indicator {
+        max-width: 85%;
+    }
+}
+
+/* Item 9: Responsive design rules for tablet devices (769px - 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .chat-container {
+        max-width: 700px;
+        padding: 1.25rem;
+    }
+    
+    .message-bubble {
+        max-width: 75%;
+    }
+}
+
+/* Item 11: Accessibility features */
+.chat-input:focus,
+.chat-send-button:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .message-bubble--ai {
+        border: 2px solid #333333;
+    }
+    
+    .chat-input {
+        border: 2px solid #333333;
+    }
+    
+    .typing-indicator {
+        border: 2px solid #333333;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .chat-input,
+    .chat-send-button,
+    .typing-dot {
+        transition: none;
+        animation: none;
+    }
+}
+
+/* Item 12: Animation keyframes for typing indicator */
+@keyframes pulse {
+    0%,
+    80%,
+    100% {
+        opacity: 0.3;
+    }
+    40% {
+        opacity: 1;
+    }
+}
+
+/* Print styles */
+@media print {
+    .chat-container {
+        height: auto;
+        max-height: none;
+    }
+    
+    .chat-messages {
+        overflow: visible;
+        max-height: none;
+    }
+    
+    .chat-input-area {
+        display: none;
+    }
+    
+    .message-bubble {
+        max-width: 100%;
+        break-inside: avoid;
+    }
+}
+
+/* Scrollbar styling for webkit browsers */
+.chat-messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Loading states */
+.chat-container--loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.chat-container--loading .chat-send-button {
+    background-color: #6c757d;
+    cursor: wait;
+} 

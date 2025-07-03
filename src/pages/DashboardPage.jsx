@@ -2,6 +2,7 @@ import { useAuth } from "wasp/client/auth";
 import { Link } from "wasp/client/router";
 import { useState, useEffect } from "react";
 import { useAction, useQuery } from "wasp/client/operations";
+import "./dashboard.css";
 import {
     processAIMessage,
     getActiveConversation,
@@ -174,62 +175,22 @@ export function DashboardPage() {
     return (
         <AppLayout>
             {/* Chat Container */}
-            <div
-                style={{
-                    height: "100vh",
-                    display: "flex",
-                    flexDirection: "column",
-                    maxWidth: "800px",
-                    margin: "0 auto",
-                    width: "100%",
-                    padding: "2rem 1rem",
-                }}
-            >
+            <div className="chat-container">
                 {/* Messages Area */}
-                <div
-                    style={{
-                        flex: 1,
-                        overflowY: "auto",
-                        padding: "1rem 0",
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "1rem",
-                    }}
-                >
+                <div className="chat-messages">
                     {messages.map((message) => (
                         <div
                             key={message.id}
-                            style={{
-                                display: "flex",
-                                flexDirection: "column",
-                                alignItems: message.sender === "user" ? "flex-end" : "flex-start",
-                            }}
+                            className={`message-container message-container--${message.sender}`}
                         >
-                            <div
-                                style={{
-                                    maxWidth: "70%",
-                                    padding: "0.75rem 1rem",
-                                    borderRadius: "12px",
-                                    backgroundColor:
-                                        message.sender === "user" ? "#007bff" : "#f8f9fa",
-                                    color: message.sender === "user" ? "white" : "#333",
-                                    whiteSpace: "pre-line",
-                                    fontSize: "0.95rem",
-                                    lineHeight: "1.4",
-                                }}
-                            >
+                            <div className={`message-bubble message-bubble--${message.sender}`}>
                                 {message.text}
                             </div>
                             {/* Display cards if this is an AI message with cards */}
                             {message.sender === "ai" &&
                                 message.cards &&
                                 message.cards.length > 0 && (
-                                    <div
-                                        style={{
-                                            width: "100%",
-                                            maxWidth: "600px",
-                                        }}
-                                    >
+                                    <div className="message-cards">
                                         <CardList
                                             cards={message.cards}
                                             onGoToWebsite={(url) =>
@@ -247,125 +208,40 @@ export function DashboardPage() {
                     ))}
 
                     {isProcessing && (
-                        <div
-                            style={{
-                                display: "flex",
-                                justifyContent: "flex-start",
-                            }}
-                        >
-                            <div
-                                style={{
-                                    padding: "0.75rem 1rem",
-                                    borderRadius: "12px",
-                                    backgroundColor: "#f8f9fa",
-                                    color: "#333",
-                                }}
-                            >
-                                <div style={{ display: "flex", gap: "4px" }}>
-                                    <div
-                                        style={{
-                                            width: "8px",
-                                            height: "8px",
-                                            borderRadius: "50%",
-                                            backgroundColor: "#999",
-                                            animation: "pulse 1.5s infinite",
-                                        }}
-                                    ></div>
-                                    <div
-                                        style={{
-                                            width: "8px",
-                                            height: "8px",
-                                            borderRadius: "50%",
-                                            backgroundColor: "#999",
-                                            animation: "pulse 1.5s infinite 0.2s",
-                                        }}
-                                    ></div>
-                                    <div
-                                        style={{
-                                            width: "8px",
-                                            height: "8px",
-                                            borderRadius: "50%",
-                                            backgroundColor: "#999",
-                                            animation: "pulse 1.5s infinite 0.4s",
-                                        }}
-                                    ></div>
-                                </div>
+                        <div className="message-container message-container--ai">
+                            <div className="typing-indicator">
+                                <div className="typing-dot"></div>
+                                <div className="typing-dot"></div>
+                                <div className="typing-dot"></div>
                             </div>
                         </div>
                     )}
                 </div>
 
                 {/* Input Area */}
-                <div
-                    style={{
-                        padding: "1rem 0 2rem 0",
-                        borderTop: "1px solid #eee",
-                        backgroundColor: "white",
-                    }}
-                >
-                    <div style={{ display: "flex", gap: "0.5rem" }}>
+                <div className="chat-input-area">
+                    <div className="chat-input-row">
                         <textarea
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value)}
                             onKeyPress={handleKeyPress}
                             placeholder="Tell me about your travel plans... (e.g., 'I want to visit Paris next month')"
-                            style={{
-                                flex: 1,
-                                padding: "0.75rem",
-                                borderRadius: "8px",
-                                border: "1px solid #ddd",
-                                fontSize: "0.95rem",
-                                fontFamily: "Arial, sans-serif",
-                                resize: "none",
-                                minHeight: "60px",
-                                maxHeight: "120px",
-                            }}
+                            className="chat-input"
                             disabled={isProcessing}
                         />
                         <button
                             onClick={handleSendMessage}
                             disabled={!inputValue.trim() || isProcessing}
-                            style={{
-                                padding: "0.75rem 1.5rem",
-                                backgroundColor:
-                                    inputValue.trim() && !isProcessing ? "#007bff" : "#ccc",
-                                color: "white",
-                                border: "none",
-                                borderRadius: "8px",
-                                cursor:
-                                    inputValue.trim() && !isProcessing ? "pointer" : "not-allowed",
-                                fontSize: "0.95rem",
-                                fontWeight: "bold",
-                            }}
+                            className="chat-send-button"
                         >
                             Send
                         </button>
                     </div>
-                    <div
-                        style={{
-                            fontSize: "0.8rem",
-                            color: "#666",
-                            marginTop: "0.5rem",
-                            textAlign: "center",
-                        }}
-                    >
+                    <div className="chat-helper-text">
                         Press Enter to send • Shift+Enter for new line
                     </div>
                 </div>
             </div>
-
-            <style>{`
-                @keyframes pulse {
-                    0%,
-                    80%,
-                    100% {
-                        opacity: 0.3;
-                    }
-                    40% {
-                        opacity: 1;
-                    }
-                }
-            `}</style>
         </AppLayout>
     );
 }

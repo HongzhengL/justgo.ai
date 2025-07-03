@@ -1,0 +1,281 @@
+/* ====================================
+   AI Travel Planner - Authentication Pages Styling
+   ====================================*/
+
+/* CSS Reset and Base Styles for Auth Pages */
+.auth-container *,
+.auth-container *::before,
+.auth-container *::after {
+    box-sizing: border-box;
+}
+
+/* Item 4: Main container with full-height layout and background */
+.auth-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa;
+    padding: 1rem;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+        "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+        sans-serif;
+}
+
+/* Item 5: Central form card with shadow and styling */
+.auth-card {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 400px;
+    border: 1px solid #dee2e6;
+}
+
+/* Item 6: Main heading (h1) styling */
+.auth-title {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #333333;
+    margin: 0 0 0.5rem 0;
+    text-align: center;
+    line-height: 1.2;
+}
+
+/* Item 7: Secondary text styling */
+.auth-subtitle {
+    font-size: 1.125rem;
+    font-weight: normal;
+    color: #666666;
+    margin: 0 0 2rem 0;
+    text-align: center;
+    line-height: 1.5;
+}
+
+/* Item 8: Navigation links styling */
+.auth-links {
+    margin-top: 1.5rem;
+    text-align: center;
+}
+
+.auth-links p {
+    margin: 0.75rem 0;
+    font-size: 0.875rem;
+    color: #666666;
+}
+
+.auth-links a {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+
+.auth-links a:hover {
+    color: #0056b3;
+    text-decoration: underline;
+}
+
+/* Item 9: Terms and privacy text */
+.auth-terms {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #dee2e6;
+}
+
+.auth-terms p {
+    margin: 0;
+    font-size: 0.75rem;
+    color: #6c757d;
+    text-align: center;
+    line-height: 1.4;
+}
+
+/* Item 10: Helper text and notifications */
+.auth-info {
+    margin-top: 1rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 6px;
+    border-left: 4px solid #007bff;
+}
+
+.auth-info p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: #495057;
+    line-height: 1.4;
+}
+
+/* Error message styling */
+.auth-error {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    border-radius: 6px;
+    color: #721c24;
+    font-size: 0.875rem;
+}
+
+/* Success message styling */
+.auth-success {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    border-radius: 6px;
+    color: #155724;
+    font-size: 0.875rem;
+}
+
+/* Wasp Form Components Integration */
+.auth-card form {
+    margin: 1.5rem 0;
+}
+
+.auth-card form input[type="email"],
+.auth-card form input[type="password"],
+.auth-card form input[type="text"] {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    background-color: #ffffff;
+}
+
+.auth-card form input[type="email"]:focus,
+.auth-card form input[type="password"]:focus,
+.auth-card form input[type="text"]:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.125rem rgba(0, 123, 255, 0.25);
+}
+
+.auth-card form button[type="submit"] {
+    width: 100%;
+    padding: 0.75rem 1.5rem;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    margin-top: 0.5rem;
+}
+
+.auth-card form button[type="submit"]:hover {
+    background-color: #0056b3;
+}
+
+.auth-card form button[type="submit"]:active {
+    transform: translateY(1px);
+}
+
+.auth-card form button[type="submit"]:disabled {
+    background-color: #6c757d;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Item 11: Responsive design for mobile devices (max-width: 768px) */
+@media (max-width: 768px) {
+    .auth-container {
+        padding: 0.5rem;
+        align-items: flex-start;
+        padding-top: 2rem;
+    }
+    
+    .auth-card {
+        padding: 2rem 1.5rem;
+        border-radius: 8px;
+        max-width: 100%;
+    }
+    
+    .auth-title {
+        font-size: 1.75rem;
+    }
+    
+    .auth-subtitle {
+        font-size: 1rem;
+    }
+}
+
+/* Item 12: Responsive design for tablet devices (769px - 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .auth-card {
+        max-width: 450px;
+    }
+    
+    .auth-container {
+        padding: 1.5rem;
+    }
+}
+
+/* Item 15: Hover effects for interactive elements */
+.auth-card form label {
+    display: block;
+    font-weight: 500;
+    color: #495057;
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* Loading states */
+.auth-loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.auth-loading button[type="submit"] {
+    background-color: #6c757d;
+    cursor: wait;
+}
+
+/* Item 14: Focus states and accessibility improvements */
+.auth-card a:focus,
+.auth-card button:focus,
+.auth-card input:focus {
+    outline: 2px solid #007bff;
+    outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .auth-card {
+        border: 2px solid #333333;
+    }
+    
+    .auth-title,
+    .auth-subtitle {
+        color: #000000;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    .auth-card form input,
+    .auth-card form button,
+    .auth-links a {
+        transition: none;
+    }
+}
+
+/* Print styles */
+@media print {
+    .auth-container {
+        background-color: white;
+        min-height: auto;
+    }
+    
+    .auth-card {
+        box-shadow: none;
+        border: 1px solid #333333;
+    }
+} 

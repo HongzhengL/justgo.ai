@@ -1,6 +1,7 @@
 import { ForgotPasswordForm, ResetPasswordForm } from "wasp/client/auth";
 import { Link } from "wasp/client/router";
 import { useLocation } from "react-router-dom";
+import "../auth.css";
 
 export function PasswordResetPage() {
     const location = useLocation();
