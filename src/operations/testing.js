@@ -1,9 +1,11 @@
 /**
  * Testing Operations for Travel API Module
  * Wasp operations that can be called from the dashboard for live API testing
+ * NOTE: These operations are only available in development environment
  */
 
 import { HttpError } from "wasp/server";
+import { shouldIncludeTestingOperations, getEnvironment } from "../config/environment.js";
 import { TravelAPIModule } from "../api/index.js";
 import { MockTravelAPIModule } from "../api/testing/apiTest.js";
 import { runAPITests, runQuickAPITest } from "../api/testing/apiTest.js";
@@ -13,10 +15,23 @@ import { TravelOperationTestSuite, runIntegrationTest } from "../api/testing/was
 import { getConfigurationHealth, validateEnvironment } from "../api/validation/envValidator.js";
 
 /**
+ * Helper function to check if testing operations are allowed
+ */
+function checkTestingOperationsAllowed() {
+    if (!shouldIncludeTestingOperations()) {
+        throw new HttpError(
+            403,
+            `Testing operations are not available in ${getEnvironment()} environment`,
+        );
+    }
+}
+
+/**
  * Comprehensive API Module Test Operation
  * Runs full test suite and returns detailed results
  */
 export const testApiModule = async (args, context) => {
+    checkTestingOperationsAllowed();
     // Authentication check
     if (!context.user) {
         throw new HttpError(401, "User must be logged in to run API tests");
@@ -88,6 +103,7 @@ export const testApiModule = async (args, context) => {
  * Runs a simplified test for rapid verification
  */
 export const quickApiTest = async (args, context) => {
+    checkTestingOperationsAllowed();
     // Authentication check
     if (!context.user) {
         throw new HttpError(401, "User must be logged in to run API tests");
@@ -123,92 +139,11 @@ export const quickApiTest = async (args, context) => {
 };
 
 /**
- * Check API Health Operation
- * Verifies API module configuration and basic connectivity
- */
-export const checkApiHealth = async (args, context) => {
-    // Authentication check
-    if (!context.user) {
-        throw new HttpError(401, "User must be logged in to check API health");
-    }
-
-    console.log(`[API-HEALTH-CHECK] Health check initiated by user: ${context.user.email}`);
-
-    try {
-        // Comprehensive environment validation
-        const configHealth = getConfigurationHealth();
-
-        // Check if TravelAPIModule can be imported
-        let moduleImportCheck = false;
-        try {
-            // Use statically imported TravelAPIModule
-            const apiModule = new TravelAPIModule();
-            moduleImportCheck = true;
-            console.log(`[API-HEALTH-CHECK] TravelAPIModule imported successfully`);
-        } catch (importError) {
-            console.error(`[API-HEALTH-CHECK] TravelAPIModule import failed:`, importError);
-        }
-
-        const healthStatus = {
-            moduleImport: moduleImportCheck,
-            environment: configHealth,
-            overallHealth:
-                moduleImportCheck &&
-                configHealth.healthy &&
-                configHealth.availableServices.length > 0,
-            timestamp: new Date().toISOString(),
-        };
-
-        console.log(`[API-HEALTH-CHECK] Health check results:`, {
-            moduleImport: healthStatus.moduleImport,
-            configurationHealthy: configHealth.healthy,
-            availableServices: configHealth.availableServices,
-            enabledFeatures: configHealth.enabledFeatures,
-        });
-
-        return {
-            success: healthStatus.overallHealth,
-            status: healthStatus,
-            message: healthStatus.overallHealth
-                ? `API module health check passed. ${configHealth.availableServices.length} services available.`
-                : "API module health check failed. Check environment configuration.",
-            configuration: {
-                healthy: configHealth.healthy,
-                availableServices: configHealth.availableServices,
-                unavailableServices: configHealth.unavailableServices,
-                enabledFeatures: configHealth.enabledFeatures,
-                errors: configHealth.errors,
-                warnings: configHealth.warnings,
-            },
-            recommendations: healthStatus.overallHealth
-                ? []
-                : [
-                      !moduleImportCheck ? "Check TravelAPIModule implementation" : null,
-                      ...configHealth.errors.map(
-                          (error) => `Fix ${error.variable}: ${error.message}`,
-                      ),
-                      configHealth.availableServices.length === 0
-                          ? "Configure at least one API key (SerpAPI, Google Maps, or OpenAI)"
-                          : null,
-                  ].filter(Boolean),
-        };
-    } catch (error) {
-        console.error(`[API-HEALTH-CHECK] Health check failed:`, error);
-
-        return {
-            success: false,
-            error: error.message,
-            message: "API health check encountered an error",
-            timestamp: new Date().toISOString(),
-        };
-    }
-};
-
-/**
  * Test specific API operation
  * Allows testing individual operations with custom parameters
  */
 export const testSpecificOperation = async ({ operation, params }, context) => {
+    checkTestingOperationsAllowed();
     // Authentication check
     if (!context.user) {
         throw new HttpError(401, "User must be logged in to test specific operations");
@@ -278,6 +213,7 @@ export const testSpecificOperation = async ({ operation, params }, context) => {
 
 // Error handling test operation
 export const testErrorHandling = async (args, context) => {
+    checkTestingOperationsAllowed();
     // Check if user is authenticated
     if (!context.user) {
         throw new HttpError(401, "Must be logged in to run tests");
@@ -327,6 +263,7 @@ export const testErrorHandling = async (args, context) => {
 
 // Performance test operation
 export const testPerformance = async (args, context) => {
+    checkTestingOperationsAllowed();
     // Check if user is authenticated
     if (!context.user) {
         throw new HttpError(401, "Must be logged in to run tests");
@@ -369,6 +306,7 @@ export const testPerformance = async (args, context) => {
 
 // Wasp integration test operation
 export const testWaspIntegration = async (args, context) => {
+    checkTestingOperationsAllowed();
     // Check if user is authenticated
     if (!context.user) {
         throw new HttpError(401, "Must be logged in to run tests");
@@ -421,7 +359,6 @@ export const testWaspIntegration = async (args, context) => {
 export default {
     testApiModule,
     quickApiTest,
-    checkApiHealth,
     testSpecificOperation,
     testErrorHandling,
     testPerformance,

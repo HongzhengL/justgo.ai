@@ -120,7 +120,7 @@ action quickApiTest {
 }
 
 action checkApiHealth {
-  fn: import { checkApiHealth } from "@src/operations/testing.js"
+  fn: import { checkApiHealth } from "@src/operations/travel.js"
 }
 
 action testSpecificOperation {

@@ -405,11 +405,6 @@ export class AIAgent {
         return `I'd be happy to help with ${intent.replace("_", " ")}! Could you provide more details? For example: '${examples}'`;
     }
 
-    // Legacy method - keeping for compatibility
-    async generateResponse(intent, searchResults, originalMessage) {
-        return this.generateResponseWithResults(originalMessage, { intent }, searchResults, {});
-    }
-
     // Utility method to add new intents easily
     addIntent(intentName, config) {
         this.supportedIntents[intentName] = {
