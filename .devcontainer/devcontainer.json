@@ -1,4 +1,5 @@
 {
-  "image": "hongzhengli/wasp-playground:latest",
-  "features": {}
+    "image": "hongzhengli/wasp-playground:latest",
+    "overrideCommand": true,
+    "mounts": ["source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"]
 }
