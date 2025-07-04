@@ -46,4 +46,7 @@ prisma/dev.db-journal
 
 migrations/
 
+.claude/
+CLAUDE.md
+
 tmp/
