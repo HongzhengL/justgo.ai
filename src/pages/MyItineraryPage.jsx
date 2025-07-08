@@ -6,14 +6,16 @@ import { Link } from "wasp/client/router";
 import { CardList } from "../components/CardList.jsx";
 import { InfoModal } from "../components/InfoModal.jsx";
 import AppLayout from "../components/layout/AppLayout.jsx";
+import useInfoModal from "../hooks/useInfoModal.js";
 
 export function MyItineraryPage() {
     const { data: user } = useAuth();
     const { data: itineraries, isLoading, error } = useQuery(getItineraries);
     const removeFromItineraryFn = useAction(removeFromItinerary);
 
-    const [showModal, setShowModal] = useState(false);
-    const [selectedCard, setSelectedCard] = useState(null);
+    // Hook for modal management
+    const { openModal, modalProps } = useInfoModal();
+
     const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
     const [itemToRemove, setItemToRemove] = useState(null);
 
@@ -45,10 +47,7 @@ export function MyItineraryPage() {
         }
     };
 
-    const handleMoreInfo = (cardData) => {
-        setSelectedCard(cardData);
-        setShowModal(true);
-    };
+    const handleMoreInfo = openModal;
 
     const handleRemoveFromItinerary = (cardData) => {
         setItemToRemove(cardData);
@@ -316,11 +315,9 @@ export function MyItineraryPage() {
                 )}
 
                 {/* Info Modal */}
-                {showModal && selectedCard && (
+                {modalProps.isOpen && modalProps.cardData && (
                     <InfoModal
-                        isOpen={showModal}
-                        onClose={() => setShowModal(false)}
-                        cardData={selectedCard}
+                        {...modalProps}
                         onGoToWebsite={handleGoToWebsite}
                         onAddToItinerary={handleRemoveFromItinerary}
                         addToItineraryText="Remove from Itinerary"

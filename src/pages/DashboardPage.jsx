@@ -11,7 +11,9 @@ import {
     addToItinerary,
 } from "wasp/client/operations";
 import { CardList } from "../components/CardList";
+import { InfoModal } from "../components/InfoModal.jsx";
 import AppLayout from "../components/layout/AppLayout.jsx";
+import useInfoModal from "../hooks/useInfoModal.js";
 
 export function DashboardPage() {
     const { data: user, isLoading } = useAuth();
@@ -31,6 +33,9 @@ export function DashboardPage() {
     const { data: itineraries } = useQuery(getItineraries, {}, { enabled: !!user });
     const createItineraryFn = useAction(createItinerary);
     const addToItineraryFn = useAction(addToItinerary);
+
+    // Hook for modal management
+    const { openModal, modalProps } = useInfoModal();
 
     // Load conversation history when conversation is available
     useEffect(() => {
@@ -196,10 +201,7 @@ export function DashboardPage() {
                                             onGoToWebsite={(url) =>
                                                 window.open(url, "_blank", "noopener,noreferrer")
                                             }
-                                            onMoreInfo={(cardData) => {
-                                                console.log("More info requested for:", cardData);
-                                                // Future: Open modal with detailed information
-                                            }}
+                                            onMoreInfo={openModal}
                                             onAddToItinerary={handleAddToItinerary}
                                         />
                                     </div>
@@ -242,6 +244,12 @@ export function DashboardPage() {
                     </div>
                 </div>
             </div>
+
+            <InfoModal
+                {...modalProps}
+                onGoToWebsite={(url) => window.open(url, "_blank", "noopener,noreferrer")}
+                onAddToItinerary={handleAddToItinerary}
+            />
         </AppLayout>
     );
 }
