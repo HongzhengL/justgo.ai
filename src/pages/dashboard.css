@@ -321,3 +321,106 @@
     background-color: #6c757d;
     cursor: wait;
 }
+
+/* Flight timing display classes */
+.flight-timing {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    margin-top: 0.5rem;
+}
+
+.departure-time {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #007bff;
+}
+
+.departure-time::before {
+    content: "🛫";
+    font-size: 1rem;
+}
+
+.arrival-time {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #28a745;
+}
+
+.arrival-time::before {
+    content: "🛬";
+    font-size: 1rem;
+}
+
+.layover-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: #6c757d;
+    padding: 0.5rem;
+    background-color: #ffffff;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    margin-top: 0.25rem;
+}
+
+.layover-info::before {
+    content: "⏱️";
+    font-size: 0.875rem;
+}
+
+/* Responsive design for flight timing */
+@media (max-width: 768px) {
+    .flight-timing {
+        padding: 0.75rem;
+        gap: 0.375rem;
+    }
+    
+    .departure-time,
+    .arrival-time {
+        font-size: 0.9rem;
+    }
+    
+    .layover-info {
+        font-size: 0.8rem;
+        padding: 0.375rem;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+    .flight-timing {
+        padding: 0.875rem;
+    }
+}
+
+/* High contrast mode support for flight timing */
+@media (prefers-contrast: high) {
+    .flight-timing {
+        border: 2px solid #333333;
+    }
+    
+    .layover-info {
+        border: 2px solid #333333;
+    }
+}
+
+/* Reduced motion support for flight timing */
+@media (prefers-reduced-motion: reduce) {
+    .flight-timing,
+    .departure-time,
+    .arrival-time,
+    .layover-info {
+        transition: none;
+    }
+}

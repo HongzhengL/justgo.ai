@@ -17,6 +17,7 @@ import {
     calculateTransitConfidence,
     getPlacePhotoUrl,
 } from "../googlemaps/client.js";
+import { extractFlightTiming } from "../../utils/timeUtils.js";
 
 export class AITranslator {
     private openai?: OpenAI;
@@ -255,6 +256,9 @@ Return only valid JSON array.`;
             // Extract comprehensive airline logo information
             const logoData = this.extractAirlineLogos(flight, segments);
 
+            // Extract timing information from flight segments
+            const timingData = extractFlightTiming(flight);
+
             const departureCode = firstSegment.departure_airport?.id || "Unknown";
             const arrivalCode = lastSegment.arrival_airport?.id || "Unknown";
 
@@ -270,6 +274,10 @@ Return only valid JSON array.`;
                       }
                     : undefined,
                 duration: flight.total_duration,
+                // Add timing fields to StandardizedCard
+                departureTime: timingData.departureTime,
+                arrivalTime: timingData.arrivalTime,
+                layoverInfo: timingData.layoverInfo,
                 location: {
                     from: { code: departureCode },
                     to: { code: arrivalCode },
@@ -285,10 +293,20 @@ Return only valid JSON array.`;
                     primaryAirline: logoData.primaryAirline, // Primary airline name for consistency
                     bookingToken: flight.departure_token,
                     type: flight.type || "Round trip",
+                    // Add detailed timing information to details section
+                    timingDetails: {
+                        departureTime: timingData.departureTime,
+                        arrivalTime: timingData.arrivalTime,
+                        totalDuration: timingData.totalDuration,
+                        layoverInfo: timingData.layoverInfo,
+                    },
                 },
                 essentialDetails: {
                     airline: extractAirlineNames(segments),
                     duration: `${Math.floor((flight.total_duration || 0) / 60)}h ${(flight.total_duration || 0) % 60}m`,
+                    // Add timing to essential details for card display
+                    departure: timingData.departureTime,
+                    arrival: timingData.arrivalTime,
                     price: flight.price ? `$${flight.price}` : "Price not available",
                     stops: flight.layovers ? flight.layovers.length : 0,
                 },

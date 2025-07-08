@@ -1,6 +1,8 @@
 // Standardized data interfaces for the AI Travel Planner
 // Based on TODO.md specifications
 
+import type { LayoverInfo } from "../utils/timeUtils.js";
+
 export interface Location {
     lat?: number;
     lng?: number;
@@ -19,6 +21,10 @@ export interface StandardizedCard {
         currency: string;
     };
     duration?: number; // minutes
+    // Flight timing fields
+    departureTime?: string; // Formatted departure time (e.g., "8:30 AM")
+    arrivalTime?: string; // Formatted arrival time (e.g., "10:45 AM")
+    layoverInfo?: LayoverInfo[]; // Layover details for connecting flights
     location: {
         from?: Location;
         to?: Location;
