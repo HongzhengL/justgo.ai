@@ -10,6 +10,20 @@ jobs:
     test:
         runs-on: ubuntu-latest
 
+        services:
+            postgres:
+                image: postgres:13
+                env:
+                    POSTGRES_PASSWORD: postgres
+                    POSTGRES_DB: test_db
+                options: >-
+                    --health-cmd pg_isready
+                    --health-interval 10s
+                    --health-timeout 5s
+                    --health-retries 5
+                ports:
+                    - 5432:5432
+
         steps:
             - uses: actions/checkout@v4
 
@@ -38,16 +52,21 @@ jobs:
               run: wasp build
               env:
                   NODE_ENV: production
-                  # Mock environment variables for build
-                  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY || 'mock-key-for-build' }}
-                  SERPAPI_API_KEY: ${{ secrets.SERPAPI_API_KEY || 'mock-key-for-build' }}
-                  GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY || 'mock-key-for-build' }}
-                  DATABASE_URL: "file:./dev.db"
+                  # Dummy environment variables for build check
+                  OPENAI_API_KEY: "sk-mock-key-for-build-check"
+                  SERPAPI_API_KEY: "mock-serp-key-for-build"
+                  GOOGLE_MAPS_API_KEY: "mock-gmaps-key-for-build"
+                  DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/test_db"
+                  # SMTP configuration for production build
+                  SMTP_HOST: "smtp.gmail.com"
+                  SMTP_PORT: "587"
+                  SMTP_USERNAME: "mock-smtp-user"
+                  SMTP_PASSWORD: "mock-smtp-password"
 
             - name: Database migration check
               run: wasp db migrate-dev --name ci-check
               env:
-                  DATABASE_URL: "file:./ci-test.db"
+                  DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/test_db"
 
             - name: Run development tests (if available)
               run: |
@@ -58,7 +77,7 @@ jobs:
                   fi
               env:
                   NODE_ENV: development
-                  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY || 'mock-key-for-tests' }}
-                  SERPAPI_API_KEY: ${{ secrets.SERPAPI_API_KEY || 'mock-key-for-tests' }}
-                  GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY || 'mock-key-for-tests' }}
-                  DATABASE_URL: "file:./test.db"
+                  OPENAI_API_KEY: "sk-mock-key-for-tests"
+                  SERPAPI_API_KEY: "mock-serp-key-for-tests"
+                  GOOGLE_MAPS_API_KEY: "mock-gmaps-key-for-tests"
+                  DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/test_db"
