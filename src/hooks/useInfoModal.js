@@ -17,7 +17,7 @@ export default function useInfoModal() {
     const modalProps = {
         isOpen,
         onClose: closeModal,
-        cardData: selectedCard
+        cardData: selectedCard,
     };
 
     return {
@@ -25,6 +25,6 @@ export default function useInfoModal() {
         selectedCard,
         openModal,
         closeModal,
-        modalProps
+        modalProps,
     };
 }

@@ -144,95 +144,235 @@ export function InfoModal({
                         >
                             Flight Schedule
                         </h3>
-                        <div style={{
-                            backgroundColor: "#f8f9fa",
-                            padding: "1rem",
-                            borderRadius: "8px",
-                            border: "1px solid #e9ecef"
-                        }}>
+                        <div
+                            style={{
+                                backgroundColor: "#f8f9fa",
+                                padding: "1rem",
+                                borderRadius: "8px",
+                                border: "1px solid #e9ecef",
+                            }}
+                        >
                             <div style={{ display: "grid", gap: "1rem" }}>
-                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        alignItems: "center",
+                                    }}
+                                >
                                     <div>
-                                        <div style={{ fontSize: "0.8rem", color: "#6c757d", marginBottom: "0.25rem" }}>Departure</div>
-                                        <div style={{ fontSize: "1.1rem", fontWeight: "bold", color: "#28a745" }}>
+                                        <div
+                                            style={{
+                                                fontSize: "0.8rem",
+                                                color: "#6c757d",
+                                                marginBottom: "0.25rem",
+                                            }}
+                                        >
+                                            Departure
+                                        </div>
+                                        <div
+                                            style={{
+                                                fontSize: "1.1rem",
+                                                fontWeight: "bold",
+                                                color: "#28a745",
+                                            }}
+                                        >
                                             {cardData.details.timingDetails.departureTime}
                                         </div>
                                     </div>
                                     <div style={{ textAlign: "center", flex: 1, margin: "0 1rem" }}>
-                                        <div style={{ fontSize: "0.8rem", color: "#6c757d", marginBottom: "0.25rem" }}>Duration</div>
+                                        <div
+                                            style={{
+                                                fontSize: "0.8rem",
+                                                color: "#6c757d",
+                                                marginBottom: "0.25rem",
+                                            }}
+                                        >
+                                            Duration
+                                        </div>
                                         <div style={{ fontSize: "0.9rem", color: "#007bff" }}>
-                                            {Math.floor((cardData.details.timingDetails.totalDuration || 0) / 60)}h {(cardData.details.timingDetails.totalDuration || 0) % 60}m
+                                            {Math.floor(
+                                                (cardData.details.timingDetails.totalDuration ||
+                                                    0) / 60,
+                                            )}
+                                            h{" "}
+                                            {(cardData.details.timingDetails.totalDuration || 0) %
+                                                60}
+                                            m
                                         </div>
                                     </div>
                                     <div style={{ textAlign: "right" }}>
-                                        <div style={{ fontSize: "0.8rem", color: "#6c757d", marginBottom: "0.25rem" }}>Arrival</div>
-                                        <div style={{ fontSize: "1.1rem", fontWeight: "bold", color: "#dc3545" }}>
+                                        <div
+                                            style={{
+                                                fontSize: "0.8rem",
+                                                color: "#6c757d",
+                                                marginBottom: "0.25rem",
+                                            }}
+                                        >
+                                            Arrival
+                                        </div>
+                                        <div
+                                            style={{
+                                                fontSize: "1.1rem",
+                                                fontWeight: "bold",
+                                                color: "#dc3545",
+                                            }}
+                                        >
                                             {cardData.details.timingDetails.arrivalTime}
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 {/* Layover details */}
-                                {cardData.details.timingDetails.layoverInfo && cardData.details.timingDetails.layoverInfo.length > 0 && (
-                                    <div style={{ borderTop: "1px solid #dee2e6", paddingTop: "1rem" }}>
-                                        <div style={{ fontSize: "0.9rem", fontWeight: "bold", color: "#333", marginBottom: "0.5rem" }}>
-                                            Layovers ({cardData.details.timingDetails.layoverInfo.length})
-                                        </div>
-                                        {cardData.details.timingDetails.layoverInfo.map((layover, index) => (
-                                            <div key={index} style={{
-                                                display: "flex",
-                                                justifyContent: "space-between",
-                                                alignItems: "center",
-                                                padding: "0.5rem",
-                                                backgroundColor: "white",
-                                                borderRadius: "4px",
-                                                marginBottom: index < cardData.details.timingDetails.layoverInfo.length - 1 ? "0.5rem" : "0"
-                                            }}>
-                                                <span style={{ fontWeight: "500" }}>
-                                                    {layover.airport}
-                                                </span>
-                                                <span style={{ color: "#6c757d" }}>
-                                                    {Math.floor(layover.duration / 60)}h {layover.duration % 60}m
-                                                    {layover.overnight && (
-                                                        <span style={{ color: "#ffc107", marginLeft: "0.5rem" }}>
-                                                            (overnight)
-                                                        </span>
-                                                    )}
-                                                </span>
+                                {cardData.details.timingDetails.layoverInfo &&
+                                    cardData.details.timingDetails.layoverInfo.length > 0 && (
+                                        <div
+                                            style={{
+                                                borderTop: "1px solid #dee2e6",
+                                                paddingTop: "1rem",
+                                            }}
+                                        >
+                                            <div
+                                                style={{
+                                                    fontSize: "0.9rem",
+                                                    fontWeight: "bold",
+                                                    color: "#333",
+                                                    marginBottom: "0.5rem",
+                                                }}
+                                            >
+                                                Layovers (
+                                                {cardData.details.timingDetails.layoverInfo.length})
                                             </div>
-                                        ))}
-                                    </div>
-                                )}
+                                            {cardData.details.timingDetails.layoverInfo.map(
+                                                (layover, index) => (
+                                                    <div
+                                                        key={index}
+                                                        style={{
+                                                            display: "flex",
+                                                            justifyContent: "space-between",
+                                                            alignItems: "center",
+                                                            padding: "0.5rem",
+                                                            backgroundColor: "white",
+                                                            borderRadius: "4px",
+                                                            marginBottom:
+                                                                index <
+                                                                cardData.details.timingDetails
+                                                                    .layoverInfo.length -
+                                                                    1
+                                                                    ? "0.5rem"
+                                                                    : "0",
+                                                        }}
+                                                    >
+                                                        <span style={{ fontWeight: "500" }}>
+                                                            {layover.airport}
+                                                        </span>
+                                                        <span style={{ color: "#6c757d" }}>
+                                                            {Math.floor(layover.duration / 60)}h{" "}
+                                                            {layover.duration % 60}m
+                                                            {layover.overnight && (
+                                                                <span
+                                                                    style={{
+                                                                        color: "#ffc107",
+                                                                        marginLeft: "0.5rem",
+                                                                    }}
+                                                                >
+                                                                    (overnight)
+                                                                </span>
+                                                            )}
+                                                        </span>
+                                                    </div>
+                                                ),
+                                            )}
+                                        </div>
+                                    )}
 
                                 {/* Segment-by-segment breakdown */}
-                                {cardData.details?.segments && cardData.details.segments.length > 1 && (
-                                    <div style={{ borderTop: "1px solid #dee2e6", paddingTop: "1rem" }}>
-                                        <div style={{ fontSize: "0.9rem", fontWeight: "bold", color: "#333", marginBottom: "0.5rem" }}>
-                                            Flight Segments
-                                        </div>
-                                        {cardData.details.segments.map((segment, index) => (
-                                            <div key={index} style={{
-                                                padding: "0.75rem",
-                                                backgroundColor: "white",
-                                                borderRadius: "4px",
-                                                marginBottom: index < cardData.details.segments.length - 1 ? "0.5rem" : "0",
-                                                border: "1px solid #e9ecef"
-                                            }}>
-                                                <div style={{ fontSize: "0.8rem", fontWeight: "bold", marginBottom: "0.5rem" }}>
-                                                    Segment {index + 1}: {segment.flight_number}
-                                                </div>
-                                                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.8rem" }}>
-                                                    <span>{segment.departure_airport?.id} at {new Date(segment.departure_airport?.time).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</span>
-                                                    <span>→</span>
-                                                    <span>{segment.arrival_airport?.id} at {new Date(segment.arrival_airport?.time).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}</span>
-                                                </div>
-                                                <div style={{ fontSize: "0.7rem", color: "#6c757d", marginTop: "0.25rem" }}>
-                                                    {segment.airline} • {segment.airplane} • {Math.floor((segment.duration || 0) / 60)}h {(segment.duration || 0) % 60}m
-                                                </div>
+                                {cardData.details?.segments &&
+                                    cardData.details.segments.length > 1 && (
+                                        <div
+                                            style={{
+                                                borderTop: "1px solid #dee2e6",
+                                                paddingTop: "1rem",
+                                            }}
+                                        >
+                                            <div
+                                                style={{
+                                                    fontSize: "0.9rem",
+                                                    fontWeight: "bold",
+                                                    color: "#333",
+                                                    marginBottom: "0.5rem",
+                                                }}
+                                            >
+                                                Flight Segments
                                             </div>
-                                        ))}
-                                    </div>
-                                )}
+                                            {cardData.details.segments.map((segment, index) => (
+                                                <div
+                                                    key={index}
+                                                    style={{
+                                                        padding: "0.75rem",
+                                                        backgroundColor: "white",
+                                                        borderRadius: "4px",
+                                                        marginBottom:
+                                                            index <
+                                                            cardData.details.segments.length - 1
+                                                                ? "0.5rem"
+                                                                : "0",
+                                                        border: "1px solid #e9ecef",
+                                                    }}
+                                                >
+                                                    <div
+                                                        style={{
+                                                            fontSize: "0.8rem",
+                                                            fontWeight: "bold",
+                                                            marginBottom: "0.5rem",
+                                                        }}
+                                                    >
+                                                        Segment {index + 1}: {segment.flight_number}
+                                                    </div>
+                                                    <div
+                                                        style={{
+                                                            display: "flex",
+                                                            justifyContent: "space-between",
+                                                            fontSize: "0.8rem",
+                                                        }}
+                                                    >
+                                                        <span>
+                                                            {segment.departure_airport?.id} at{" "}
+                                                            {new Date(
+                                                                segment.departure_airport?.time,
+                                                            ).toLocaleTimeString("en-US", {
+                                                                hour: "numeric",
+                                                                minute: "2-digit",
+                                                                hour12: true,
+                                                            })}
+                                                        </span>
+                                                        <span>→</span>
+                                                        <span>
+                                                            {segment.arrival_airport?.id} at{" "}
+                                                            {new Date(
+                                                                segment.arrival_airport?.time,
+                                                            ).toLocaleTimeString("en-US", {
+                                                                hour: "numeric",
+                                                                minute: "2-digit",
+                                                                hour12: true,
+                                                            })}
+                                                        </span>
+                                                    </div>
+                                                    <div
+                                                        style={{
+                                                            fontSize: "0.7rem",
+                                                            color: "#6c757d",
+                                                            marginTop: "0.25rem",
+                                                        }}
+                                                    >
+                                                        {segment.airline} • {segment.airplane} •{" "}
+                                                        {Math.floor((segment.duration || 0) / 60)}h{" "}
+                                                        {(segment.duration || 0) % 60}m
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                             </div>
                         </div>
                     </div>

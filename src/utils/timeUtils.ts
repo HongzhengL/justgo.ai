@@ -5,16 +5,16 @@
 
 // Interface for layover information between flight segments
 export interface LayoverInfo {
-    duration: number;      // Layover duration in minutes
-    airport: string;       // Airport code (e.g., "DEN")
-    overnight: boolean;    // Whether layover crosses midnight
+    duration: number; // Layover duration in minutes
+    airport: string; // Airport code (e.g., "DEN")
+    overnight: boolean; // Whether layover crosses midnight
 }
 
 // Interface for extracted flight timing data
 export interface FlightTiming {
-    departureTime: string;     // Formatted departure time
-    arrivalTime: string;       // Formatted arrival time
-    totalDuration: number;     // Total flight duration in minutes
+    departureTime: string; // Formatted departure time
+    arrivalTime: string; // Formatted arrival time
+    totalDuration: number; // Total flight duration in minutes
     layoverInfo: LayoverInfo[]; // Array of layover details
 }
 
@@ -26,7 +26,7 @@ export interface FlightTiming {
 export function extractFlightTiming(flightData: any): FlightTiming {
     try {
         const segments = flightData.flights || [];
-        
+
         if (segments.length === 0) {
             throw new Error("No flight segments found");
         }
@@ -34,7 +34,7 @@ export function extractFlightTiming(flightData: any): FlightTiming {
         // Extract overall departure time from first segment
         const firstSegment = segments[0];
         const departureTime = firstSegment?.departure_airport?.time;
-        
+
         // Extract overall arrival time from last segment
         const lastSegment = segments[segments.length - 1];
         const arrivalTime = lastSegment?.arrival_airport?.time;
@@ -50,16 +50,16 @@ export function extractFlightTiming(flightData: any): FlightTiming {
             departureTime: formatTimeForDisplay(departureTime),
             arrivalTime: formatTimeForDisplay(arrivalTime),
             totalDuration: flightData.total_duration || 0,
-            layoverInfo
+            layoverInfo,
         };
     } catch (error) {
         console.error("Error extracting flight timing:", error);
         // Return fallback timing data
         return {
             departureTime: "N/A",
-            arrivalTime: "N/A", 
+            arrivalTime: "N/A",
             totalDuration: flightData.total_duration || 0,
-            layoverInfo: []
+            layoverInfo: [],
         };
     }
 }
@@ -70,29 +70,29 @@ export function extractFlightTiming(flightData: any): FlightTiming {
  * @param format - Optional time format preference (defaults to 12h)
  * @returns Formatted time string (e.g., "8:30 AM", "14:30")
  */
-export function formatTimeForDisplay(isoTime: string, format: '12h' | '24h' = '12h'): string {
+export function formatTimeForDisplay(isoTime: string, format: "12h" | "24h" = "12h"): string {
     try {
-        if (!isoTime || typeof isoTime !== 'string') {
+        if (!isoTime || typeof isoTime !== "string") {
             return "N/A";
         }
 
         const date = new Date(isoTime);
-        
+
         if (isNaN(date.getTime())) {
             throw new Error(`Invalid ISO time format: ${isoTime}`);
         }
 
-        if (format === '24h') {
-            return date.toLocaleTimeString('en-US', {
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: false
+        if (format === "24h") {
+            return date.toLocaleTimeString("en-US", {
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: false,
             });
         } else {
-            return date.toLocaleTimeString('en-US', {
-                hour: 'numeric',
-                minute: '2-digit',
-                hour12: true
+            return date.toLocaleTimeString("en-US", {
+                hour: "numeric",
+                minute: "2-digit",
+                hour12: true,
             });
         }
     } catch (error) {
@@ -137,15 +137,17 @@ export function calculateLayoverDuration(segments: any[]): LayoverInfo[] {
             }
 
             // Calculate layover duration in minutes
-            const layoverMinutes = Math.round((departureDate.getTime() - arrivalDate.getTime()) / (1000 * 60));
-            
+            const layoverMinutes = Math.round(
+                (departureDate.getTime() - arrivalDate.getTime()) / (1000 * 60),
+            );
+
             // Check if layover crosses midnight (overnight)
             const overnight = arrivalDate.getDate() !== departureDate.getDate();
 
             layovers.push({
                 duration: layoverMinutes,
                 airport: layoverAirport,
-                overnight
+                overnight,
             });
         }
 
