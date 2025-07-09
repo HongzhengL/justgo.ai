@@ -12,6 +12,8 @@ export class AIAgent {
         this.model = "gpt-4o";
         this.temperature = 0.7;
         this.maxTokens = 5000;
+        this.contextWindowSize = parseInt(process.env.CONTEXT_WINDOW_SIZE) || 20;
+        this.maxContextTokens = parseInt(process.env.MAX_CONTEXT_TOKENS) || 10000;
 
         // Initialize mapping and validation services
         this.mappingService = new ParameterMappingService();
@@ -90,12 +92,19 @@ export class AIAgent {
         `;
     }
 
-    async processUserMessage(message, conversationContext = {}, userId) {
+    async processUserMessage(message, conversationContext = {}, userId, dbContext) {
         try {
             console.log(`Processing message for user ${userId}:`, message);
 
+            // Retrieve conversation history for context
+            const conversationHistory = await this.retrieveConversationContext(
+                conversationContext.conversationId,
+                userId,
+                dbContext,
+            );
+
             // Extract travel parameters from the message
-            const parameters = await this.extractTravelParameters(message);
+            const parameters = await this.extractTravelParameters(message, conversationHistory);
             console.log("Extracted parameters:", parameters);
 
             // Validate the extracted intent
@@ -117,6 +126,7 @@ export class AIAgent {
                     parameters,
                     searchResults,
                     conversationContext,
+                    conversationHistory,
                 );
 
                 return {
@@ -131,6 +141,7 @@ export class AIAgent {
                     message,
                     parameters,
                     conversationContext,
+                    conversationHistory,
                 );
 
                 return {
@@ -150,7 +161,7 @@ export class AIAgent {
         }
     }
 
-    async extractTravelParameters(message) {
+    async extractTravelParameters(message, conversationHistory = []) {
         try {
             const completion = await this.openai.chat.completions.create({
                 model: this.model,
@@ -159,6 +170,7 @@ export class AIAgent {
                         role: "system",
                         content: this.generateIntentPrompt(),
                     },
+                    ...conversationHistory,
                     {
                         role: "user",
                         content: message,
@@ -306,7 +318,13 @@ export class AIAgent {
         }
     }
 
-    async generateResponseWithResults(message, parameters, searchResults, context) {
+    async generateResponseWithResults(
+        message,
+        parameters,
+        searchResults,
+        context,
+        conversationHistory = [],
+    ) {
         try {
             const completion = await this.openai.chat.completions.create({
                 model: this.model,
@@ -323,6 +341,7 @@ export class AIAgent {
                             Keep it conversational and helpful. The actual search results will be displayed as cards below your message.
                         `,
                     },
+                    ...conversationHistory,
                     {
                         role: "user",
                         content: `User request: "${message}"
@@ -348,7 +367,7 @@ export class AIAgent {
         }
     }
 
-    async generateClarificationResponse(message, parameters, context) {
+    async generateClarificationResponse(message, parameters, context, conversationHistory = []) {
         try {
             const requiredParams = this.supportedIntents[parameters.intent]?.requiredParams || [];
             const missingParams = requiredParams.filter((param) => {
@@ -373,6 +392,7 @@ export class AIAgent {
                             Be specific about what information you need. Focus on the missing parameters.
                         `,
                     },
+                    ...conversationHistory,
                     {
                         role: "user",
                         content: `User request: "${message}"
@@ -417,5 +437,92 @@ export class AIAgent {
     // Utility method to get all supported intents
     getSupportedIntents() {
         return Object.keys(this.supportedIntents);
+    }
+
+    estimateTokenCount(text) {
+        return Math.ceil(text.length / 4);
+    }
+
+    truncateContextToTokenLimit(messages, maxTokens) {
+        let totalTokens = 0;
+        const truncatedMessages = [];
+
+        // Process messages in reverse order (most recent first)
+        for (let i = messages.length - 1; i >= 0; i--) {
+            const message = messages[i];
+            const messageTokens = this.estimateTokenCount(message.content);
+
+            if (totalTokens + messageTokens <= maxTokens) {
+                totalTokens += messageTokens;
+                truncatedMessages.unshift(message);
+            } else {
+                break;
+            }
+        }
+
+        return truncatedMessages;
+    }
+
+    logContextPerformance(conversationId, retrievalTime, messageCount, tokenCount) {
+        console.log(
+            `Context Performance - Conversation ${conversationId}: ${retrievalTime}ms retrieval, ${messageCount} messages, ${tokenCount} tokens`,
+        );
+    }
+
+    async retrieveConversationContext(conversationId, userId, dbContext) {
+        const startTime = Date.now();
+
+        try {
+            // Query database for messages excluding system and error types
+            const messages = await dbContext.entities.Message.findMany({
+                where: {
+                    conversationId: conversationId,
+                    NOT: {
+                        messageType: {
+                            in: ["system", "error"],
+                        },
+                    },
+                },
+                orderBy: {
+                    timestamp: "desc",
+                },
+                take: this.contextWindowSize,
+            });
+
+            // Format messages as OpenAI format
+            const formattedMessages = messages.map((msg) => ({
+                role: msg.sender === "user" ? "user" : "assistant",
+                content: msg.content,
+            }));
+
+            // Reverse array to chronological order (oldest first)
+            formattedMessages.reverse();
+
+            // Apply token truncation
+            const truncatedMessages = this.truncateContextToTokenLimit(
+                formattedMessages,
+                this.maxContextTokens,
+            );
+
+            // Calculate metrics
+            const retrievalTime = Date.now() - startTime;
+            const totalTokens = truncatedMessages.reduce(
+                (sum, msg) => sum + this.estimateTokenCount(msg.content),
+                0,
+            );
+
+            // Log performance
+            this.logContextPerformance(
+                conversationId,
+                retrievalTime,
+                truncatedMessages.length,
+                totalTokens,
+            );
+
+            return truncatedMessages;
+        } catch (error) {
+            console.error("Context retrieval error:", error);
+            return [];
+        }
     }
 }
