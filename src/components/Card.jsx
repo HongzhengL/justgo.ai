@@ -6,7 +6,17 @@ export function Card({
     addToItineraryText,
     addToItineraryIcon,
 }) {
-    const { title, subtitle, price, type, essentialDetails, externalLinks, departureTime, arrivalTime, layoverInfo } = cardData;
+    const {
+        title,
+        subtitle,
+        price,
+        type,
+        essentialDetails,
+        externalLinks,
+        departureTime,
+        arrivalTime,
+        layoverInfo,
+    } = cardData;
 
     return (
         <div
@@ -62,66 +72,93 @@ export function Card({
                     </p>
                     {/* Flight timing display for flight cards */}
                     {type === "flight" && (departureTime || arrivalTime) && (
-                        <div className="flight-timing" style={{
-                            margin: "0 0 0.5rem 0",
-                            padding: "0.5rem",
-                            backgroundColor: "#f8f9fa",
-                            borderRadius: "4px",
-                            border: "1px solid #e9ecef"
-                        }}>
-                            <div style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                                fontSize: "0.9rem",
-                                fontWeight: "500"
-                            }}>
+                        <div
+                            className="flight-timing"
+                            style={{
+                                margin: "0 0 0.5rem 0",
+                                padding: "0.5rem",
+                                backgroundColor: "#f8f9fa",
+                                borderRadius: "4px",
+                                border: "1px solid #e9ecef",
+                            }}
+                        >
+                            <div
+                                style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "center",
+                                    fontSize: "0.9rem",
+                                    fontWeight: "500",
+                                }}
+                            >
                                 <div className="departure-time" style={{ color: "#28a745" }}>
-                                    <span style={{ fontSize: "0.8rem", color: "#6c757d" }}>Depart:</span>
+                                    <span style={{ fontSize: "0.8rem", color: "#6c757d" }}>
+                                        Depart:
+                                    </span>
                                     <br />
                                     <span>{departureTime || "N/A"}</span>
                                 </div>
-                                <div style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "0.5rem",
-                                    flex: 1,
-                                    justifyContent: "center"
-                                }}>
-                                    <div style={{
-                                        height: "1px",
-                                        backgroundColor: "#007bff",
-                                        flex: 1
-                                    }}></div>
-                                    <span style={{
-                                        fontSize: "0.7rem",
-                                        color: "#007bff",
-                                        fontWeight: "bold"
-                                    }}>
-                                        {layoverInfo && layoverInfo.length > 0 ? `${layoverInfo.length} stop${layoverInfo.length > 1 ? 's' : ''}` : 'Direct'}
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "0.5rem",
+                                        flex: 1,
+                                        justifyContent: "center",
+                                    }}
+                                >
+                                    <div
+                                        style={{
+                                            height: "1px",
+                                            backgroundColor: "#007bff",
+                                            flex: 1,
+                                        }}
+                                    ></div>
+                                    <span
+                                        style={{
+                                            fontSize: "0.7rem",
+                                            color: "#007bff",
+                                            fontWeight: "bold",
+                                        }}
+                                    >
+                                        {layoverInfo && layoverInfo.length > 0
+                                            ? `${layoverInfo.length} stop${layoverInfo.length > 1 ? "s" : ""}`
+                                            : "Direct"}
                                     </span>
-                                    <div style={{
-                                        height: "1px",
-                                        backgroundColor: "#007bff",
-                                        flex: 1
-                                    }}></div>
+                                    <div
+                                        style={{
+                                            height: "1px",
+                                            backgroundColor: "#007bff",
+                                            flex: 1,
+                                        }}
+                                    ></div>
                                 </div>
                                 <div className="arrival-time" style={{ color: "#dc3545" }}>
-                                    <span style={{ fontSize: "0.8rem", color: "#6c757d" }}>Arrive:</span>
+                                    <span style={{ fontSize: "0.8rem", color: "#6c757d" }}>
+                                        Arrive:
+                                    </span>
                                     <br />
                                     <span>{arrivalTime || "N/A"}</span>
                                 </div>
                             </div>
                             {layoverInfo && layoverInfo.length > 0 && (
-                                <div className="layover-info" style={{
-                                    marginTop: "0.5rem",
-                                    fontSize: "0.7rem",
-                                    color: "#6c757d"
-                                }}>
+                                <div
+                                    className="layover-info"
+                                    style={{
+                                        marginTop: "0.5rem",
+                                        fontSize: "0.7rem",
+                                        color: "#6c757d",
+                                    }}
+                                >
                                     {layoverInfo.map((layover, index) => (
                                         <span key={index}>
                                             {layover.duration}m layover in {layover.airport}
-                                            {layover.overnight && <span style={{ color: "#ffc107" }}> (overnight)</span>}
+                                            {layover.overnight && (
+                                                <span style={{ color: "#ffc107" }}>
+                                                    {" "}
+                                                    (overnight)
+                                                </span>
+                                            )}
                                             {index < layoverInfo.length - 1 && " • "}
                                         </span>
                                     ))}

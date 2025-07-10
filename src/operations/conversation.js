@@ -185,7 +185,7 @@ export const processAIMessage = async ({ message }, context) => {
             message,
             { conversationId: conversation.id },
             context.user.id,
-            context
+            context,
         );
 
         // Save the AI response

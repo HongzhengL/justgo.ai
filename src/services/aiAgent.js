@@ -472,6 +472,11 @@ export class AIAgent {
     async retrieveConversationContext(conversationId, userId, dbContext) {
         const startTime = Date.now();
 
+        if (!dbContext || !dbContext.entities || !dbContext.entities.Message) {
+            console.error("Invalid dbContext provided to retrieveConversationContext.");
+            return [];
+        }
+
         try {
             // Query database for messages excluding system and error types
             const messages = await dbContext.entities.Message.findMany({
