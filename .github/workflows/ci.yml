@@ -54,7 +54,7 @@ jobs:
                   NODE_ENV: production
                   # Dummy environment variables for build check
                   OPENAI_API_KEY: "sk-mock-key-for-build-check"
-                  SERPAPI_API_KEY: "mock-serp-key-for-build"
+                  SERP_API_KEY: "mock-serp-key-for-build"
                   GOOGLE_MAPS_API_KEY: "mock-gmaps-key-for-build"
                   DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/test_db"
                   # SMTP configuration for production build
@@ -78,6 +78,6 @@ jobs:
               env:
                   NODE_ENV: development
                   OPENAI_API_KEY: "sk-mock-key-for-tests"
-                  SERPAPI_API_KEY: "mock-serp-key-for-tests"
+                  SERP_API_KEY: "mock-serp-key-for-tests"
                   GOOGLE_MAPS_API_KEY: "mock-gmaps-key-for-tests"
                   DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/test_db"
