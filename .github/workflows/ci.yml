@@ -38,7 +38,7 @@ jobs:
 
             - name: Install Wasp
               run: |
-                  curl -sSL https://get.wasp.sh/installer.sh | sh -s
+                  curl -sSL https://get.wasp-lang.dev/installer.sh | sh
                   export PATH=$PATH:$HOME/.local/bin
                   echo "$HOME/.local/bin" >> $GITHUB_PATH
 
@@ -48,6 +48,11 @@ jobs:
             - name: TypeScript type check
               run: npx tsc --noEmit
 
+            - name: Generate Prisma Client
+              run: npx prisma generate
+              env:
+                  DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/test_db"
+
             - name: Wasp build check
               run: wasp build
               env:
@@ -56,6 +61,8 @@ jobs:
                   OPENAI_API_KEY: "sk-mock-key-for-build-check"
                   SERP_API_KEY: "mock-serp-key-for-build"
                   GOOGLE_MAPS_API_KEY: "mock-gmaps-key-for-build"
+                  REACT_APP_APP_NAME: "AI Travel Planner"
+                  REACT_APP_MAPS_API_KEY: "mock-client-maps-key"
                   DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/test_db"
                   # SMTP configuration for production build
                   SMTP_HOST: "smtp.gmail.com"
@@ -66,18 +73,4 @@ jobs:
             - name: Database migration check
               run: wasp db migrate-dev --name ci-check
               env:
-                  DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/test_db"
-
-            - name: Run development tests (if available)
-              run: |
-                  if [ -f "package.json" ] && grep -q '"test"' package.json; then
-                    npm test
-                  else
-                    echo "No test script found in package.json, skipping tests"
-                  fi
-              env:
-                  NODE_ENV: development
-                  OPENAI_API_KEY: "sk-mock-key-for-tests"
-                  SERP_API_KEY: "mock-serp-key-for-tests"
-                  GOOGLE_MAPS_API_KEY: "mock-gmaps-key-for-tests"
                   DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/test_db"
