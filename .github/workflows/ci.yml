@@ -38,7 +38,7 @@ jobs:
 
             - name: Install Wasp
               run: |
-                  curl -sSL https://get.wasp-lang.dev/installer.sh | sh
+                  curl -sSL https://get.wasp.sh/installer.sh | sh -s
                   export PATH=$PATH:$HOME/.local/bin
                   echo "$HOME/.local/bin" >> $GITHUB_PATH
 
