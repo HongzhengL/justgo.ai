@@ -169,6 +169,111 @@ export default class ValidationService {
     }
 
     /**
+     * Validates parameters based on intent type
+     * @param {string} intent - Intent type to validate for
+     * @param {Object} parameters - Parameters to validate
+     * @returns {ValidationResult} - Validation result with errors and suggestions
+     */
+    validateByIntent(intent, parameters) {
+        switch (intent) {
+            case "flight_search":
+                return this.validateFlightParameters(parameters);
+            case "place_search":
+                return this.validatePlaceSearchParameters(parameters);
+            case "general_question":
+                return this.validateGeneralQuestionParameters(parameters);
+            default:
+                return {
+                    isValid: false,
+                    errors: [`Unknown intent: ${intent}`],
+                    warnings: [],
+                    suggestions: ["Please specify what you're looking for"],
+                };
+        }
+    }
+
+    /**
+     * Validates general question parameters
+     * @param {Object} params - AI-extracted parameters
+     * @returns {ValidationResult} - Validation result
+     */
+    validateGeneralQuestionParameters(params) {
+        const errors = [];
+        const warnings = [];
+        const suggestions = [];
+
+        if (!params) {
+            errors.push("No parameters provided");
+            return { isValid: false, errors, warnings, suggestions };
+        }
+
+        // General questions don't require specific parameters
+        // Just validate that intent is correct
+        if (params.intent && params.intent !== "general_question") {
+            warnings.push(`Expected general_question intent, got: ${params.intent}`);
+        }
+
+        return {
+            isValid: true, // General questions are always valid
+            errors,
+            warnings,
+            suggestions,
+        };
+    }
+
+    /**
+     * Validates place search parameters (enhanced from existing logic)
+     * @param {Object} params - AI-extracted parameters
+     * @returns {ValidationResult} - Validation result
+     */
+    validatePlaceSearchParameters(params) {
+        const errors = [];
+        const warnings = [];
+        const suggestions = [];
+
+        if (!params) {
+            errors.push("No parameters provided");
+            return { isValid: false, errors, warnings, suggestions };
+        }
+
+        // Check intent
+        if (!params.intent) {
+            errors.push("Intent not specified");
+        } else if (params.intent !== "place_search") {
+            warnings.push(`Expected place_search intent, got: ${params.intent}`);
+        }
+
+        // For place search, we need either destination or query
+        if (!params.destination && !params.query) {
+            errors.push("Either destination or search query is required");
+            suggestions.push("Please specify what type of place you're looking for and where");
+        }
+
+        // Validate query if provided
+        if (params.query && typeof params.query !== "string") {
+            errors.push("Search query must be text");
+        }
+
+        // Validate location if provided
+        if (params.location) {
+            if (
+                typeof params.location !== "object" ||
+                !params.location.lat ||
+                !params.location.lng
+            ) {
+                warnings.push("Location coordinates invalid - will use text-based search");
+            }
+        }
+
+        return {
+            isValid: errors.length === 0,
+            errors,
+            warnings,
+            suggestions,
+        };
+    }
+
+    /**
      * Formats validation errors into user-friendly message
      * @param {string[]} errors - Array of error messages
      * @returns {string} - Formatted error message for users

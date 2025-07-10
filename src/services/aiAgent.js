@@ -144,43 +144,18 @@ export class AIAgent {
                 parameters.intent = "general_question";
             }
 
-            // Determine if we have enough information to make a search
-            if (this.hasCompleteSearchParameters(parameters)) {
-                // We have enough info - make the search
-                const searchResults = await this.performTravelSearch(parameters);
+            // Store original message in conversation context for handlers
+            conversationContext.originalMessage = message;
 
-                // Generate response with search results
-                const response = await this.generateResponseWithResults(
-                    message,
-                    parameters,
-                    searchResults,
-                    conversationContext,
-                    conversationHistory,
-                    timeContext,
-                );
-
-                return {
-                    type: "response_with_cards",
-                    message: response.text,
-                    cards: searchResults,
-                    parameters: parameters,
-                };
-            } else {
-                // Need more information - ask clarifying questions
-                const response = await this.generateClarificationResponse(
-                    message,
-                    parameters,
-                    conversationContext,
-                    conversationHistory,
-                    timeContext,
-                );
-
-                return {
-                    type: "clarification",
-                    message: response,
-                    parameters: parameters,
-                };
-            }
+            // Route to appropriate intent handler
+            return await this.routeToIntentHandler(
+                parameters.intent,
+                parameters,
+                message,
+                conversationContext,
+                conversationHistory,
+                timeContext,
+            );
         } catch (error) {
             console.error("AI Agent error:", error);
             return {
@@ -281,67 +256,62 @@ export class AIAgent {
         return intent && this.supportedIntents.hasOwnProperty(intent);
     }
 
-    hasCompleteSearchParameters(parameters) {
-        if (!this.isValidIntent(parameters.intent)) {
-            return false;
-        }
-
-        const requiredParams = this.supportedIntents[parameters.intent].requiredParams;
-
-        // Check if all required parameters are present
-        return requiredParams.every((param) => {
-            if (param === "query" && parameters.intent === "place_search") {
-                // For place search, we need either destination OR query
-                return parameters.destination || parameters.query;
-            }
-            return parameters[param];
-        });
-    }
-
-    async performTravelSearch(parameters) {
+    async handleFlightSearch(parameters, conversationContext, conversationHistory, timeContext) {
         try {
-            console.log("PerformTravelSearch called with parameters:", parameters);
+            console.log("HandleFlightSearch called with parameters:", parameters);
 
             // Validate parameters first
-            const validation = this.validationService.validateFlightParameters(parameters);
+            const validation = this.validationService.validateByIntent("flight_search", parameters);
             if (!validation.isValid) {
-                console.warn("Parameter validation failed:", validation.errors);
-                throw new Error(this.validationService.formatValidationErrors(validation.errors));
+                console.warn("Flight parameter validation failed:", validation.errors);
+                // Return clarification request instead of throwing error
+                const clarificationResponse = await this.generateClarificationResponse(
+                    conversationContext.originalMessage || "Flight search request",
+                    parameters,
+                    conversationContext,
+                    conversationHistory,
+                    timeContext,
+                );
+
+                return {
+                    type: "clarification",
+                    message: clarificationResponse,
+                    parameters: parameters,
+                };
             }
 
             // Log warnings if present
             if (validation.warnings.length > 0) {
-                console.warn("Parameter warnings:", validation.warnings);
+                console.warn("Flight parameter warnings:", validation.warnings);
             }
 
-            // Handle different intents
-            if (parameters.intent === "flight_search") {
-                // Map AI parameters to SerpAPI format
-                const mappedParams = this.mappingService.mapToSerpAPI(parameters);
-                console.log("Original AI parameters:", JSON.stringify(parameters, null, 2));
-                console.log(
-                    "Mapped parameters for SerpAPI:",
-                    JSON.stringify(mappedParams, null, 2),
-                );
+            // Map AI parameters to SerpAPI format
+            const mappedParams = this.mappingService.mapToSerpAPI(parameters);
+            console.log("Original AI parameters:", JSON.stringify(parameters, null, 2));
+            console.log("Mapped parameters for SerpAPI:", JSON.stringify(mappedParams, null, 2));
 
-                // Call TravelAPIModule for flight search
-                const results = await travelAPI.searchFlights(mappedParams);
-                console.log(`Flight search completed: ${results.length} results found`);
-                return results;
-            } else if (parameters.intent === "place_search") {
-                // Future implementation for place search
-                console.log("Place search not implemented yet - returning empty results");
-                return [];
-            } else if (parameters.intent === "general_question") {
-                // No search needed for general questions
-                console.log("General question intent - no search performed");
-                return [];
-            } else {
-                console.warn(`Unknown intent: ${parameters.intent}`);
-                return [];
-            }
+            // Call TravelAPIModule for flight search
+            const results = await travelAPI.searchFlights(mappedParams);
+            console.log(`Flight search completed: ${results.length} results found`);
+
+            // Generate response with search results
+            const response = await this.generateResponseWithResults(
+                conversationContext.originalMessage || "Flight search request",
+                parameters,
+                results,
+                conversationContext,
+                conversationHistory,
+                timeContext,
+            );
+
+            return {
+                type: "response_with_cards",
+                message: response.text,
+                cards: results,
+                parameters: parameters,
+            };
         } catch (error) {
-            console.error("PerformTravelSearch error:", error);
+            console.error("HandleFlightSearch error:", error);
 
             // Surface API errors directly to users as requested
             if (error.message && error.message.includes("SerpAPI")) {
@@ -349,9 +319,186 @@ export class AIAgent {
             }
 
             // For other errors, provide user-friendly message
-            throw new Error(
-                `I encountered an issue searching for travel options: ${error.message}`,
+            throw new Error(`I encountered an issue searching for flights: ${error.message}`);
+        }
+    }
+
+    async handlePlaceSearch(parameters, conversationContext, conversationHistory, timeContext) {
+        try {
+            console.log("HandlePlaceSearch called with parameters:", parameters);
+
+            // Validate parameters first
+            const validation = this.validationService.validateByIntent("place_search", parameters);
+            if (!validation.isValid) {
+                console.warn("Place parameter validation failed:", validation.errors);
+                // Return clarification request instead of throwing error
+                const clarificationResponse = await this.generateClarificationResponse(
+                    conversationContext.originalMessage || "Place search request",
+                    parameters,
+                    conversationContext,
+                    conversationHistory,
+                    timeContext,
+                );
+
+                return {
+                    type: "clarification",
+                    message: clarificationResponse,
+                    parameters: parameters,
+                };
+            }
+
+            // Log warnings if present
+            if (validation.warnings.length > 0) {
+                console.warn("Place parameter warnings:", validation.warnings);
+            }
+
+            // Future implementation for place search API calls
+            console.log(
+                "Place search API integration not implemented yet - returning empty results",
             );
+            const results = [];
+
+            // Generate response with search results
+            const response = await this.generateResponseWithResults(
+                conversationContext.originalMessage || "Place search request",
+                parameters,
+                results,
+                conversationContext,
+                conversationHistory,
+                timeContext,
+            );
+
+            return {
+                type: "response_with_cards",
+                message: response.text,
+                cards: results,
+                parameters: parameters,
+            };
+        } catch (error) {
+            console.error("HandlePlaceSearch error:", error);
+            throw new Error(`I encountered an issue searching for places: ${error.message}`);
+        }
+    }
+
+    async handleGeneralQuestion(
+        message,
+        parameters,
+        conversationContext,
+        conversationHistory,
+        timeContext,
+    ) {
+        try {
+            console.log("HandleGeneralQuestion called with message:", message);
+
+            // Validate parameters first
+            const validation = this.validationService.validateByIntent(
+                "general_question",
+                parameters,
+            );
+            if (!validation.isValid) {
+                console.warn("General question parameter validation failed:", validation.errors);
+                // For general questions, we can proceed even with validation issues
+            }
+
+            // Log warnings if present
+            if (validation.warnings.length > 0) {
+                console.warn("General question parameter warnings:", validation.warnings);
+            }
+
+            // Build system message with time context
+            const baseSystemMessage = `You are a helpful travel assistant. Answer the user's general travel question with accurate, helpful information. 
+                Use web search if needed to provide current information. Be conversational and friendly.
+                Focus on providing practical travel advice and information.
+            `;
+
+            const systemMessage = timeContext
+                ? `${baseSystemMessage}\n\n${timeContext}`
+                : baseSystemMessage;
+
+            // Use OpenAI with web search tools for general questions
+            const completion = await this.openai.chat.completions.create({
+                model: this.model,
+                messages: [
+                    {
+                        role: "system",
+                        content: systemMessage,
+                    },
+                    ...conversationHistory,
+                    {
+                        role: "user",
+                        content: message,
+                    },
+                ],
+                temperature: this.temperature,
+                max_tokens: this.maxTokens,
+            });
+
+            const aiResponse = completion.choices[0].message.content;
+            console.log("General question response generated");
+
+            return {
+                type: "response",
+                message: aiResponse,
+                parameters: parameters,
+            };
+        } catch (error) {
+            console.error("HandleGeneralQuestion error:", error);
+            return {
+                type: "response",
+                message:
+                    "I'd be happy to help answer your travel question! Could you please rephrase it or provide more details?",
+                parameters: parameters,
+            };
+        }
+    }
+
+    async routeToIntentHandler(
+        intent,
+        parameters,
+        message,
+        conversationContext,
+        conversationHistory,
+        timeContext,
+    ) {
+        try {
+            console.log(`Routing to handler for intent: ${intent}`);
+
+            switch (intent) {
+                case "flight_search":
+                    return await this.handleFlightSearch(
+                        parameters,
+                        conversationContext,
+                        conversationHistory,
+                        timeContext,
+                    );
+                case "place_search":
+                    return await this.handlePlaceSearch(
+                        parameters,
+                        conversationContext,
+                        conversationHistory,
+                        timeContext,
+                    );
+                case "general_question":
+                    return await this.handleGeneralQuestion(
+                        message,
+                        parameters,
+                        conversationContext,
+                        conversationHistory,
+                        timeContext,
+                    );
+                default:
+                    console.warn(`Unknown intent: ${intent}, defaulting to general question`);
+                    return await this.handleGeneralQuestion(
+                        message,
+                        parameters,
+                        conversationContext,
+                        conversationHistory,
+                        timeContext,
+                    );
+            }
+        } catch (error) {
+            console.error(`Intent handler error for ${intent}:`, error);
+            throw error; // Re-throw to be handled by processUserMessage
         }
     }
 
