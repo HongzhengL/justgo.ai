@@ -38,7 +38,7 @@ jobs:
 
             - name: Install Wasp
               run: |
-                  curl -sSL https://get.wasp-lang.dev/installer.sh | sh
+                  curl -sSL https://get.wasp.sh/installer.sh | sh
                   export PATH=$PATH:$HOME/.local/bin
                   echo "$HOME/.local/bin" >> $GITHUB_PATH
 
@@ -55,20 +55,6 @@ jobs:
 
             - name: Wasp build check
               run: wasp build
-              env:
-                  NODE_ENV: production
-                  # Dummy environment variables for build check
-                  OPENAI_API_KEY: "sk-mock-key-for-build-check"
-                  SERP_API_KEY: "mock-serp-key-for-build"
-                  GOOGLE_MAPS_API_KEY: "mock-gmaps-key-for-build"
-                  REACT_APP_APP_NAME: "AI Travel Planner"
-                  REACT_APP_MAPS_API_KEY: "mock-client-maps-key"
-                  DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/test_db"
-                  # SMTP configuration for production build
-                  SMTP_HOST: "smtp.gmail.com"
-                  SMTP_PORT: "587"
-                  SMTP_USERNAME: "mock-smtp-user"
-                  SMTP_PASSWORD: "mock-smtp-password"
 
             - name: Database migration check
               run: wasp db migrate-dev --name ci-check
