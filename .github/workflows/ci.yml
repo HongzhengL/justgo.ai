@@ -36,17 +36,17 @@ jobs:
             - name: Install dependencies
               run: npm ci
 
-            - name: Code formatting check
-              run: npx prettier --check .
-
-            - name: TypeScript type check
-              run: npx tsc --noEmit
-
             - name: Install Wasp
               run: |
                   curl -sSL https://get.wasp-lang.dev/installer.sh | sh
                   export PATH=$PATH:$HOME/.local/bin
                   echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+            - name: Code formatting check
+              run: npx prettier --check .
+
+            - name: TypeScript type check
+              run: npx tsc --noEmit
 
             - name: Wasp build check
               run: wasp build

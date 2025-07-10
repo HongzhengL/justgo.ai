@@ -10,6 +10,8 @@
         "wasp": "file:.wasp/out/sdk/wasp"
     },
     "devDependencies": {
+        "@testing-library/jest-dom": "^6.0.0",
+        "@tsconfig/node22": "latest",
         "@types/node": "^20.0.0",
         "@types/react": "^18.0.37",
         "prettier": "^3.6.2",
