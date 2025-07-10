@@ -188,3 +188,83 @@ export function formatDuration(minutes: number): string {
 export function isLongLayover(duration: number): boolean {
     return duration > 180; // 3 hours = 180 minutes
 }
+
+/**
+ * Convert timezone to local time
+ * @param timezone - Target timezone string (e.g., "America/New_York")
+ * @returns Current time in the specified timezone
+ */
+export function convertTimezoneToLocal(timezone: string): string {
+    try {
+        const now = new Date();
+        return new Intl.DateTimeFormat("en-US", {
+            timeZone: timezone,
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            weekday: "long",
+        }).format(now);
+    } catch (error) {
+        console.error("Error converting timezone to local:", error);
+        return new Date().toLocaleString();
+    }
+}
+
+/**
+ * Format time for AI consumption
+ * @param date - Date object
+ * @param timezone - Target timezone string
+ * @returns Formatted time string for AI
+ */
+export function formatTimeForAI(date: Date, timezone: string): string {
+    try {
+        const timeString = new Intl.DateTimeFormat("en-US", {
+            timeZone: timezone,
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            weekday: "long",
+        }).format(date);
+
+        return `Current user time: ${timeString}`;
+    } catch (error) {
+        console.error("Error formatting time for AI:", error);
+        return `Current user time: ${date.toLocaleString()}`;
+    }
+}
+
+/**
+ * Get current time in specific timezone
+ * @param timezone - Target timezone string
+ * @returns Date object representing current time in timezone
+ */
+export function getCurrentTimeInTimezone(timezone: string): Date {
+    try {
+        // Get current time
+        const now = new Date();
+
+        // Convert to target timezone
+        const timeString = new Intl.DateTimeFormat("en-CA", {
+            timeZone: timezone,
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: false,
+        }).format(now);
+
+        // Parse back to Date object
+        return new Date(timeString);
+    } catch (error) {
+        console.error("Error getting current time in timezone:", error);
+        return new Date();
+    }
+}

@@ -2,6 +2,8 @@ import OpenAI from "openai";
 import ParameterMappingService from "./parameterMapping.js";
 import ValidationService from "./validation.js";
 import { travelAPI } from "../api/index.js";
+import { TimeContextManager } from "./timeContextManager.js";
+import { SystemMessageBuilder } from "../utils/systemMessageBuilder.js";
 
 export class AIAgent {
     constructor() {
@@ -18,6 +20,9 @@ export class AIAgent {
         // Initialize mapping and validation services
         this.mappingService = new ParameterMappingService();
         this.validationService = new ValidationService();
+
+        // Initialize system message builder
+        this.systemMessageBuilder = new SystemMessageBuilder(this.systemPrompt);
 
         // Define supported intents - easy to maintain and extend
         this.supportedIntents = {
@@ -64,7 +69,7 @@ export class AIAgent {
             .join("\n");
 
         return `Extract travel parameters from the user's message. Return ONLY a valid JSON object (no markdown formatting) with these fields:
-            
+
             INTENT (choose one):
             ${intentDescriptions}
             
@@ -92,9 +97,29 @@ export class AIAgent {
         `;
     }
 
-    async processUserMessage(message, conversationContext = {}, userId, dbContext) {
+    async processUserMessage(
+        message,
+        conversationContext = {},
+        userId,
+        dbContext,
+        frontendTimezone = null,
+    ) {
         try {
             console.log(`Processing message for user ${userId}:`, message);
+
+            // Initialize time context manager for this conversation
+            const timeContextManager = new TimeContextManager(conversationContext.conversationId);
+
+            // Check for timezone override in user message
+            const detectedTimezone = await timeContextManager.detectTimezoneFromMessage(message);
+            if (detectedTimezone) {
+                timeContextManager.setTimezoneOverride(detectedTimezone);
+                console.log(`Detected timezone override: ${detectedTimezone}`);
+            }
+
+            // Generate current time context for AI
+            const timeContext = timeContextManager.getTimeContextForAI(frontendTimezone);
+            console.log(`Time context for AI: ${timeContext}`);
 
             // Retrieve conversation history for context
             const conversationHistory = await this.retrieveConversationContext(
@@ -104,7 +129,11 @@ export class AIAgent {
             );
 
             // Extract travel parameters from the message
-            const parameters = await this.extractTravelParameters(message, conversationHistory);
+            const parameters = await this.extractTravelParameters(
+                message,
+                conversationHistory,
+                timeContext,
+            );
             console.log("Extracted parameters:", parameters);
 
             // Validate the extracted intent
@@ -127,6 +156,7 @@ export class AIAgent {
                     searchResults,
                     conversationContext,
                     conversationHistory,
+                    timeContext,
                 );
 
                 return {
@@ -142,6 +172,7 @@ export class AIAgent {
                     parameters,
                     conversationContext,
                     conversationHistory,
+                    timeContext,
                 );
 
                 return {
@@ -161,14 +192,20 @@ export class AIAgent {
         }
     }
 
-    async extractTravelParameters(message, conversationHistory = []) {
+    async extractTravelParameters(message, conversationHistory = [], timeContext = null) {
         try {
+            // Build system message with time context
+            const baseIntentPrompt = this.generateIntentPrompt();
+            const systemMessage = timeContext
+                ? `${baseIntentPrompt}\n\n${timeContext}`
+                : baseIntentPrompt;
+
             const completion = await this.openai.chat.completions.create({
                 model: this.model,
                 messages: [
                     {
                         role: "system",
-                        content: this.generateIntentPrompt(),
+                        content: systemMessage,
                     },
                     ...conversationHistory,
                     {
@@ -324,22 +361,30 @@ export class AIAgent {
         searchResults,
         context,
         conversationHistory = [],
+        timeContext = null,
     ) {
         try {
+            // Build system message with time context
+            const baseSystemMessage = `You are a helpful travel assistant. The user made a request and you found search results. 
+                Generate a conversational response that:
+                1. Acknowledges their request
+                2. Briefly describes what you found
+                3. Encourages them to look at the results cards
+                4. Offers to help with next steps
+
+                Keep it conversational and helpful. The actual search results will be displayed as cards below your message.
+            `;
+
+            const systemMessage = timeContext
+                ? `${baseSystemMessage}\n\n${timeContext}`
+                : baseSystemMessage;
+
             const completion = await this.openai.chat.completions.create({
                 model: this.model,
                 messages: [
                     {
                         role: "system",
-                        content: `You are a helpful travel assistant. The user made a request and you found search results. 
-                            Generate a conversational response that:
-                            1. Acknowledges their request
-                            2. Briefly describes what you found
-                            3. Encourages them to look at the results cards
-                            4. Offers to help with next steps
-
-                            Keep it conversational and helpful. The actual search results will be displayed as cards below your message.
-                        `,
+                        content: systemMessage,
                     },
                     ...conversationHistory,
                     {
@@ -367,7 +412,13 @@ export class AIAgent {
         }
     }
 
-    async generateClarificationResponse(message, parameters, context, conversationHistory = []) {
+    async generateClarificationResponse(
+        message,
+        parameters,
+        context,
+        conversationHistory = [],
+        timeContext = null,
+    ) {
         try {
             const requiredParams = this.supportedIntents[parameters.intent]?.requiredParams || [];
             const missingParams = requiredParams.filter((param) => {
@@ -377,20 +428,27 @@ export class AIAgent {
                 return !parameters[param];
             });
 
+            // Build system message with time context
+            const baseSystemMessage = `You are a helpful travel assistant. The user made a request but you need more information to help them effectively. 
+                Generate a conversational response that:
+                1. Acknowledges what you understood from their request
+                2. Asks for the specific missing information needed
+                3. Provides examples or suggestions to help them
+                4. Maintains a friendly, helpful tone
+
+                Be specific about what information you need. Focus on the missing parameters.
+            `;
+
+            const systemMessage = timeContext
+                ? `${baseSystemMessage}\n\n${timeContext}`
+                : baseSystemMessage;
+
             const completion = await this.openai.chat.completions.create({
                 model: this.model,
                 messages: [
                     {
                         role: "system",
-                        content: `You are a helpful travel assistant. The user made a request but you need more information to help them effectively. 
-                            Generate a conversational response that:
-                            1. Acknowledges what you understood from their request
-                            2. Asks for the specific missing information needed
-                            3. Provides examples or suggestions to help them
-                            4. Maintains a friendly, helpful tone
-
-                            Be specific about what information you need. Focus on the missing parameters.
-                        `,
+                        content: systemMessage,
                     },
                     ...conversationHistory,
                     {

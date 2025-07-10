@@ -157,7 +157,7 @@ export const getConversationHistory = async ({ conversationId, limit = 50 }, con
 };
 
 // Process AI message - combines AI processing with message saving
-export const processAIMessage = async ({ message }, context) => {
+export const processAIMessage = async ({ message, frontendTimezone }, context) => {
     if (!context.user) {
         throw new HttpError(401, "User must be logged in");
     }
@@ -186,6 +186,7 @@ export const processAIMessage = async ({ message }, context) => {
             { conversationId: conversation.id },
             context.user.id,
             context,
+            frontendTimezone,
         );
 
         // Save the AI response
