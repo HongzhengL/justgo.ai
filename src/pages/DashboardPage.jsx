@@ -66,6 +66,16 @@ export function DashboardPage() {
         }
     }, [activeConversation]);
 
+    // Function to detect user timezone
+    const detectUserTimezone = () => {
+        try {
+            return Intl.DateTimeFormat().resolvedOptions().timeZone;
+        } catch (error) {
+            console.warn("Timezone detection failed:", error);
+            return null;
+        }
+    };
+
     const handleSendMessage = async () => {
         if (!inputValue.trim() || isProcessing) return;
 
@@ -74,8 +84,14 @@ export function DashboardPage() {
         setIsProcessing(true);
 
         try {
+            // Detect user timezone
+            const frontendTimezone = detectUserTimezone();
+
             // Process message with AI Agent and save to database
-            const result = await processAIMessageFn({ message: messageText });
+            const result = await processAIMessageFn({
+                message: messageText,
+                frontendTimezone: frontendTimezone,
+            });
 
             // Add both user and AI messages to local state
             const userMessage = {
