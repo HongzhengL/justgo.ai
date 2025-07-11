@@ -11,7 +11,7 @@ export class AIAgent {
             apiKey: process.env.OPENAI_API_KEY,
         });
 
-        this.model = "gpt-4o";
+        this.model = process.env.OPENAI_MODEL || "gpt-4.1-mini";
         this.temperature = 0.7;
         this.maxTokens = 5000;
         this.contextWindowSize = parseInt(process.env.CONTEXT_WINDOW_SIZE) || 20;

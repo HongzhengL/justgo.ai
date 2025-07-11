@@ -6,7 +6,7 @@ class AITimezoneDetector {
         this.openai = new OpenAI({
             apiKey: process.env.OPENAI_API_KEY,
         });
-        this.model = "gpt-4o";
+        this.model = process.env.OPENAI_MODEL || "gpt-4.1-mini";
         this.temperature = 0.1;
     }
 
