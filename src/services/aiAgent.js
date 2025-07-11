@@ -144,6 +144,7 @@ export class AIAgent {
                 parameters.intent = "general_question";
             }
 
+
             // Store original message in conversation context for handlers
             conversationContext.originalMessage = message;
 
