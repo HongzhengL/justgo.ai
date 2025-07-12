@@ -1,5 +1,18 @@
 {
-    "image": "hongzhengli/wasp-playground:latest",
-    "overrideCommand": true,
-    "mounts": ["source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"]
+    "image": "mcr.microsoft.com/devcontainers/universal:2",
+    "features": {
+        "ghcr.io/devcontainers/features/common-utils:2": {
+            "installZsh": true,
+            "configureZshAsDefaultShell": true
+        }
+    },
+    "postCreateCommand": "chmod +x .devcontainer/setup.sh && ./.devcontainer/setup.sh",
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "terminal.integrated.defaultProfile.linux": "zsh"
+            }
+        }
+    },
+    "remoteUser": "codespace"
 }

@@ -22,8 +22,10 @@ import { extractFlightTiming } from "../../utils/timeUtils.js";
 export class AITranslator {
     private openai?: OpenAI;
     private useAI: boolean;
+    private model: string;
 
     constructor(openaiApiKey?: string) {
+        this.model = process.env.OPENAI_MODEL || "gpt-4.1-mini";
         this.useAI = !!openaiApiKey;
         if (openaiApiKey) {
             this.openai = new OpenAI({
@@ -109,7 +111,7 @@ Flight data: ${JSON.stringify(flights.slice(0, 5))}
 Return only valid JSON array.`;
 
         const response = await this.openai.chat.completions.create({
-            model: "gpt-3.5-turbo",
+            model: this.model,
             messages: [{ role: "user", content: prompt }],
             temperature: 0.1,
         });
@@ -142,7 +144,7 @@ Places data: ${JSON.stringify(places.slice(0, 5))}
 Return only valid JSON array.`;
 
         const response = await this.openai.chat.completions.create({
-            model: "gpt-3.5-turbo",
+            model: this.model,
             messages: [{ role: "user", content: prompt }],
             temperature: 0.1,
         });
@@ -173,7 +175,7 @@ Routes data: ${JSON.stringify(routes.slice(0, 3))}
 Return only valid JSON array.`;
 
         const response = await this.openai.chat.completions.create({
-            model: "gpt-3.5-turbo",
+            model: this.model,
             messages: [{ role: "user", content: prompt }],
             temperature: 0.1,
         });
