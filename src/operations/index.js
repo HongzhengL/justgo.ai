@@ -4,6 +4,7 @@
  */
 
 import { shouldIncludeTestingOperations, getEnvironment } from "../config/environment.js";
+import logger from "../utils/logger.js";
 
 // Core operations - always available
 import * as travelOps from "./travel.js";
@@ -18,12 +19,12 @@ try {
         // Dynamically import testing operations only in development
         const testingModule = await import("./testing.js");
         testingOps = testingModule;
-        console.log(`[OPERATIONS] Testing operations loaded for ${getEnvironment()} environment`);
+        logger.info(`[OPERATIONS] Testing operations loaded for ${getEnvironment()} environment`);
     } else {
-        console.log(`[OPERATIONS] Testing operations excluded for ${getEnvironment()} environment`);
+        logger.info(`[OPERATIONS] Testing operations excluded for ${getEnvironment()} environment`);
     }
 } catch (error) {
-    console.warn("[OPERATIONS] Failed to load testing operations:", error.message);
+    logger.warn("[OPERATIONS] Failed to load testing operations:", error.message);
     // Continue without testing operations
 }
 

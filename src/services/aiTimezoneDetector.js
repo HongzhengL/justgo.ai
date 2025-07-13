@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { isValidTimezone } from "../utils/timezoneParser.js";
+import logger from "../utils/logger.js";
 
 class AITimezoneDetector {
     constructor() {
@@ -65,23 +66,23 @@ IMPORTANT: Return only valid JSON without any markdown code block formatting or 
             const detectedTimezone = parsedResponse.timezone;
 
             if (!detectedTimezone || detectedTimezone === null) {
-                console.log("AI timezone detection: No timezone detected in message");
+                logger.info("AI timezone detection: No timezone detected in message");
                 return null;
             }
 
             if (!isValidTimezone(detectedTimezone)) {
-                console.warn(
+                logger.warn(
                     `AI timezone detection: Invalid timezone detected: ${detectedTimezone}`,
                 );
                 return null;
             }
 
-            console.log(
+            logger.info(
                 `AI timezone detection: Successfully detected timezone: ${detectedTimezone}`,
             );
             return detectedTimezone;
         } catch (error) {
-            console.error("Error in AI timezone detection:", error);
+            logger.error("Error in AI timezone detection:", error);
             return null;
         }
     }

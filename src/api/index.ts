@@ -9,6 +9,7 @@ import { SerpAPIClient } from "./serpapi/client.js";
 import { GoogleMapsClient } from "./googlemaps/client.js";
 import { AITranslator } from "./translation/aiTranslator.js";
 import { TravelAPIError, getUserFriendlyMessage } from "./utils/errors.js";
+import logger from "../utils/logger.js";
 
 export class TravelAPIModule implements TravelAPIInterface {
     private serpClient?: SerpAPIClient;
@@ -43,12 +44,12 @@ export class TravelAPIModule implements TravelAPIInterface {
         }
 
         try {
-            console.log("Searching flights with params:", params);
+            logger.info("Searching flights with params:", params);
 
             const serpResponse = await this.serpClient.searchFlights(params);
             const standardizedCards = await this.translator.translateSerpFlights(serpResponse);
 
-            console.log(`Found ${standardizedCards.length} flight options`);
+            logger.info(`Found ${standardizedCards.length} flight options`);
             return standardizedCards;
         } catch (error) {
             if (error instanceof TravelAPIError) {
@@ -72,7 +73,7 @@ export class TravelAPIModule implements TravelAPIInterface {
         }
 
         try {
-            console.log("Searching places with params:", params);
+            logger.info("Searching places with params:", params);
 
             const placesResponse = await this.googleMapsClient.searchPlaces(params);
             const standardizedCards = await this.translator.translateGooglePlaces(
@@ -80,7 +81,7 @@ export class TravelAPIModule implements TravelAPIInterface {
                 process.env.GOOGLE_MAPS_API_KEY!,
             );
 
-            console.log(`Found ${standardizedCards.length} place options`);
+            logger.info(`Found ${standardizedCards.length} place options`);
             return standardizedCards;
         } catch (error) {
             if (error instanceof TravelAPIError) {
@@ -104,13 +105,13 @@ export class TravelAPIModule implements TravelAPIInterface {
         }
 
         try {
-            console.log("Getting transit directions with params:", params);
+            logger.info("Getting transit directions with params:", params);
 
             const directionsResponse = await this.googleMapsClient.getDirections(params);
             const standardizedCards =
                 await this.translator.translateGoogleDirections(directionsResponse);
 
-            console.log(`Found ${standardizedCards.length} transit options`);
+            logger.info(`Found ${standardizedCards.length} transit options`);
             return standardizedCards;
         } catch (error) {
             if (error instanceof TravelAPIError) {
@@ -118,7 +119,9 @@ export class TravelAPIModule implements TravelAPIInterface {
             }
             throw new TravelAPIError(
                 "UNKNOWN",
-                `Transit search failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+                `Transit search failed: ${
+                    error instanceof Error ? error.message : "Unknown error"
+                }`,
                 "Google Directions API",
             );
         }
@@ -141,7 +144,7 @@ export class TravelAPIModule implements TravelAPIInterface {
                 results.serpAPI = await this.serpClient.validateApiKey();
             }
         } catch (error) {
-            console.warn("SerpAPI validation failed:", error);
+            logger.warn("SerpAPI validation failed:", error);
         }
 
         try {
@@ -149,7 +152,7 @@ export class TravelAPIModule implements TravelAPIInterface {
                 results.googleMaps = await this.googleMapsClient.validateApiKey();
             }
         } catch (error) {
-            console.warn("Google Maps API validation failed:", error);
+            logger.warn("Google Maps API validation failed:", error);
         }
 
         return results;

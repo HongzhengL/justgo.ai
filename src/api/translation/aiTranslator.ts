@@ -4,6 +4,11 @@ import {
     SerpFlightResponse,
     GooglePlacesResponse,
     GoogleDirectionsResponse,
+    SerpFlightData,
+    SerpFlightSegment,
+    GooglePlaceData,
+    GoogleDirectionsRoute,
+    GoogleDirectionsLeg,
 } from "../types.js";
 import {
     generateFlightId,
@@ -18,6 +23,7 @@ import {
     getPlacePhotoUrl,
 } from "../googlemaps/client.js";
 import { extractFlightTiming } from "../../utils/timeUtils.js";
+import logger from "../../utils/logger.js";
 
 export class AITranslator {
     private openai?: OpenAI;
@@ -44,10 +50,10 @@ export class AITranslator {
 
             // Force rule-based translation for flights to ensure airline logos are handled properly
             // The rule-based method has better handling of airline logos from SerpAPI data
-            console.log("Using rule-based translation for flights to preserve airline logos");
+            logger.info("Using rule-based translation for flights to preserve airline logos");
             return this.translateFlightsWithRules(allFlights);
         } catch (error) {
-            console.warn("Rule-based translation failed:", error);
+            logger.warn("Rule-based translation failed:", error);
             const allFlights = [
                 ...(serpResponse.best_flights || []),
                 ...(serpResponse.other_flights || []),
@@ -67,7 +73,7 @@ export class AITranslator {
                 return this.translatePlacesWithRules(placesResponse.results, apiKey);
             }
         } catch (error) {
-            console.warn("AI translation failed, falling back to rule-based:", error);
+            logger.warn("AI translation failed, falling back to rule-based:", error);
             return this.translatePlacesWithRules(placesResponse.results, apiKey);
         }
     }
@@ -82,13 +88,13 @@ export class AITranslator {
                 return this.translateDirectionsWithRules(directionsResponse.routes);
             }
         } catch (error) {
-            console.warn("AI translation failed, falling back to rule-based:", error);
+            logger.warn("AI translation failed, falling back to rule-based:", error);
             return this.translateDirectionsWithRules(directionsResponse.routes);
         }
     }
 
     // AI-powered translation methods
-    private async translateFlightsWithAI(flights: any[]): Promise<StandardizedCard[]> {
+    private async translateFlightsWithAI(flights: unknown[]): Promise<StandardizedCard[]> {
         if (!this.openai || flights.length === 0) return [];
 
         const prompt = `Convert these flight search results to standardized travel cards. Each card should have:
@@ -123,7 +129,7 @@ Return only valid JSON array.`;
     }
 
     private async translatePlacesWithAI(
-        places: any[],
+        places: unknown[],
         apiKey: string,
     ): Promise<StandardizedCard[]> {
         if (!this.openai || places.length === 0) return [];
@@ -141,6 +147,8 @@ Return only valid JSON array.`;
 
 Places data: ${JSON.stringify(places.slice(0, 5))}
 
+API Key available for photo URLs: ${apiKey ? "Yes" : "No"}
+
 Return only valid JSON array.`;
 
         const response = await this.openai.chat.completions.create({
@@ -155,7 +163,7 @@ Return only valid JSON array.`;
         return JSON.parse(content);
     }
 
-    private async translateDirectionsWithAI(routes: any[]): Promise<StandardizedCard[]> {
+    private async translateDirectionsWithAI(routes: unknown[]): Promise<StandardizedCard[]> {
         if (!this.openai || routes.length === 0) return [];
 
         const prompt = `Convert these Google Directions routes to standardized travel cards. Each card should have:
@@ -191,8 +199,8 @@ Return only valid JSON array.`;
      * Supports both single-carrier and multi-carrier flights with future multi-logo UI support
      */
     private extractAirlineLogos(
-        flight: any,
-        segments: any[],
+        flight: SerpFlightData,
+        segments: SerpFlightSegment[],
     ): {
         primaryLogo: string | null;
         allLogos: Array<{
@@ -228,7 +236,7 @@ Return only valid JSON array.`;
 
         const primaryAirline = segments[0]?.airline || "Unknown Airline";
 
-        console.log("Airline logo extraction:", {
+        logger.debug("Airline logo extraction:", {
             isMultiCarrier,
             primaryAirline,
             primaryLogo,
@@ -246,10 +254,10 @@ Return only valid JSON array.`;
     }
 
     // Rule-based translation methods (fallback)
-    private translateFlightsWithRules(flights: any[]): StandardizedCard[] {
+    private translateFlightsWithRules(flights: SerpFlightData[]): StandardizedCard[] {
         return flights.map((flight) => {
-            console.log("Rule-based flight translation - flight object:", flight);
-            console.log("Rule-based flight translation - airline_logo:", flight.airline_logo);
+            logger.debug("Rule-based flight translation - flight object:", flight);
+            logger.debug("Rule-based flight translation - airline_logo:", flight.airline_logo);
 
             const segments = flight.flights || [];
             const firstSegment = segments[0] || {};
@@ -305,7 +313,9 @@ Return only valid JSON array.`;
                 },
                 essentialDetails: {
                     airline: extractAirlineNames(segments),
-                    duration: `${Math.floor((flight.total_duration || 0) / 60)}h ${(flight.total_duration || 0) % 60}m`,
+                    duration: `${Math.floor((flight.total_duration || 0) / 60)}h ${
+                        (flight.total_duration || 0) % 60
+                    }m`,
                     // Add timing to essential details for card display
                     departure: timingData.departureTime,
                     arrival: timingData.arrivalTime,
@@ -327,7 +337,10 @@ Return only valid JSON array.`;
         });
     }
 
-    private translatePlacesWithRules(places: any[], apiKey: string): StandardizedCard[] {
+    private translatePlacesWithRules(
+        places: GooglePlaceData[],
+        apiKey: string,
+    ): StandardizedCard[] {
         return places.map((place) => {
             const photoUrl = place.photos?.[0]?.photo_reference
                 ? getPlacePhotoUrl(place.photos[0].photo_reference, apiKey)
@@ -363,7 +376,11 @@ Return only valid JSON array.`;
                     status: place.opening_hours?.open_now ? "Open" : "Closed",
                 },
                 externalLinks: {
-                    maps: `https://www.google.com/maps/place/${encodeURIComponent(place.name || "")}/@${place.geometry?.location?.lat || 0},${place.geometry?.location?.lng || 0}`,
+                    maps: `https://www.google.com/maps/place/${encodeURIComponent(
+                        place.name || "",
+                    )}/@${place.geometry?.location?.lat || 0},${
+                        place.geometry?.location?.lng || 0
+                    }`,
                     website: place.website,
                 },
                 metadata: {
@@ -375,15 +392,15 @@ Return only valid JSON array.`;
         });
     }
 
-    private translateDirectionsWithRules(routes: any[]): StandardizedCard[] {
+    private translateDirectionsWithRules(routes: GoogleDirectionsRoute[]): StandardizedCard[] {
         return routes.map((route) => {
             const legs = route.legs || [];
             const totalDistance = legs.reduce(
-                (sum: number, leg: any) => sum + (leg.distance?.value || 0),
+                (sum: number, leg: GoogleDirectionsLeg) => sum + (leg?.distance?.value || 0),
                 0,
             );
             const totalDuration = legs.reduce(
-                (sum: number, leg: any) => sum + (leg.duration?.value || 0),
+                (sum: number, leg: GoogleDirectionsLeg) => sum + (leg?.duration?.value || 0),
                 0,
             );
 
@@ -394,7 +411,9 @@ Return only valid JSON array.`;
                 id: generateTransitId(route),
                 type: "transit" as const,
                 title: `${startAddress} to ${endAddress}`,
-                subtitle: `${Math.round(totalDistance / 1000)} km • ${Math.floor(totalDuration / 60)} min`,
+                subtitle: `${Math.round(totalDistance / 1000)} km • ${Math.floor(
+                    totalDuration / 60,
+                )} min`,
                 duration: Math.floor(totalDuration / 60), // Convert seconds to minutes
                 location: {
                     from: { address: startAddress },
@@ -419,7 +438,9 @@ Return only valid JSON array.`;
                         : "Normal traffic",
                 },
                 externalLinks: {
-                    directions: `https://www.google.com/maps/dir/${encodeURIComponent(startAddress)}/${encodeURIComponent(endAddress)}`,
+                    directions: `https://www.google.com/maps/dir/${encodeURIComponent(
+                        startAddress,
+                    )}/${encodeURIComponent(endAddress)}`,
                 },
                 metadata: {
                     provider: "Google Directions",

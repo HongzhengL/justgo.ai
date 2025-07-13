@@ -2,6 +2,7 @@
 // Tests all error scenarios and recovery mechanisms
 
 import { TravelAPIError } from "../utils/errors.js";
+import logger from "../../utils/logger.js";
 
 // Error scenarios test cases
 export const errorScenarios = {
@@ -141,7 +142,7 @@ export class MockTravelAPIModule {
         return this._simulateOperation("getTransitInfo", params);
     }
 
-    async _simulateOperation(operation, params) {
+    async _simulateOperation(operation) {
         const operationConfig = this.errorConfig[operation] || {};
 
         // Increment attempt count
@@ -246,7 +247,7 @@ export class ErrorHandlingTester {
     }
 
     async runAllTests() {
-        console.log("🧪 Starting Error Handling Tests...\n");
+        logger.info("🧪 Starting Error Handling Tests...\n");
 
         const tests = [
             this.testNetworkErrors.bind(this),
@@ -261,7 +262,7 @@ export class ErrorHandlingTester {
             try {
                 await test();
             } catch (error) {
-                console.error(`Test failed: ${error.message}`);
+                logger.error(`Test failed: ${error.message}`);
                 this.testResults.push({
                     test: test.name,
                     status: "FAILED",
@@ -274,7 +275,7 @@ export class ErrorHandlingTester {
     }
 
     async testNetworkErrors() {
-        console.log("📡 Testing Network Error Handling...");
+        logger.info("📡 Testing Network Error Handling...");
 
         const mockAPI = new MockTravelAPIModule({
             searchFlights: {
@@ -288,7 +289,7 @@ export class ErrorHandlingTester {
             throw new Error("Expected network error to be thrown");
         } catch (error) {
             if (error instanceof TravelAPIError && error.type === "NETWORK_ERROR") {
-                console.log("✅ Network error properly caught and typed");
+                logger.info("✅ Network error properly caught and typed");
                 this.testResults.push({
                     test: "Network Errors",
                     status: "PASSED",
@@ -300,7 +301,7 @@ export class ErrorHandlingTester {
     }
 
     async testApiErrors() {
-        console.log("🔑 Testing API Error Handling...");
+        logger.info("🔑 Testing API Error Handling...");
 
         const mockAPI = new MockTravelAPIModule({
             searchPlaces: {
@@ -314,7 +315,7 @@ export class ErrorHandlingTester {
             throw new Error("Expected rate limit error to be thrown");
         } catch (error) {
             if (error instanceof TravelAPIError && error.type === "RATE_LIMIT") {
-                console.log("✅ Rate limit error properly caught and typed");
+                logger.info("✅ Rate limit error properly caught and typed");
                 this.testResults.push({ test: "API Errors", status: "PASSED" });
             } else {
                 throw error;
@@ -323,7 +324,7 @@ export class ErrorHandlingTester {
     }
 
     async testValidationErrors() {
-        console.log("📝 Testing Validation Error Handling...");
+        logger.info("📝 Testing Validation Error Handling...");
 
         const mockAPI = new MockTravelAPIModule({
             searchFlights: {
@@ -337,7 +338,7 @@ export class ErrorHandlingTester {
             throw new Error("Expected validation error to be thrown");
         } catch (error) {
             if (error instanceof TravelAPIError && error.type === "INVALID_PARAMS") {
-                console.log("✅ Validation error properly caught and typed");
+                logger.info("✅ Validation error properly caught and typed");
                 this.testResults.push({
                     test: "Validation Errors",
                     status: "PASSED",
@@ -349,7 +350,7 @@ export class ErrorHandlingTester {
     }
 
     async testRetryMechanism() {
-        console.log("🔄 Testing Retry Mechanism...");
+        logger.info("🔄 Testing Retry Mechanism...");
 
         const mockAPI = new MockTravelAPIModule({
             getTransitInfo: {
@@ -367,19 +368,19 @@ export class ErrorHandlingTester {
         while (attempts < recoveryStrategies.retry.maxAttempts && !succeeded) {
             attempts++;
             try {
-                const results = await mockAPI.getTransitInfo({
+                await mockAPI.getTransitInfo({
                     origin: "SFO",
                     destination: "Downtown SF",
                 });
                 succeeded = true;
-                console.log(`✅ Succeeded after ${attempts} attempts`);
+                logger.info(`✅ Succeeded after ${attempts} attempts`);
                 this.testResults.push({
                     test: "Retry Mechanism",
                     status: "PASSED",
                 });
             } catch (error) {
                 if (attempts >= recoveryStrategies.retry.maxAttempts) {
-                    console.log(`✅ Properly failed after ${attempts} attempts`);
+                    logger.info(`✅ Properly failed after ${attempts} attempts`);
                     this.testResults.push({
                         test: "Retry Mechanism",
                         status: "PASSED",
@@ -394,16 +395,16 @@ export class ErrorHandlingTester {
     }
 
     async testFallbackStrategies() {
-        console.log("🔄 Testing Fallback Strategies...");
+        logger.info("🔄 Testing Fallback Strategies...");
 
         // Test SerpAPI fallback
         const fallbackMessage = recoveryStrategies.fallback.serpAPIFallback.message;
         const alternatives = recoveryStrategies.fallback.serpAPIFallback.alternativeActions;
 
         if (fallbackMessage && alternatives.length > 0) {
-            console.log("✅ SerpAPI fallback strategy defined");
-            console.log(`   Fallback message: ${fallbackMessage}`);
-            console.log(`   Alternative actions: ${alternatives.join(", ")}`);
+            logger.info("✅ SerpAPI fallback strategy defined");
+            logger.info(`   Fallback message: ${fallbackMessage}`);
+            logger.info(`   Alternative actions: ${alternatives.join(", ")}`);
         }
 
         this.testResults.push({
@@ -413,7 +414,7 @@ export class ErrorHandlingTester {
     }
 
     async testUserFriendlyMessages() {
-        console.log("💬 Testing User-Friendly Error Messages...");
+        logger.info("💬 Testing User-Friendly Error Messages...");
 
         const testErrors = [
             errorScenarios.networkErrors.timeout,
@@ -426,7 +427,7 @@ export class ErrorHandlingTester {
             const friendlyMessage = this.getUserFriendlyMessage(error);
 
             if (friendlyMessage && !friendlyMessage.includes("undefined")) {
-                console.log(`✅ User-friendly message for ${error.type}: ${friendlyMessage}`);
+                logger.info(`✅ User-friendly message for ${error.type}: ${friendlyMessage}`);
             } else {
                 throw new Error(`Missing user-friendly message for error type: ${error.type}`);
             }
@@ -453,25 +454,25 @@ export class ErrorHandlingTester {
     }
 
     generateReport() {
-        console.log("\n📊 Error Handling Test Report");
-        console.log("================================");
+        logger.info("\n📊 Error Handling Test Report");
+        logger.info("================================");
 
         const passed = this.testResults.filter((r) => r.status === "PASSED").length;
         const failed = this.testResults.filter((r) => r.status === "FAILED").length;
 
-        console.log(`Total Tests: ${this.testResults.length}`);
-        console.log(`Passed: ${passed}`);
-        console.log(`Failed: ${failed}`);
-        console.log(`Success Rate: ${((passed / this.testResults.length) * 100).toFixed(1)}%`);
+        logger.info(`Total Tests: ${this.testResults.length}`);
+        logger.info(`Passed: ${passed}`);
+        logger.info(`Failed: ${failed}`);
+        logger.info(`Success Rate: ${((passed / this.testResults.length) * 100).toFixed(1)}%`);
 
         if (failed > 0) {
-            console.log("\nFailed Tests:");
+            logger.info("\nFailed Tests:");
             this.testResults
                 .filter((r) => r.status === "FAILED")
-                .forEach((r) => console.log(`❌ ${r.test}: ${r.error}`));
+                .forEach((r) => logger.info(`❌ ${r.test}: ${r.error}`));
         }
 
-        console.log("\n✅ Error Handling Tests Complete!\n");
+        logger.info("\n✅ Error Handling Tests Complete!\n");
     }
 }
 

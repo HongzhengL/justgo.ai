@@ -1,4 +1,5 @@
 import { HttpError } from "wasp/server";
+import logger from "../utils/logger.js";
 
 // Get all itineraries for the logged-in user
 export const getItineraries = async (args, context) => {
@@ -17,10 +18,10 @@ export const getItineraries = async (args, context) => {
             orderBy: { createdAt: "desc" },
         });
 
-        console.log(`Found ${itineraries.length} itineraries for user ${context.user.id}`);
+        logger.info(`Found ${itineraries.length} itineraries for user ${context.user.id}`);
         return itineraries;
     } catch (error) {
-        console.error("Get itineraries error:", error);
+        logger.error("Get itineraries error:", error);
         throw new HttpError(500, "Failed to fetch itineraries");
     }
 };
@@ -50,7 +51,7 @@ export const getItinerary = async ({ id }, context) => {
 
         return itinerary;
     } catch (error) {
-        console.error("Get itinerary error:", error);
+        logger.error("Get itinerary error:", error);
         if (error instanceof HttpError) {
             throw error;
         }
@@ -84,10 +85,10 @@ export const createItinerary = async (args, context) => {
             },
         });
 
-        console.log(`Created itinerary ${itinerary.id} for user ${context.user.id}`);
+        logger.info(`Created itinerary ${itinerary.id} for user ${context.user.id}`);
         return itinerary;
     } catch (error) {
-        console.error("Create itinerary error:", error);
+        logger.error("Create itinerary error:", error);
         if (error instanceof HttpError) {
             throw error;
         }
@@ -139,10 +140,10 @@ export const addToItinerary = async (args, context) => {
             },
         });
 
-        console.log(`Added item ${itineraryItem.id} to itinerary ${itineraryId}`);
+        logger.info(`Added item ${itineraryItem.id} to itinerary ${itineraryId}`);
         return itineraryItem;
     } catch (error) {
-        console.error("Add to itinerary error:", error);
+        logger.error("Add to itinerary error:", error);
         if (error instanceof HttpError) {
             throw error;
         }
@@ -177,10 +178,10 @@ export const removeFromItinerary = async ({ itemId }, context) => {
             where: { id: itemId },
         });
 
-        console.log(`Removed item ${itemId} from itinerary ${item.itineraryId}`);
+        logger.info(`Removed item ${itemId} from itinerary ${item.itineraryId}`);
         return { success: true };
     } catch (error) {
-        console.error("Remove from itinerary error:", error);
+        logger.error("Remove from itinerary error:", error);
         if (error instanceof HttpError) {
             throw error;
         }
@@ -221,10 +222,10 @@ export const updateItinerary = async (args, context) => {
             },
         });
 
-        console.log(`Updated itinerary ${id} for user ${context.user.id}`);
+        logger.info(`Updated itinerary ${id} for user ${context.user.id}`);
         return updatedItinerary;
     } catch (error) {
-        console.error("Update itinerary error:", error);
+        logger.error("Update itinerary error:", error);
         if (error instanceof HttpError) {
             throw error;
         }

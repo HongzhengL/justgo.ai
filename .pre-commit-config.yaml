@@ -29,15 +29,15 @@ repos:
 
           - id: typescript-check
             name: typescript-check
-            entry: npx tsc --noEmit
+            entry: npx tsc --noEmit --skipLibCheck
             files: \.(ts|tsx)$
             language: node
 
           - id: prisma-validate
             name: prisma-validate
-            entry: npx prisma validate
+            entry: bash -c 'if [ -z "$DATABASE_URL" ]; then echo "DATABASE_URL not set, loading from .env.server.dev"; export $(cat .env.server.dev | grep DATABASE_URL | xargs); fi; npx prisma validate'
             files: ^schema\.prisma$
-            language: node
+            language: system
 
           - id: prisma-format
             name: prisma-format

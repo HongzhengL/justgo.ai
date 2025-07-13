@@ -13,7 +13,7 @@ export function LoginPage() {
 
                 <div className="auth-links">
                     <p>
-                        Don't have an account? <Link to="/signup">Sign up</Link>
+                        Don&apos;t have an account? <Link to="/signup">Sign up</Link>
                     </p>
                     <p>
                         <Link to="/password-reset">Forgot your password?</Link>

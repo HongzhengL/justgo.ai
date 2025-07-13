@@ -2,6 +2,7 @@ import { useAuth } from "wasp/client/auth";
 import { Link } from "wasp/client/router";
 import { useState, useEffect } from "react";
 import { useAction, useQuery } from "wasp/client/operations";
+import logger from "../utils/logger.js";
 import "./dashboard.css";
 import {
     processAIMessage,
@@ -71,7 +72,7 @@ export function DashboardPage() {
         try {
             return Intl.DateTimeFormat().resolvedOptions().timeZone;
         } catch (error) {
-            console.warn("Timezone detection failed:", error);
+            logger.warn("Timezone detection failed:", error);
             return null;
         }
     };
@@ -113,7 +114,7 @@ export function DashboardPage() {
 
             setMessages((prev) => [...prev, userMessage, aiMessage]);
         } catch (error) {
-            console.error("Error processing message:", error);
+            logger.error("Error processing message:", error);
 
             // Add user message and error response
             const userMessage = {
@@ -164,12 +165,12 @@ export function DashboardPage() {
                 cardData: cardData,
             });
 
-            console.log("Successfully added to itinerary:", cardData.title);
+            logger.info("Successfully added to itinerary:", cardData.title);
 
             // Show a success message (you could use a toast notification here)
             alert(`Added "${cardData.title}" to your itinerary!`);
         } catch (error) {
-            console.error("Error adding to itinerary:", error);
+            logger.error("Error adding to itinerary:", error);
             alert("Failed to add item to itinerary. Please try again.");
         }
     };

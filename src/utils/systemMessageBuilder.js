@@ -3,6 +3,8 @@
  * Handles dynamic content injection for AI agent system messages
  */
 
+import logger from "./logger.js";
+
 class SystemMessageBuilder {
     constructor(baseSystemMessage) {
         this.baseSystemMessage = baseSystemMessage || "";
@@ -23,7 +25,7 @@ class SystemMessageBuilder {
             // Append time context as a new paragraph
             return `${this.baseSystemMessage}\n\n${timeContext}`;
         } catch (error) {
-            console.warn("Error appending time context:", error);
+            logger.warn("Error appending time context:", error);
             return this.baseSystemMessage;
         }
     }
@@ -40,7 +42,7 @@ class SystemMessageBuilder {
 
             return this.appendTimeContext(this.timeContext);
         } catch (error) {
-            console.warn("Error building system message:", error);
+            logger.warn("Error building system message:", error);
             return this.baseSystemMessage;
         }
     }

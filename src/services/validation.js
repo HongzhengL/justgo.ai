@@ -1,4 +1,4 @@
-import { FlightSearchParams } from "../api/types.js";
+import logger from "../utils/logger.js";
 
 /**
  * @typedef {Object} ValidationResult
@@ -305,19 +305,19 @@ export default class ValidationService {
                 - Travel dates in YYYY-MM-DD format
                 - Number of passengers (adults and children separately)
                 - Travel class preferences (economy/business/first)
-                
+
                 Original message: "${originalMessage}"
-                
+
                 Be very specific about extracting location names and dates.
             `;
 
             // Use the AI agent's extraction method with enhanced prompt
             const retryParameters = await aiAgent.extractTravelParameters(retryPrompt);
 
-            console.log("Retry parameter extraction result:", retryParameters);
+            logger.info("Retry parameter extraction result:", retryParameters);
             return retryParameters;
         } catch (error) {
-            console.error("Retry parameter extraction failed:", error);
+            logger.error("Retry parameter extraction failed:", error);
             // Return basic structure with general_question intent as fallback
             return {
                 intent: "general_question",

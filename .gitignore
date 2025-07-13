@@ -53,3 +53,5 @@ migrations/
 CLAUDE.md
 
 tmp/
+
+nohup.out

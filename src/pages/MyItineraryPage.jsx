@@ -7,6 +7,7 @@ import { CardList } from "../components/CardList.jsx";
 import { InfoModal } from "../components/InfoModal.jsx";
 import AppLayout from "../components/layout/AppLayout.jsx";
 import useInfoModal from "../hooks/useInfoModal.js";
+import logger from "../utils/logger.js";
 
 export function MyItineraryPage() {
     const { data: user } = useAuth();
@@ -34,7 +35,7 @@ export function MyItineraryPage() {
                                 itineraryTitle: itinerary.title,
                             };
                         } catch (e) {
-                            console.error("Error parsing card data:", e);
+                            logger.error("Error parsing card data:", e);
                             return null;
                         }
                     })
@@ -63,7 +64,7 @@ export function MyItineraryPage() {
                 setShowRemoveConfirm(false);
                 setItemToRemove(null);
             } catch (error) {
-                console.error("Error removing item:", error);
+                logger.error("Error removing item:", error);
                 alert("Failed to remove item from itinerary");
             }
         }
@@ -273,8 +274,8 @@ export function MyItineraryPage() {
                                     color: "#495057",
                                 }}
                             >
-                                Are you sure you want to remove "{itemToRemove?.title}" from your
-                                itinerary?
+                                Are you sure you want to remove &quot;{itemToRemove?.title}&quot;
+                                from your itinerary?
                             </p>
                             <div
                                 style={{

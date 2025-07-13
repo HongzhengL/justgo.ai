@@ -33,16 +33,6 @@ const STANDARDIZED_CARD_SCHEMA = {
 /**
  * Location Schema (nested in StandardizedCard)
  */
-const LOCATION_SCHEMA = {
-    properties: {
-        from: "object", // { lat?, lng?, code?, address?, name? }
-        to: "object", // { lat?, lng?, code?, address?, name? }
-        lat: "number", // Direct location coordinates
-        lng: "number",
-        address: "string",
-        name: "string",
-    },
-};
 
 /**
  * ExternalLinks Schema

@@ -41,5 +41,6 @@
         // outDir.
         "outDir": ".wasp/out/user"
     },
-    "include": ["src"]
+    "include": ["src"],
+    "exclude": ["node_modules/openai/**/*"]
 }

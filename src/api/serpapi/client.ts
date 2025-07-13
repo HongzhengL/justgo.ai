@@ -1,6 +1,12 @@
 import axios from "axios";
-import { FlightSearchParams, SerpFlightResponse, StandardizedCard } from "../types.js";
+import {
+    FlightSearchParams,
+    SerpFlightResponse,
+    SerpFlightData,
+    SerpFlightSegment,
+} from "../types.js";
 import { handleAPIError, withRetry } from "../utils/errors.js";
+import logger from "../../utils/logger.js";
 
 export class SerpAPIClient {
     private readonly apiKey: string;
@@ -14,9 +20,9 @@ export class SerpAPIClient {
     async searchFlights(params: FlightSearchParams): Promise<SerpFlightResponse> {
         const serpParams = this.buildSerpParams(params);
 
-        console.log("SerpAPI Client - Input params:", JSON.stringify(params, null, 2));
-        console.log("SerpAPI Client - Built serp params:", JSON.stringify(serpParams, null, 2));
-        console.log(
+        logger.info("SerpAPI Client - Input params:", JSON.stringify(params, null, 2));
+        logger.info("SerpAPI Client - Built serp params:", JSON.stringify(serpParams, null, 2));
+        logger.info(
             "SerpAPI Client - Full URL would be:",
             `${this.baseURL}?${new URLSearchParams(serpParams).toString()}`,
         );
@@ -28,23 +34,34 @@ export class SerpAPIClient {
                     timeout: this.timeout,
                 });
 
-                console.log("SerpAPI Response status:", response.status);
-                console.log("SerpAPI Response data:", JSON.stringify(response.data, null, 2));
+                logger.info("SerpAPI Response status:", response.status);
+                logger.info("SerpAPI Response data:", JSON.stringify(response.data, null, 2));
 
                 if (response.data.error) {
-                    console.error("SerpAPI returned error:", response.data.error);
+                    logger.error("SerpAPI returned error:", response.data.error);
                     throw new Error(response.data.error);
                 }
 
                 return response.data as SerpFlightResponse;
             });
-        } catch (error: any) {
-            console.error("SerpAPI Client error details:", {
-                message: error.message,
-                status: error.response?.status,
-                statusText: error.response?.statusText,
-                data: error.response?.data,
-            });
+        } catch (error: unknown) {
+            const errorDetails = {
+                message: error instanceof Error ? error.message : String(error),
+                status: undefined as number | undefined,
+                statusText: undefined as string | undefined,
+                data: undefined as unknown,
+            };
+
+            if (error && typeof error === "object" && "response" in error) {
+                const axiosError = error as {
+                    response?: { status?: number; statusText?: string; data?: unknown };
+                };
+                errorDetails.status = axiosError.response?.status;
+                errorDetails.statusText = axiosError.response?.statusText;
+                errorDetails.data = axiosError.response?.data;
+            }
+
+            logger.error("SerpAPI Client error details:", errorDetails);
             throw handleAPIError(error, "SerpAPI");
         }
     }
@@ -111,7 +128,7 @@ export class SerpAPIClient {
 
 // Helper function to generate unique ID for flights
 let flightIdCounter = 0;
-export function generateFlightId(flight: any): string {
+export function generateFlightId(flight: SerpFlightData): string {
     const segments = flight.flights || [];
     const firstFlight = segments[0] || {};
     const lastFlight = segments[segments.length - 1] || {};
@@ -129,7 +146,7 @@ export function generateFlightId(flight: any): string {
 }
 
 // Helper function to extract airline names from flight segments
-export function extractAirlineNames(flights: any[]): string {
+export function extractAirlineNames(flights: SerpFlightSegment[]): string {
     const airlines = new Set<string>();
 
     flights.forEach((flight) => {
@@ -142,7 +159,7 @@ export function extractAirlineNames(flights: any[]): string {
 }
 
 // Helper function to calculate confidence score
-export function calculateFlightConfidence(flight: any): number {
+export function calculateFlightConfidence(flight: SerpFlightData): number {
     let confidence = 0.5; // Base confidence
 
     // Higher confidence for flights with more data

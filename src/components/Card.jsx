@@ -122,7 +122,9 @@ export function Card({
                                         }}
                                     >
                                         {layoverInfo && layoverInfo.length > 0
-                                            ? `${layoverInfo.length} stop${layoverInfo.length > 1 ? "s" : ""}`
+                                            ? `${layoverInfo.length} stop${
+                                                  layoverInfo.length > 1 ? "s" : ""
+                                              }`
                                             : "Direct"}
                                     </span>
                                     <div

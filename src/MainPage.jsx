@@ -36,7 +36,7 @@ export const MainPage = () => {
             >
                 <div>
                     <h2>Welcome back, {user.email}!</h2>
-                    <p>You're already logged in.</p>
+                    <p>You&apos;re already logged in.</p>
                     <Link
                         to="/dashboard"
                         style={{

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Card } from "./Card.jsx";
 import { InfoModal } from "./InfoModal.jsx";
+import logger from "../utils/logger.js";
 
 export function CardList({
     cards = [],
@@ -42,7 +43,7 @@ export function CardList({
         if (onAddToItinerary) {
             onAddToItinerary(cardData);
         } else {
-            console.log("Add to itinerary:", cardData);
+            logger.info("Add to itinerary:", cardData);
             // Future: Add to user's itinerary
         }
     };
@@ -75,7 +76,9 @@ export function CardList({
                         : "untitled";
                     const stableKey = card.id
                         ? `card-${card.id}-${index}`
-                        : `card-${index}-${cardFingerprint.replace(/[^a-zA-Z0-9]/g, "").substring(0, 20)}`;
+                        : `card-${index}-${cardFingerprint
+                              .replace(/[^a-zA-Z0-9]/g, "")
+                              .substring(0, 20)}`;
 
                     return (
                         <Card
