@@ -8,6 +8,7 @@ import {
     validateStandardizedCardArray,
     getValidationReport,
 } from "./cardValidator.js";
+import logger from "../../utils/logger.js";
 import mockData from "../testing/mockData.js";
 
 /**
@@ -93,7 +94,9 @@ function translateMockSerpAPIFlights(serpResponse) {
             const card = {
                 id: `flight-${Date.now()}-${index}`,
                 type: "flight",
-                title: `${flight.flights[0].departure_airport.id} → ${flight.flights[flight.flights.length - 1].arrival_airport.id}`,
+                title: `${flight.flights[0].departure_airport.id} → ${
+                    flight.flights[flight.flights.length - 1].arrival_airport.id
+                }`,
                 subtitle: flight.flights.map((f) => f.airline).join(", "),
                 price: {
                     amount: flight.price,
@@ -128,7 +131,9 @@ function translateMockSerpAPIFlights(serpResponse) {
                 externalLinks: {
                     booking: flight.departure_token
                         ? `https://www.google.com/flights/booking?token=${flight.departure_token}`
-                        : `https://www.google.com/flights#search;f=${flight.flights[0].departure_airport.id};t=${flight.flights[flight.flights.length - 1].arrival_airport.id}`,
+                        : `https://www.google.com/flights#search;f=${
+                              flight.flights[0].departure_airport.id
+                          };t=${flight.flights[flight.flights.length - 1].arrival_airport.id}`,
                 },
                 metadata: {
                     provider: "SerpAPI",
@@ -186,7 +191,9 @@ function translateMockGooglePlaces(placesResponse) {
                     categories: place.types?.slice(0, 3), // First 3 categories
                 },
                 externalLinks: {
-                    maps: `https://www.google.com/maps/place/${encodeURIComponent(place.name)}/@${place.geometry.location.lat},${place.geometry.location.lng}`,
+                    maps: `https://www.google.com/maps/place/${encodeURIComponent(place.name)}/@${
+                        place.geometry.location.lat
+                    },${place.geometry.location.lng}`,
                     website: place.website,
                 },
                 metadata: {
@@ -253,7 +260,9 @@ function translateMockGoogleDirections(directionsResponse) {
                     fare: route.fare?.text,
                 },
                 externalLinks: {
-                    directions: `https://www.google.com/maps/dir/${encodeURIComponent(leg.start_address)}/${encodeURIComponent(leg.end_address)}`,
+                    directions: `https://www.google.com/maps/dir/${encodeURIComponent(
+                        leg.start_address,
+                    )}/${encodeURIComponent(leg.end_address)}`,
                 },
                 metadata: {
                     provider: "Google Directions",
@@ -273,17 +282,17 @@ function translateMockGoogleDirections(directionsResponse) {
  * Test Flight Cards from SerpAPI Translation
  */
 export function testFlightCards() {
-    console.log("\n🛫 Testing Flight Cards from SerpAPI Translation");
+    logger.info("\n🛫 Testing Flight Cards from SerpAPI Translation");
 
     const mockResponse = mockData.mockSerpAPIFlightResponse;
     const flightCards = translateMockSerpAPIFlights(mockResponse);
 
-    console.log(`Generated ${flightCards.length} flight cards for validation`);
+    logger.info(`Generated ${flightCards.length} flight cards for validation`);
 
     const validationResults = flightCards.map((card, index) => {
         const validation = validateStandardizedCard(card, "flight");
 
-        console.log(`Flight Card ${index + 1}:`, {
+        logger.info(`Flight Card ${index + 1}:`, {
             id: card.id,
             title: card.title,
             isValid: validation.isValid,
@@ -292,7 +301,7 @@ export function testFlightCards() {
         });
 
         if (!validation.isValid) {
-            console.log(`  Validation Report:`, getValidationReport(validation));
+            logger.info(`  Validation Report:`, getValidationReport(validation));
         }
 
         return validation;
@@ -300,8 +309,8 @@ export function testFlightCards() {
 
     const testResult = new CardTypeTestResult("flight", "SerpAPI", flightCards, validationResults);
 
-    console.log("Flight Cards Test Summary:", testResult.summary);
-    console.log("Recommendations:", testResult.getRecommendations());
+    logger.info("Flight Cards Test Summary:", testResult.summary);
+    logger.info("Recommendations:", testResult.getRecommendations());
 
     return testResult;
 }
@@ -310,17 +319,17 @@ export function testFlightCards() {
  * Test Place Cards from Google Maps Translation
  */
 export function testPlaceCards() {
-    console.log("\n📍 Testing Place Cards from Google Maps Translation");
+    logger.info("\n📍 Testing Place Cards from Google Maps Translation");
 
     const mockResponse = mockData.mockGooglePlacesResponse;
     const placeCards = translateMockGooglePlaces(mockResponse);
 
-    console.log(`Generated ${placeCards.length} place cards for validation`);
+    logger.info(`Generated ${placeCards.length} place cards for validation`);
 
     const validationResults = placeCards.map((card, index) => {
         const validation = validateStandardizedCard(card, "place");
 
-        console.log(`Place Card ${index + 1}:`, {
+        logger.info(`Place Card ${index + 1}:`, {
             id: card.id,
             title: card.title,
             isValid: validation.isValid,
@@ -329,7 +338,7 @@ export function testPlaceCards() {
         });
 
         if (!validation.isValid) {
-            console.log(`  Validation Report:`, getValidationReport(validation));
+            logger.info(`  Validation Report:`, getValidationReport(validation));
         }
 
         return validation;
@@ -342,8 +351,8 @@ export function testPlaceCards() {
         validationResults,
     );
 
-    console.log("Place Cards Test Summary:", testResult.summary);
-    console.log("Recommendations:", testResult.getRecommendations());
+    logger.info("Place Cards Test Summary:", testResult.summary);
+    logger.info("Recommendations:", testResult.getRecommendations());
 
     return testResult;
 }
@@ -352,17 +361,17 @@ export function testPlaceCards() {
  * Test Transit Cards from Google Directions Translation
  */
 export function testTransitCards() {
-    console.log("\n🚌 Testing Transit Cards from Google Directions Translation");
+    logger.info("\n🚌 Testing Transit Cards from Google Directions Translation");
 
     const mockResponse = mockData.mockGoogleDirectionsResponse;
     const transitCards = translateMockGoogleDirections(mockResponse);
 
-    console.log(`Generated ${transitCards.length} transit cards for validation`);
+    logger.info(`Generated ${transitCards.length} transit cards for validation`);
 
     const validationResults = transitCards.map((card, index) => {
         const validation = validateStandardizedCard(card, "transit");
 
-        console.log(`Transit Card ${index + 1}:`, {
+        logger.info(`Transit Card ${index + 1}:`, {
             id: card.id,
             title: card.title,
             isValid: validation.isValid,
@@ -371,7 +380,7 @@ export function testTransitCards() {
         });
 
         if (!validation.isValid) {
-            console.log(`  Validation Report:`, getValidationReport(validation));
+            logger.info(`  Validation Report:`, getValidationReport(validation));
         }
 
         return validation;
@@ -384,8 +393,8 @@ export function testTransitCards() {
         validationResults,
     );
 
-    console.log("Transit Cards Test Summary:", testResult.summary);
-    console.log("Recommendations:", testResult.getRecommendations());
+    logger.info("Transit Cards Test Summary:", testResult.summary);
+    logger.info("Recommendations:", testResult.getRecommendations());
 
     return testResult;
 }
@@ -394,8 +403,8 @@ export function testTransitCards() {
  * Run All Card Type Tests
  */
 export function runAllCardTypeTests() {
-    console.log("\n🧪 RUNNING ALL CARD TYPE VALIDATION TESTS");
-    console.log("================================================");
+    logger.info("\n🧪 RUNNING ALL CARD TYPE VALIDATION TESTS");
+    logger.info("================================================");
 
     const results = {
         flight: testFlightCards(),
@@ -404,8 +413,8 @@ export function runAllCardTypeTests() {
     };
 
     // Overall Summary
-    console.log("\n📊 OVERALL CARD TYPE TEST RESULTS");
-    console.log("===================================");
+    logger.info("\n📊 OVERALL CARD TYPE TEST RESULTS");
+    logger.info("===================================");
 
     const overallSummary = {
         totalCardTypes: 3,
@@ -424,7 +433,7 @@ export function runAllCardTypeTests() {
         overallSummary.totalWarnings += result.summary.warnings;
     });
 
-    console.log("Overall Summary:", {
+    logger.info("Overall Summary:", {
         cardTypesPassed: `${overallSummary.passedCardTypes}/${overallSummary.totalCardTypes}`,
         overallComplianceRate:
             overallSummary.totalCards > 0
@@ -441,9 +450,9 @@ export function runAllCardTypeTests() {
         overallSummary.totalCriticalErrors === 0;
 
     if (allPassed) {
-        console.log("🎉 ALL CARD TYPES PASSED VALIDATION! Schema compliance verified.");
+        logger.info("🎉 ALL CARD TYPES PASSED VALIDATION! Schema compliance verified.");
     } else {
-        console.log("⚠️  Some card types failed validation. Review individual results above.");
+        logger.info("⚠️  Some card types failed validation. Review individual results above.");
     }
 
     return {
@@ -458,7 +467,7 @@ export function runAllCardTypeTests() {
  * Quick Card Type Compliance Check
  */
 export function quickCardTypeCheck() {
-    console.log("\n⚡ QUICK CARD TYPE COMPLIANCE CHECK");
+    logger.info("\n⚡ QUICK CARD TYPE COMPLIANCE CHECK");
 
     const flightCard = translateMockSerpAPIFlights(mockData.mockSerpAPIFlightResponse)[0];
     const placeCard = translateMockGooglePlaces(mockData.mockGooglePlacesResponse)[0];
@@ -477,7 +486,7 @@ export function quickCardTypeCheck() {
         allValid: Object.values(checks).every((check) => check.isValid),
     };
 
-    console.log("Quick Check Results:", summary);
+    logger.info("Quick Check Results:", summary);
 
     return {
         success: summary.allValid,

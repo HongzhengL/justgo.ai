@@ -20,7 +20,9 @@ export class RateLimitError extends TravelAPIError {
     constructor(provider: string, retryAfter?: number) {
         super(
             "RATE_LIMIT",
-            `Rate limit exceeded for ${provider}. ${retryAfter ? `Try again in ${retryAfter} seconds.` : "Please try again later."}`,
+            `Rate limit exceeded for ${provider}. ${
+                retryAfter ? `Try again in ${retryAfter} seconds.` : "Please try again later."
+            }`,
             provider,
             429,
         );
@@ -51,51 +53,87 @@ export class NetworkError extends TravelAPIError {
     constructor(provider: string, originalError?: Error) {
         super(
             "NETWORK_ERROR",
-            `Network error connecting to ${provider}: ${originalError?.message || "Unknown network error"}`,
+            `Network error connecting to ${provider}: ${
+                originalError?.message || "Unknown network error"
+            }`,
             provider,
         );
     }
 }
 
 // Error handler utility function
-export function handleAPIError(error: any, provider: string): TravelAPIError {
+export function handleAPIError(error: unknown, provider: string): TravelAPIError {
     if (error instanceof TravelAPIError) {
         return error;
     }
 
     // Handle common HTTP status codes
-    if (error.response?.status) {
-        const status = error.response.status;
-        switch (status) {
-            case 429:
-                return new RateLimitError(provider, error.response.headers?.["retry-after"]);
-            case 503:
-            case 502:
-            case 504:
-                return new APIDownError(provider);
-            case 400:
-            case 422:
-                return new InvalidParamsError(
-                    error.response.data?.message || "Invalid request parameters",
-                    provider,
-                );
-            default:
-                return new TravelAPIError(
-                    "UNKNOWN",
-                    `HTTP ${status}: ${error.response.data?.message || error.message}`,
-                    provider,
-                    status,
-                );
+    if (error && typeof error === "object" && "response" in error) {
+        const axiosError = error as {
+            response?: {
+                status?: number;
+                headers?: Record<string, string>;
+                data?: { message?: string };
+            };
+        };
+        if (axiosError.response?.status) {
+            const status = axiosError.response.status;
+            switch (status) {
+                case 429: {
+                    const retryAfterHeader = axiosError.response.headers?.["retry-after"];
+                    const retryAfter = retryAfterHeader
+                        ? parseInt(retryAfterHeader, 10)
+                        : undefined;
+                    return new RateLimitError(provider, retryAfter);
+                }
+                case 503:
+                case 502:
+                case 504:
+                    return new APIDownError(provider);
+                case 400:
+                case 422:
+                    return new InvalidParamsError(
+                        axiosError.response.data?.message || "Invalid request parameters",
+                        provider,
+                    );
+                default: {
+                    const errorMessage =
+                        axiosError.response.data?.message ||
+                        (error instanceof Error ? error.message : "Unknown error");
+                    return new TravelAPIError(
+                        "UNKNOWN",
+                        `HTTP ${status}: ${errorMessage}`,
+                        provider,
+                        status,
+                    );
+                }
+            }
         }
     }
 
     // Handle network errors
-    if (error.code === "ECONNREFUSED" || error.code === "ENOTFOUND" || error.code === "ETIMEDOUT") {
-        return new NetworkError(provider, error);
+    if (error && typeof error === "object" && "code" in error) {
+        const networkError = error as { code?: string };
+        if (
+            networkError.code === "ECONNREFUSED" ||
+            networkError.code === "ENOTFOUND" ||
+            networkError.code === "ETIMEDOUT"
+        ) {
+            return new NetworkError(
+                provider,
+                error instanceof Error ? error : new Error(String(error)),
+            );
+        }
     }
 
     // Default unknown error
-    return new TravelAPIError("UNKNOWN", error.message || "Unknown error occurred", provider);
+    const errorMessage =
+        error instanceof Error
+            ? error.message
+            : error && typeof error === "object" && "message" in error
+            ? String((error as { message: unknown }).message)
+            : "Unknown error occurred";
+    return new TravelAPIError("UNKNOWN", errorMessage, provider);
 }
 
 // User-friendly error messages for frontend
@@ -104,7 +142,9 @@ export function getUserFriendlyMessage(error: TravelAPIError): string {
         case "RATE_LIMIT":
             return "High demand detected. Please try again in a moment.";
         case "API_DOWN":
-            return `${error.provider || "Service"} is temporarily unavailable. Please try again later.`;
+            return `${
+                error.provider || "Service"
+            } is temporarily unavailable. Please try again later.`;
         case "INVALID_PARAMS":
             return "Please check your search parameters and try again.";
         case "NETWORK_ERROR":

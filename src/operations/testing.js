@@ -4,15 +4,15 @@
  * NOTE: These operations are only available in development environment
  */
 
+import logger from "../utils/logger.js";
+
 import { HttpError } from "wasp/server";
 import { shouldIncludeTestingOperations, getEnvironment } from "../config/environment.js";
-import { TravelAPIModule } from "../api/index.js";
 import { MockTravelAPIModule } from "../api/testing/apiTest.js";
 import { runAPITests, runQuickAPITest } from "../api/testing/apiTest.js";
 import { ErrorHandlingTester } from "../api/testing/errorHandling.js";
 import { PerformanceTester } from "../api/testing/performanceTests.js";
 import { TravelOperationTestSuite, runIntegrationTest } from "../api/testing/waspIntegration.js";
-import { getConfigurationHealth, validateEnvironment } from "../api/validation/envValidator.js";
 
 /**
  * Helper function to check if testing operations are allowed
@@ -37,15 +37,15 @@ export const testApiModule = async (args, context) => {
         throw new HttpError(401, "User must be logged in to run API tests");
     }
 
-    console.log(`[API-TEST-OPERATION] Test initiated by user: ${context.user.email}`);
-    console.log(`[API-TEST-OPERATION] Starting comprehensive API module test suite...`);
+    logger.info(`[API-TEST-OPERATION] Test initiated by user: ${context.user.email}`);
+    logger.info(`[API-TEST-OPERATION] Starting comprehensive API module test suite...`);
 
     try {
         // Run the comprehensive test suite
         const testResults = await runAPITests();
 
-        console.log(`[API-TEST-OPERATION] Test suite completed`);
-        console.log(`[API-TEST-OPERATION] Results summary:`, {
+        logger.info(`[API-TEST-OPERATION] Test suite completed`);
+        logger.info(`[API-TEST-OPERATION] Results summary:`, {
             totalTests: testResults.summary?.totalTests || 0,
             passedTests: testResults.summary?.passedTests || 0,
             failedTests: testResults.summary?.failedTests || 0,
@@ -92,7 +92,7 @@ export const testApiModule = async (args, context) => {
             },
         };
     } catch (error) {
-        console.error(`[API-TEST-OPERATION] Test suite failed:`, error);
+        logger.error(`[API-TEST-OPERATION] Test suite failed:`, error);
 
         throw new HttpError(500, `API testing failed: ${error.message}`);
     }
@@ -109,14 +109,14 @@ export const quickApiTest = async (args, context) => {
         throw new HttpError(401, "User must be logged in to run API tests");
     }
 
-    console.log(`[QUICK-API-TEST] Quick test initiated by user: ${context.user.email}`);
+    logger.info(`[QUICK-API-TEST] Quick test initiated by user: ${context.user.email}`);
 
     try {
         // Run the quick test
         const testResults = await runQuickAPITest();
 
-        console.log(`[QUICK-API-TEST] Quick test completed successfully`);
-        console.log(`[QUICK-API-TEST] Results:`, testResults.summary);
+        logger.info(`[QUICK-API-TEST] Quick test completed successfully`);
+        logger.info(`[QUICK-API-TEST] Results:`, testResults.summary);
 
         return {
             success: testResults.success,
@@ -132,7 +132,7 @@ export const quickApiTest = async (args, context) => {
             },
         };
     } catch (error) {
-        console.error(`[QUICK-API-TEST] Quick test failed:`, error);
+        logger.error(`[QUICK-API-TEST] Quick test failed:`, error);
 
         throw new HttpError(500, `Quick API test failed: ${error.message}`);
     }
@@ -158,7 +158,7 @@ export const testSpecificOperation = async ({ operation, params }, context) => {
         );
     }
 
-    console.log(`[SPECIFIC-API-TEST] Testing ${operation} operation with params:`, params);
+    logger.info(`[SPECIFIC-API-TEST] Testing ${operation} operation with params:`, params);
 
     try {
         // Use statically imported MockTravelAPIModule
@@ -182,7 +182,7 @@ export const testSpecificOperation = async ({ operation, params }, context) => {
         const endTime = Date.now();
         const duration = endTime - startTime;
 
-        console.log(
+        logger.info(
             `[SPECIFIC-API-TEST] ${operation} completed in ${duration}ms, returned ${results.length} cards`,
         );
 
@@ -205,7 +205,7 @@ export const testSpecificOperation = async ({ operation, params }, context) => {
             timestamp: new Date().toISOString(),
         };
     } catch (error) {
-        console.error(`[SPECIFIC-API-TEST] ${operation} test failed:`, error);
+        logger.error(`[SPECIFIC-API-TEST] ${operation} test failed:`, error);
 
         throw new HttpError(500, `${operation} test failed: ${error.message}`);
     }
@@ -219,8 +219,8 @@ export const testErrorHandling = async (args, context) => {
         throw new HttpError(401, "Must be logged in to run tests");
     }
 
-    console.log("\n🔥 Starting Error Handling Tests...");
-    console.log("User:", context.user.email);
+    logger.info("\n🔥 Starting Error Handling Tests...");
+    logger.info("User:", context.user.email);
 
     try {
         const tester = new ErrorHandlingTester();
@@ -240,8 +240,8 @@ export const testErrorHandling = async (args, context) => {
                     : 0,
         };
 
-        console.log("\n✅ Error Handling Tests Complete!");
-        console.log(
+        logger.info("\n✅ Error Handling Tests Complete!");
+        logger.info(
             `📊 Summary: ${summary.passed}/${summary.totalTests} passed (${summary.successRate}%)`,
         );
 
@@ -252,7 +252,7 @@ export const testErrorHandling = async (args, context) => {
             results: tester.testResults,
         };
     } catch (error) {
-        console.error("❌ Error handling tests failed:", error);
+        logger.error("❌ Error handling tests failed:", error);
         return {
             success: false,
             message: `Error handling tests failed: ${error.message}`,
@@ -269,16 +269,16 @@ export const testPerformance = async (args, context) => {
         throw new HttpError(401, "Must be logged in to run tests");
     }
 
-    console.log("\n🏃‍♂️ Starting Performance Tests...");
-    console.log("User:", context.user.email);
+    logger.info("\n🏃‍♂️ Starting Performance Tests...");
+    logger.info("User:", context.user.email);
 
     try {
         const tester = new PerformanceTester();
         const results = await tester.runAllPerformanceTests();
 
         if (results.success) {
-            console.log("\n✅ Performance Tests Complete!");
-            console.log(`📊 Summary: ${results.summary.message}`);
+            logger.info("\n✅ Performance Tests Complete!");
+            logger.info(`📊 Summary: ${results.summary.message}`);
 
             return {
                 success: true,
@@ -287,7 +287,7 @@ export const testPerformance = async (args, context) => {
                 results: results.results,
             };
         } else {
-            console.error("❌ Performance tests failed:", results.error);
+            logger.error("❌ Performance tests failed:", results.error);
             return {
                 success: false,
                 message: `Performance tests failed: ${results.error}`,
@@ -295,7 +295,7 @@ export const testPerformance = async (args, context) => {
             };
         }
     } catch (error) {
-        console.error("❌ Performance tests failed:", error);
+        logger.error("❌ Performance tests failed:", error);
         return {
             success: false,
             message: `Performance tests failed: ${error.message}`,
@@ -312,8 +312,8 @@ export const testWaspIntegration = async (args, context) => {
         throw new HttpError(401, "Must be logged in to run tests");
     }
 
-    console.log("\n🔗 Starting Wasp Integration Tests...");
-    console.log("User:", context.user.email);
+    logger.info("\n🔗 Starting Wasp Integration Tests...");
+    logger.info("User:", context.user.email);
 
     try {
         // Run the travel operations test suite
@@ -333,21 +333,25 @@ export const testWaspIntegration = async (args, context) => {
 
         const overallSuccess = summary.failed === 0 && summary.integrationPassed;
 
-        console.log("\n✅ Wasp Integration Tests Complete!");
-        console.log(`📊 Summary: ${summary.passed}/${summary.totalTests} unit tests passed`);
-        console.log(`🔗 Integration test: ${summary.integrationPassed ? "PASSED" : "FAILED"}`);
+        logger.info("\n✅ Wasp Integration Tests Complete!");
+        logger.info(`📊 Summary: ${summary.passed}/${summary.totalTests} unit tests passed`);
+        logger.info(`🔗 Integration test: ${summary.integrationPassed ? "PASSED" : "FAILED"}`);
 
         return {
             success: overallSuccess,
             message: overallSuccess
                 ? `Wasp integration tests completed successfully: ${summary.passed}/${summary.totalTests} passed, integration test passed`
-                : `Wasp integration tests had failures: ${summary.failed} unit test failures, integration ${summary.integrationPassed ? "passed" : "failed"}`,
+                : `Wasp integration tests had failures: ${
+                      summary.failed
+                  } unit test failures, integration ${
+                      summary.integrationPassed ? "passed" : "failed"
+                  }`,
             summary: summary,
             testResults: testResults,
             integrationResult: integrationResult,
         };
     } catch (error) {
-        console.error("❌ Wasp integration tests failed:", error);
+        logger.error("❌ Wasp integration tests failed:", error);
         return {
             success: false,
             message: `Wasp integration tests failed: ${error.message}`,

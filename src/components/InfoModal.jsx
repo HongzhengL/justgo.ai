@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import logger from "../utils/logger.js";
 
 export function InfoModal({
     isOpen,
@@ -485,7 +486,7 @@ export function InfoModal({
                             if (onAddToItinerary) {
                                 onAddToItinerary(cardData);
                             } else {
-                                console.log("Add to itinerary:", cardData);
+                                logger.info("Add to itinerary:", cardData);
                             }
                         }}
                         style={{

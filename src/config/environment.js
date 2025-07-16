@@ -11,7 +11,7 @@ export function getEnvironment() {
     try {
         return process.env.NODE_ENV || "production";
     } catch (error) {
-        console.warn("Environment detection failed, defaulting to production");
+        // Fallback without logging to avoid circular dependency
         return "production";
     }
 }

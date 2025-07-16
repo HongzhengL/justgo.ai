@@ -4,6 +4,7 @@ import ValidationService from "./validation.js";
 import { travelAPI } from "../api/index.js";
 import { TimeContextManager } from "./timeContextManager.js";
 import { SystemMessageBuilder } from "../utils/systemMessageBuilder.js";
+import logger from "../utils/logger.js";
 
 export class AIAgent {
     constructor() {
@@ -72,7 +73,7 @@ export class AIAgent {
 
             INTENT (choose one):
             ${intentDescriptions}
-            
+
             PARAMETERS:
             - intent: one of the supported intents above
             - departure: departure city/airport IATA code (if mentioned) - REQUIRED for flights
@@ -92,7 +93,7 @@ export class AIAgent {
 
             Only include fields that are clearly mentioned or can be reasonably inferred.
             If the intent is unclear, default to "general_question".
-            
+
             IMPORTANT: Return only valid JSON without any markdown code block formatting or explanatory text.
         `;
     }
@@ -105,7 +106,7 @@ export class AIAgent {
         frontendTimezone = null,
     ) {
         try {
-            console.log(`Processing message for user ${userId}:`, message);
+            logger.info(`Processing message for user ${userId}:`, message);
 
             // Initialize time context manager for this conversation
             const timeContextManager = new TimeContextManager(conversationContext.conversationId);
@@ -114,12 +115,12 @@ export class AIAgent {
             const detectedTimezone = await timeContextManager.detectTimezoneFromMessage(message);
             if (detectedTimezone) {
                 timeContextManager.setTimezoneOverride(detectedTimezone);
-                console.log(`Detected timezone override: ${detectedTimezone}`);
+                logger.info(`Detected timezone override: ${detectedTimezone}`);
             }
 
             // Generate current time context for AI
             const timeContext = timeContextManager.getTimeContextForAI(frontendTimezone);
-            console.log(`Time context for AI: ${timeContext}`);
+            logger.info(`Time context for AI: ${timeContext}`);
 
             // Retrieve conversation history for context
             const conversationHistory = await this.retrieveConversationContext(
@@ -134,11 +135,11 @@ export class AIAgent {
                 conversationHistory,
                 timeContext,
             );
-            console.log("Extracted parameters:", parameters);
+            logger.info("Extracted parameters:", parameters);
 
             // Validate the extracted intent
             if (!this.isValidIntent(parameters.intent)) {
-                console.warn(
+                logger.warn(
                     `Invalid intent detected: ${parameters.intent}, defaulting to general_question`,
                 );
                 parameters.intent = "general_question";
@@ -157,7 +158,7 @@ export class AIAgent {
                 timeContext,
             );
         } catch (error) {
-            console.error("AI Agent error:", error);
+            logger.error("AI Agent error:", error);
             return {
                 type: "error",
                 message:
@@ -211,7 +212,7 @@ export class AIAgent {
 
             return parameters;
         } catch (error) {
-            console.error("Parameter extraction error:", error);
+            logger.error("Parameter extraction error:", error);
             // Simple fallback that still uses AI for intent recognition
             return await this.fallbackParameterExtraction(message);
         }
@@ -229,7 +230,7 @@ export class AIAgent {
                             - flight_search: looking for flights
                             - place_search: looking for hotels, restaurants, activities, or places
                             - general_question: general travel questions
-                            
+
                             Respond with only the intent name.`,
                     },
                     {
@@ -246,24 +247,24 @@ export class AIAgent {
                 intent: this.isValidIntent(intent) ? intent : "general_question",
             };
         } catch (error) {
-            console.error("Fallback parameter extraction error:", error);
+            logger.error("Fallback parameter extraction error:", error);
             // Ultimate fallback
             return { intent: "general_question" };
         }
     }
 
     isValidIntent(intent) {
-        return intent && this.supportedIntents.hasOwnProperty(intent);
+        return intent && Object.prototype.hasOwnProperty.call(this.supportedIntents, intent);
     }
 
     async handleFlightSearch(parameters, conversationContext, conversationHistory, timeContext) {
         try {
-            console.log("HandleFlightSearch called with parameters:", parameters);
+            logger.info("HandleFlightSearch called with parameters:", parameters);
 
             // Validate parameters first
             const validation = this.validationService.validateByIntent("flight_search", parameters);
             if (!validation.isValid) {
-                console.warn("Flight parameter validation failed:", validation.errors);
+                logger.warn("Flight parameter validation failed:", validation.errors);
                 // Return clarification request instead of throwing error
                 const clarificationResponse = await this.generateClarificationResponse(
                     conversationContext.originalMessage || "Flight search request",
@@ -282,17 +283,17 @@ export class AIAgent {
 
             // Log warnings if present
             if (validation.warnings.length > 0) {
-                console.warn("Flight parameter warnings:", validation.warnings);
+                logger.warn("Flight parameter warnings:", validation.warnings);
             }
 
             // Map AI parameters to SerpAPI format
             const mappedParams = this.mappingService.mapToSerpAPI(parameters);
-            console.log("Original AI parameters:", JSON.stringify(parameters, null, 2));
-            console.log("Mapped parameters for SerpAPI:", JSON.stringify(mappedParams, null, 2));
+            logger.debug("Original AI parameters:", JSON.stringify(parameters, null, 2));
+            logger.debug("Mapped parameters for SerpAPI:", JSON.stringify(mappedParams, null, 2));
 
             // Call TravelAPIModule for flight search
             const results = await travelAPI.searchFlights(mappedParams);
-            console.log(`Flight search completed: ${results.length} results found`);
+            logger.info(`Flight search completed: ${results.length} results found`);
 
             // Generate response with search results
             const response = await this.generateResponseWithResults(
@@ -311,7 +312,7 @@ export class AIAgent {
                 parameters: parameters,
             };
         } catch (error) {
-            console.error("HandleFlightSearch error:", error);
+            logger.error("HandleFlightSearch error:", error);
 
             // Surface API errors directly to users as requested
             if (error.message && error.message.includes("SerpAPI")) {
@@ -325,12 +326,12 @@ export class AIAgent {
 
     async handlePlaceSearch(parameters, conversationContext, conversationHistory, timeContext) {
         try {
-            console.log("HandlePlaceSearch called with parameters:", parameters);
+            logger.info("HandlePlaceSearch called with parameters:", parameters);
 
             // Validate parameters first
             const validation = this.validationService.validateByIntent("place_search", parameters);
             if (!validation.isValid) {
-                console.warn("Place parameter validation failed:", validation.errors);
+                logger.warn("Place parameter validation failed:", validation.errors);
                 // Return clarification request instead of throwing error
                 const clarificationResponse = await this.generateClarificationResponse(
                     conversationContext.originalMessage || "Place search request",
@@ -349,11 +350,11 @@ export class AIAgent {
 
             // Log warnings if present
             if (validation.warnings.length > 0) {
-                console.warn("Place parameter warnings:", validation.warnings);
+                logger.warn("Place parameter warnings:", validation.warnings);
             }
 
             // Future implementation for place search API calls
-            console.log(
+            logger.info(
                 "Place search API integration not implemented yet - returning empty results",
             );
             const results = [];
@@ -375,7 +376,7 @@ export class AIAgent {
                 parameters: parameters,
             };
         } catch (error) {
-            console.error("HandlePlaceSearch error:", error);
+            logger.error("HandlePlaceSearch error:", error);
             throw new Error(`I encountered an issue searching for places: ${error.message}`);
         }
     }
@@ -388,7 +389,7 @@ export class AIAgent {
         timeContext,
     ) {
         try {
-            console.log("HandleGeneralQuestion called with message:", message);
+            logger.info("HandleGeneralQuestion called with message:", message);
 
             // Validate parameters first
             const validation = this.validationService.validateByIntent(
@@ -396,17 +397,17 @@ export class AIAgent {
                 parameters,
             );
             if (!validation.isValid) {
-                console.warn("General question parameter validation failed:", validation.errors);
+                logger.warn("General question parameter validation failed:", validation.errors);
                 // For general questions, we can proceed even with validation issues
             }
 
             // Log warnings if present
             if (validation.warnings.length > 0) {
-                console.warn("General question parameter warnings:", validation.warnings);
+                logger.warn("General question parameter warnings:", validation.warnings);
             }
 
             // Build system message with time context
-            const baseSystemMessage = `You are a helpful travel assistant. Answer the user's general travel question with accurate, helpful information. 
+            const baseSystemMessage = `You are a helpful travel assistant. Answer the user's general travel question with accurate, helpful information.
                 Use web search if needed to provide current information. Be conversational and friendly.
                 Focus on providing practical travel advice and information.
             `;
@@ -434,7 +435,7 @@ export class AIAgent {
             });
 
             const aiResponse = completion.choices[0].message.content;
-            console.log("General question response generated");
+            logger.info("General question response generated");
 
             return {
                 type: "response",
@@ -442,7 +443,7 @@ export class AIAgent {
                 parameters: parameters,
             };
         } catch (error) {
-            console.error("HandleGeneralQuestion error:", error);
+            logger.error("HandleGeneralQuestion error:", error);
             return {
                 type: "response",
                 message:
@@ -461,7 +462,7 @@ export class AIAgent {
         timeContext,
     ) {
         try {
-            console.log(`Routing to handler for intent: ${intent}`);
+            logger.info(`Routing to handler for intent: ${intent}`);
 
             switch (intent) {
                 case "flight_search":
@@ -487,7 +488,7 @@ export class AIAgent {
                         timeContext,
                     );
                 default:
-                    console.warn(`Unknown intent: ${intent}, defaulting to general question`);
+                    logger.warn(`Unknown intent: ${intent}, defaulting to general question`);
                     return await this.handleGeneralQuestion(
                         message,
                         parameters,
@@ -497,7 +498,7 @@ export class AIAgent {
                     );
             }
         } catch (error) {
-            console.error(`Intent handler error for ${intent}:`, error);
+            logger.error(`Intent handler error for ${intent}:`, error);
             throw error; // Re-throw to be handled by processUserMessage
         }
     }
@@ -512,7 +513,7 @@ export class AIAgent {
     ) {
         try {
             // Build system message with time context
-            const baseSystemMessage = `You are a helpful travel assistant. The user made a request and you found search results. 
+            const baseSystemMessage = `You are a helpful travel assistant. The user made a request and you found search results.
                 Generate a conversational response that:
                 1. Acknowledges their request
                 2. Briefly describes what you found
@@ -552,7 +553,7 @@ export class AIAgent {
                 text: completion.choices[0].message.content,
             };
         } catch (error) {
-            console.error("Response generation error:", error);
+            logger.error("Response generation error:", error);
             return {
                 text: `I found ${searchResults.length} results for your request! Take a look at the options below and let me know if you'd like me to search for something else or help you add any of these to your itinerary.`,
             };
@@ -576,7 +577,7 @@ export class AIAgent {
             });
 
             // Build system message with time context
-            const baseSystemMessage = `You are a helpful travel assistant. The user made a request but you need more information to help them effectively. 
+            const baseSystemMessage = `You are a helpful travel assistant. The user made a request but you need more information to help them effectively.
                 Generate a conversational response that:
                 1. Acknowledges what you understood from their request
                 2. Asks for the specific missing information needed
@@ -615,7 +616,7 @@ export class AIAgent {
 
             return completion.choices[0].message.content;
         } catch (error) {
-            console.error("Clarification generation error:", error);
+            logger.error("Clarification generation error:", error);
             return this.getFallbackClarificationMessage(parameters.intent);
         }
     }
@@ -627,7 +628,10 @@ export class AIAgent {
         }
 
         const examples = intentConfig.examples.join("' or '");
-        return `I'd be happy to help with ${intent.replace("_", " ")}! Could you provide more details? For example: '${examples}'`;
+        return `I'd be happy to help with ${intent.replace(
+            "_",
+            " ",
+        )}! Could you provide more details? For example: '${examples}'`;
     }
 
     // Utility method to add new intents easily
@@ -669,7 +673,7 @@ export class AIAgent {
     }
 
     logContextPerformance(conversationId, retrievalTime, messageCount, tokenCount) {
-        console.log(
+        logger.info(
             `Context Performance - Conversation ${conversationId}: ${retrievalTime}ms retrieval, ${messageCount} messages, ${tokenCount} tokens`,
         );
     }
@@ -678,7 +682,7 @@ export class AIAgent {
         const startTime = Date.now();
 
         if (!dbContext || !dbContext.entities || !dbContext.entities.Message) {
-            console.error("Invalid dbContext provided to retrieveConversationContext.");
+            logger.error("Invalid dbContext provided to retrieveConversationContext.");
             return [];
         }
 
@@ -731,7 +735,7 @@ export class AIAgent {
 
             return truncatedMessages;
         } catch (error) {
-            console.error("Context retrieval error:", error);
+            logger.error("Context retrieval error:", error);
             return [];
         }
     }

@@ -3,15 +3,16 @@
  * Generates detailed validation reports comparing actual vs expected StandardizedCard structure
  */
 
-import { validateStandardizedCard, STANDARDIZED_CARD_SCHEMA } from "./cardValidator.js";
+import { STANDARDIZED_CARD_SCHEMA } from "./cardValidator.js";
 import { runAllCardTypeTests } from "./cardTypeTests.js";
+import logger from "../../utils/logger.js";
 
 /**
  * Generate Comprehensive Compliance Report
  */
 export function generateComplianceReport() {
-    console.log("\n📋 GENERATING STANDARDIZED CARD COMPLIANCE REPORT");
-    console.log("==================================================");
+    logger.info("\n📋 GENERATING STANDARDIZED CARD COMPLIANCE REPORT");
+    logger.info("==================================================");
 
     const report = {
         timestamp: new Date().toISOString(),
@@ -40,24 +41,24 @@ export function generateComplianceReport() {
         report.summary = summary;
 
         // Log results
-        console.log("\n📊 COMPLIANCE REPORT SUMMARY");
-        console.log("==============================");
-        console.log("Overall Compliance Rate:", `${compliance.overallRate}%`);
-        console.log("Card Types Passed:", `${compliance.passedTypes}/${compliance.totalTypes}`);
-        console.log("Total Cards Tested:", compliance.totalCards);
-        console.log("Valid Cards:", compliance.validCards);
-        console.log("Critical Errors:", compliance.criticalErrors);
-        console.log("Status:", compliance.status);
+        logger.info("\n📊 COMPLIANCE REPORT SUMMARY");
+        logger.info("==============================");
+        logger.info("Overall Compliance Rate:", `${compliance.overallRate}%`);
+        logger.info("Card Types Passed:", `${compliance.passedTypes}/${compliance.totalTypes}`);
+        logger.info("Total Cards Tested:", compliance.totalCards);
+        logger.info("Valid Cards:", compliance.validCards);
+        logger.info("Critical Errors:", compliance.criticalErrors);
+        logger.info("Status:", compliance.status);
 
-        console.log("\n🎯 RECOMMENDATIONS");
-        console.log("====================");
+        logger.info("\n🎯 RECOMMENDATIONS");
+        logger.info("====================");
         recommendations.forEach((rec, index) => {
-            console.log(`${index + 1}. ${rec}`);
+            logger.info(`${index + 1}. ${rec}`);
         });
 
         return report;
     } catch (error) {
-        console.error("❌ Compliance report generation failed:", error);
+        logger.error("❌ Compliance report generation failed:", error);
         report.error = error.message;
         return report;
     }
@@ -228,10 +229,10 @@ export function exportComplianceReport(report, filename = null) {
 
     try {
         const reportJSON = JSON.stringify(report, null, 2);
-        console.log(`\n📄 COMPLIANCE REPORT EXPORT`);
-        console.log(`Filename: ${finalFilename}`);
-        console.log(`Size: ${(reportJSON.length / 1024).toFixed(2)} KB`);
-        console.log("Report ready for export");
+        logger.info(`\n📄 COMPLIANCE REPORT EXPORT`);
+        logger.info(`Filename: ${finalFilename}`);
+        logger.info(`Size: ${(reportJSON.length / 1024).toFixed(2)} KB`);
+        logger.info("Report ready for export");
 
         return {
             success: true,
@@ -240,7 +241,7 @@ export function exportComplianceReport(report, filename = null) {
             size: reportJSON.length,
         };
     } catch (error) {
-        console.error("❌ Failed to export compliance report:", error);
+        logger.error("❌ Failed to export compliance report:", error);
         return {
             success: false,
             error: error.message,
@@ -252,8 +253,8 @@ export function exportComplianceReport(report, filename = null) {
  * Quick Compliance Check
  */
 export function quickComplianceCheck() {
-    console.log("\n⚡ QUICK COMPLIANCE CHECK");
-    console.log("=========================");
+    logger.info("\n⚡ QUICK COMPLIANCE CHECK");
+    logger.info("=========================");
 
     try {
         const cardTypeResults = runAllCardTypeTests();
@@ -270,7 +271,7 @@ export function quickComplianceCheck() {
             timestamp: new Date().toISOString(),
         };
 
-        console.log("Quick Summary:", quickSummary);
+        logger.info("Quick Summary:", quickSummary);
 
         return {
             success: quickSummary.readyForProduction,
@@ -278,7 +279,7 @@ export function quickComplianceCheck() {
             fullReport: null, // Not generated for quick check
         };
     } catch (error) {
-        console.error("❌ Quick compliance check failed:", error);
+        logger.error("❌ Quick compliance check failed:", error);
         return {
             success: false,
             error: error.message,

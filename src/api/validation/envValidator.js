@@ -1,6 +1,8 @@
 // Environment Variable Validation for AI Travel Planner
 // Validates all required environment variables for the travel API module
 
+import logger from "../../utils/logger.js";
+
 // Required environment variables for different components
 export const requiredEnvVars = {
     // Core API keys
@@ -92,7 +94,7 @@ export class EnvValidationResult {
         }
     }
 
-    addValid(varName) {
+    addValid() {
         this.summary.valid++;
     }
 
@@ -108,7 +110,7 @@ export class EnvironmentValidator {
     }
 
     validateAll() {
-        console.log("🔍 Validating Environment Configuration...\n");
+        logger.info("🔍 Validating Environment Configuration...\n");
 
         // Validate each category
         this.validateCategory("APIs", requiredEnvVars.apis);
@@ -125,7 +127,7 @@ export class EnvironmentValidator {
     }
 
     validateCategory(categoryName, variables) {
-        console.log(`📋 ${categoryName} Configuration:`);
+        logger.info(`📋 ${categoryName} Configuration:`);
 
         for (const [varName, config] of Object.entries(variables)) {
             this.result.incrementTotal();
@@ -139,20 +141,20 @@ export class EnvironmentValidator {
             }
         }
 
-        console.log(""); // Empty line between categories
+        logger.info(""); // Empty line between categories
     }
 
     handleMissingVariable(varName, config) {
         if (config.required) {
             this.result.addError(varName, `Required environment variable is missing`);
-            console.log(`❌ ${varName}: MISSING (Required)`);
-            console.log(`   Description: ${config.description}`);
-            console.log(`   Example: ${config.example}`);
+            logger.info(`❌ ${varName}: MISSING (Required)`);
+            logger.info(`   Description: ${config.description}`);
+            logger.info(`   Example: ${config.example}`);
         } else {
             this.result.addMissing(varName, false);
-            console.log(`⚠️  ${varName}: Not set (Optional)`);
-            console.log(`   Service: ${config.service} will be unavailable`);
-            console.log(`   Features disabled: ${config.features.join(", ")}`);
+            logger.info(`⚠️  ${varName}: Not set (Optional)`);
+            logger.info(`   Service: ${config.service} will be unavailable`);
+            logger.info(`   Features disabled: ${config.features.join(", ")}`);
         }
 
         this.result.services[config.service] = {
@@ -166,9 +168,9 @@ export class EnvironmentValidator {
         // Check format validation
         if (config.validation && !config.validation.test(value)) {
             this.result.addError(varName, `Invalid format for ${config.service}`);
-            console.log(`❌ ${varName}: INVALID FORMAT`);
-            console.log(`   Expected pattern: ${config.validation.toString()}`);
-            console.log(`   Example: ${config.example}`);
+            logger.info(`❌ ${varName}: INVALID FORMAT`);
+            logger.info(`   Expected pattern: ${config.validation.toString()}`);
+            logger.info(`   Example: ${config.example}`);
 
             this.result.services[config.service] = {
                 available: false,
@@ -180,8 +182,8 @@ export class EnvironmentValidator {
 
         // Variable is valid
         this.result.addValid(varName);
-        console.log(`✅ ${varName}: Valid`);
-        console.log(`   Service: ${config.service} available`);
+        logger.info(`✅ ${varName}: Valid`);
+        logger.info(`   Service: ${config.service} available`);
 
         this.result.services[config.service] = {
             available: true,
@@ -193,50 +195,50 @@ export class EnvironmentValidator {
     }
 
     generateServiceSummary() {
-        console.log("📊 Service Availability Summary:");
-        console.log("================================");
+        logger.info("📊 Service Availability Summary:");
+        logger.info("================================");
 
         for (const [serviceName, serviceInfo] of Object.entries(this.result.services)) {
             const status = serviceInfo.available ? "✅ Available" : "❌ Unavailable";
             const reason = serviceInfo.reason ? ` (${serviceInfo.reason})` : "";
 
-            console.log(`${serviceName}: ${status}${reason}`);
+            logger.info(`${serviceName}: ${status}${reason}`);
 
             if (serviceInfo.available) {
-                console.log(`   Features: ${serviceInfo.features.join(", ")}`);
+                logger.info(`   Features: ${serviceInfo.features.join(", ")}`);
             }
         }
 
-        console.log("");
+        logger.info("");
     }
 
     logResults() {
-        console.log("🎯 Validation Summary:");
-        console.log("======================");
-        console.log(`Total Variables: ${this.result.summary.total}`);
-        console.log(`Valid: ${this.result.summary.valid}`);
-        console.log(`Missing Required: ${this.result.summary.missing}`);
-        console.log(`Invalid Format: ${this.result.summary.invalid}`);
-        console.log(`Optional Not Set: ${this.result.summary.optional}`);
+        logger.info("🎯 Validation Summary:");
+        logger.info("======================");
+        logger.info(`Total Variables: ${this.result.summary.total}`);
+        logger.info(`Valid: ${this.result.summary.valid}`);
+        logger.info(`Missing Required: ${this.result.summary.missing}`);
+        logger.info(`Invalid Format: ${this.result.summary.invalid}`);
+        logger.info(`Optional Not Set: ${this.result.summary.optional}`);
 
         const configurationHealth = this.result.isValid ? "HEALTHY" : "NEEDS ATTENTION";
-        console.log(`Configuration Health: ${configurationHealth}`);
+        logger.info(`Configuration Health: ${configurationHealth}`);
 
         if (this.result.errors.length > 0) {
-            console.log("\n❌ Configuration Errors:");
+            logger.info("\n❌ Configuration Errors:");
             this.result.errors.forEach((error) => {
-                console.log(`   ${error.variable}: ${error.message}`);
+                logger.info(`   ${error.variable}: ${error.message}`);
             });
         }
 
         if (this.result.warnings.length > 0) {
-            console.log("\n⚠️  Configuration Warnings:");
+            logger.info("\n⚠️  Configuration Warnings:");
             this.result.warnings.forEach((warning) => {
-                console.log(`   ${warning.variable}: ${warning.message}`);
+                logger.info(`   ${warning.variable}: ${warning.message}`);
             });
         }
 
-        console.log("\n✅ Environment Validation Complete!\n");
+        logger.info("\n✅ Environment Validation Complete!\n");
     }
 }
 
@@ -298,13 +300,13 @@ REACT_APP_GOOGLE_MAPS_API_KEY="AIzaSyYourClientSideGoogleMapsKey"
 
 // Health check for startup validation
 export function performStartupValidation() {
-    console.log("🚀 Performing Startup Environment Validation...\n");
+    logger.info("🚀 Performing Startup Environment Validation...\n");
 
     const result = validateEnvironment();
 
     if (!result.isValid) {
-        console.error("💥 STARTUP FAILED: Environment configuration errors detected!");
-        console.error(
+        logger.error("💥 STARTUP FAILED: Environment configuration errors detected!");
+        logger.error(
             "Please fix the configuration errors above before starting the application.\n",
         );
 
@@ -314,7 +316,7 @@ export function performStartupValidation() {
         return false;
     }
 
-    console.log("🎉 Startup validation passed! Application ready to start.\n");
+    logger.info("🎉 Startup validation passed! Application ready to start.\n");
     return true;
 }
 

@@ -2,6 +2,7 @@
 // Validates 3-second response time requirement from TODO.md
 
 import { MockTravelAPIModule } from "./apiTest.js";
+import logger from "../../utils/logger.js";
 
 // Performance benchmarks from TODO.md
 export const performanceBenchmarks = {
@@ -173,15 +174,15 @@ export class LoadTester {
     }
 
     async runLoadTest(testConfig) {
-        console.log(`🚀 Starting Load Test: ${testConfig.name}`);
-        console.log(`   Operations: ${testConfig.operations.length}`);
-        console.log(`   Concurrent Users: ${testConfig.concurrentUsers || 1}`);
-        console.log(`   Iterations: ${testConfig.iterations || 1}\n`);
+        logger.info(`🚀 Starting Load Test: ${testConfig.name}`);
+        logger.info(`   Operations: ${testConfig.operations.length}`);
+        logger.info(`   Concurrent Users: ${testConfig.concurrentUsers || 1}`);
+        logger.info(`   Iterations: ${testConfig.iterations || 1}\n`);
 
         const results = [];
 
         for (let iteration = 0; iteration < (testConfig.iterations || 1); iteration++) {
-            console.log(`📊 Iteration ${iteration + 1}/${testConfig.iterations || 1}`);
+            logger.info(`📊 Iteration ${iteration + 1}/${testConfig.iterations || 1}`);
 
             // Run operations concurrently
             const promises = [];
@@ -220,8 +221,10 @@ export class LoadTester {
 
                         // Log if operation is slow
                         if (metric.duration > performanceBenchmarks.targets.acceptable) {
-                            console.log(
-                                `⚠️  Slow operation: ${operation.type} took ${Math.round(metric.duration)}ms`,
+                            logger.info(
+                                `⚠️  Slow operation: ${operation.type} took ${Math.round(
+                                    metric.duration,
+                                )}ms`,
                             );
                         }
 
@@ -240,7 +243,7 @@ export class LoadTester {
                         });
 
                         results.push(metric);
-                        console.log(`❌ Operation failed: ${operation.type} - ${error.message}`);
+                        logger.info(`❌ Operation failed: ${operation.type} - ${error.message}`);
 
                         return { success: false, error: error.message };
                     }
@@ -259,7 +262,7 @@ export class LoadTester {
         }
 
         const report = this.monitor.generateReport();
-        console.log(`\n✅ Load Test Complete: ${testConfig.name}\n`);
+        logger.info(`\n✅ Load Test Complete: ${testConfig.name}\n`);
 
         return {
             testConfig,
@@ -349,8 +352,8 @@ export class PerformanceTester {
     }
 
     async runAllPerformanceTests() {
-        console.log("🏃‍♂️ Starting Performance Tests...\n");
-        console.log(
+        logger.info("🏃‍♂️ Starting Performance Tests...\n");
+        logger.info(
             `⏱️  Target: Average response time < ${performanceBenchmarks.maxResponseTime}ms (TODO.md requirement)\n`,
         );
 
@@ -368,7 +371,7 @@ export class PerformanceTester {
                 summary: this.generateSummary(),
             };
         } catch (error) {
-            console.error("Performance tests failed:", error);
+            logger.error("Performance tests failed:", error);
             return {
                 success: false,
                 error: error.message,
@@ -377,33 +380,35 @@ export class PerformanceTester {
     }
 
     generateComprehensiveReport() {
-        console.log("\n📈 Performance Test Results");
-        console.log("============================\n");
+        logger.info("\n📈 Performance Test Results");
+        logger.info("============================\n");
 
         let totalOperations = 0;
         let totalTime = 0;
-        let allDurations = [];
+        const allDurations = [];
         let failedOperations = 0;
 
         this.results.forEach((testResult, index) => {
             const { testConfig, performanceReport } = testResult;
 
-            console.log(`📊 Test ${index + 1}: ${testConfig.name}`);
-            console.log(`   Operations: ${performanceReport.totalOperations}`);
-            console.log(`   Average Response Time: ${performanceReport.averageResponseTime}ms`);
-            console.log(`   95th Percentile: ${performanceReport.p95ResponseTime}ms`);
-            console.log(`   Performance Grade: ${performanceReport.performanceGrade}`);
-            console.log(
+            logger.info(`📊 Test ${index + 1}: ${testConfig.name}`);
+            logger.info(`   Operations: ${performanceReport.totalOperations}`);
+            logger.info(`   Average Response Time: ${performanceReport.averageResponseTime}ms`);
+            logger.info(`   95th Percentile: ${performanceReport.p95ResponseTime}ms`);
+            logger.info(`   Performance Grade: ${performanceReport.performanceGrade}`);
+            logger.info(
                 `   Meets Requirement: ${performanceReport.meetsRequirement ? "✅ YES" : "❌ NO"}`,
             );
 
             if (performanceReport.memoryMetrics) {
-                console.log(
-                    `   Memory Usage: ${Math.round(performanceReport.memoryMetrics.averageMemoryUsed / 1024)}KB avg`,
+                logger.info(
+                    `   Memory Usage: ${Math.round(
+                        performanceReport.memoryMetrics.averageMemoryUsed / 1024,
+                    )}KB avg`,
                 );
             }
 
-            console.log("");
+            logger.info("");
 
             // Aggregate data
             totalOperations += performanceReport.totalOperations;
@@ -428,29 +433,31 @@ export class PerformanceTester {
         const overall95th = this.calculatePercentile(allDurations, 95);
         const overall99th = this.calculatePercentile(allDurations, 99);
 
-        console.log("🎯 Overall Performance Summary");
-        console.log("==============================");
-        console.log(`Total Operations: ${totalOperations}`);
-        console.log(`Overall Average Response Time: ${Math.round(overallAverage)}ms`);
-        console.log(`Overall 95th Percentile: ${Math.round(overall95th)}ms`);
-        console.log(`Overall 99th Percentile: ${Math.round(overall99th)}ms`);
-        console.log(`Success Rate: ${successRate.toFixed(1)}%`);
-        console.log(
-            `Meets TODO.md Requirement: ${overallAverage < performanceBenchmarks.maxResponseTime ? "✅ YES" : "❌ NO"}`,
+        logger.info("🎯 Overall Performance Summary");
+        logger.info("==============================");
+        logger.info(`Total Operations: ${totalOperations}`);
+        logger.info(`Overall Average Response Time: ${Math.round(overallAverage)}ms`);
+        logger.info(`Overall 95th Percentile: ${Math.round(overall95th)}ms`);
+        logger.info(`Overall 99th Percentile: ${Math.round(overall99th)}ms`);
+        logger.info(`Success Rate: ${successRate.toFixed(1)}%`);
+        logger.info(
+            `Meets TODO.md Requirement: ${
+                overallAverage < performanceBenchmarks.maxResponseTime ? "✅ YES" : "❌ NO"
+            }`,
         );
 
         // Performance verdict
         if (overallAverage < performanceBenchmarks.targets.fast) {
-            console.log("🚀 Performance Grade: EXCELLENT");
+            logger.info("🚀 Performance Grade: EXCELLENT");
         } else if (overallAverage < performanceBenchmarks.targets.acceptable) {
-            console.log("⚡ Performance Grade: GOOD");
+            logger.info("⚡ Performance Grade: GOOD");
         } else if (overallAverage < performanceBenchmarks.targets.slow) {
-            console.log("✅ Performance Grade: ACCEPTABLE");
+            logger.info("✅ Performance Grade: ACCEPTABLE");
         } else {
-            console.log("⚠️  Performance Grade: NEEDS IMPROVEMENT");
+            logger.info("⚠️  Performance Grade: NEEDS IMPROVEMENT");
         }
 
-        console.log("\n✅ Performance Tests Complete!\n");
+        logger.info("\n✅ Performance Tests Complete!\n");
     }
 
     calculatePercentile(sortedArray, percentile) {
@@ -469,7 +476,7 @@ export class PerformanceTester {
 
         let totalOperations = 0;
         let totalTime = 0;
-        let allDurations = [];
+        const allDurations = [];
 
         this.results.forEach((testResult) => {
             const { performanceReport } = testResult;
@@ -490,8 +497,12 @@ export class PerformanceTester {
             meetsRequirement,
             performanceGrade: this.getOverallGrade(overallAverage),
             message: meetsRequirement
-                ? `✅ Performance meets TODO.md requirement (${Math.round(overallAverage)}ms < ${performanceBenchmarks.maxResponseTime}ms)`
-                : `❌ Performance does not meet requirement (${Math.round(overallAverage)}ms >= ${performanceBenchmarks.maxResponseTime}ms)`,
+                ? `✅ Performance meets TODO.md requirement (${Math.round(overallAverage)}ms < ${
+                      performanceBenchmarks.maxResponseTime
+                  }ms)`
+                : `❌ Performance does not meet requirement (${Math.round(overallAverage)}ms >= ${
+                      performanceBenchmarks.maxResponseTime
+                  }ms)`,
         };
     }
 

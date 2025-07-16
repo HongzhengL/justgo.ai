@@ -1,5 +1,6 @@
 import { HttpError } from "wasp/server";
 import { AIAgent } from "../services/aiAgent.js";
+import logger from "../utils/logger.js";
 
 // Get or create the active conversation for a user
 export const getActiveConversation = async (args, context) => {
@@ -35,9 +36,9 @@ export const getActiveConversation = async (args, context) => {
                 },
             });
 
-            console.log(`Created new conversation ${conversation.id} for user ${context.user.id}`);
+            logger.info(`Created new conversation ${conversation.id} for user ${context.user.id}`);
         } else {
-            console.log(
+            logger.info(
                 `Found existing conversation ${conversation.id} for user ${context.user.id}`,
             );
         }
@@ -52,7 +53,7 @@ export const getActiveConversation = async (args, context) => {
 
         return conversation;
     } catch (error) {
-        console.error("Get active conversation error:", error);
+        logger.error("Get active conversation error:", error);
         throw new HttpError(500, "Failed to get conversation");
     }
 };
@@ -96,10 +97,10 @@ export const saveMessage = async (
             data: { updatedAt: new Date() },
         });
 
-        console.log(`Saved message ${message.id} to conversation ${conversationId}`);
+        logger.info(`Saved message ${message.id} to conversation ${conversationId}`);
         return message;
     } catch (error) {
-        console.error("Save message error:", error);
+        logger.error("Save message error:", error);
         if (error instanceof HttpError) {
             throw error;
         }
@@ -148,7 +149,7 @@ export const getConversationHistory = async ({ conversationId, limit = 50 }, con
             messages,
         };
     } catch (error) {
-        console.error("Get conversation history error:", error);
+        logger.error("Get conversation history error:", error);
         if (error instanceof HttpError) {
             throw error;
         }
@@ -204,7 +205,7 @@ export const processAIMessage = async ({ message, frontendTimezone }, context) =
             context,
         );
 
-        console.log(
+        logger.info(
             `Processed AI message for user ${context.user.id}, conversation ${conversation.id}`,
         );
 
@@ -230,7 +231,7 @@ export const processAIMessage = async ({ message, frontendTimezone }, context) =
             },
         };
     } catch (error) {
-        console.error("Process AI message error:", error);
+        logger.error("Process AI message error:", error);
         if (error instanceof HttpError) {
             throw error;
         }

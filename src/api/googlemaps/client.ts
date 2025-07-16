@@ -4,6 +4,9 @@ import {
     TransitSearchParams,
     GooglePlacesResponse,
     GoogleDirectionsResponse,
+    GooglePlaceData,
+    GoogleDirectionsRoute,
+    GoogleDirectionsLeg,
 } from "../types.js";
 import { handleAPIError, withRetry } from "../utils/errors.js";
 
@@ -29,7 +32,9 @@ export class GoogleMapsClient {
 
                 if (response.data.status !== "OK" && response.data.status !== "ZERO_RESULTS") {
                     throw new Error(
-                        `Google Places API error: ${response.data.status} - ${response.data.error_message || "Unknown error"}`,
+                        `Google Places API error: ${response.data.status} - ${
+                            response.data.error_message || "Unknown error"
+                        }`,
                     );
                 }
 
@@ -52,7 +57,9 @@ export class GoogleMapsClient {
 
                 if (response.data.status !== "OK" && response.data.status !== "ZERO_RESULTS") {
                     throw new Error(
-                        `Google Directions API error: ${response.data.status} - ${response.data.error_message || "Unknown error"}`,
+                        `Google Directions API error: ${response.data.status} - ${
+                            response.data.error_message || "Unknown error"
+                        }`,
                     );
                 }
 
@@ -63,7 +70,7 @@ export class GoogleMapsClient {
         }
     }
 
-    async getPlaceDetails(placeId: string): Promise<any> {
+    async getPlaceDetails(placeId: string): Promise<GooglePlaceData> {
         try {
             const response = await axios.get(`${this.placesBaseURL}/details/json`, {
                 params: {
@@ -150,7 +157,7 @@ export class GoogleMapsClient {
 }
 
 // Helper function to generate unique ID for places
-export function generatePlaceId(place: any): string {
+export function generatePlaceId(place: GooglePlaceData): string {
     const name = place.name?.replace(/[^a-zA-Z0-9]/g, "-") || "unknown";
     const placeId = place.place_id || "";
     const rating = place.rating || 0;
@@ -159,7 +166,7 @@ export function generatePlaceId(place: any): string {
 }
 
 // Helper function to generate unique ID for transit routes
-export function generateTransitId(route: any): string {
+export function generateTransitId(route: GoogleDirectionsRoute): string {
     const legs = route.legs || [];
     const firstLeg = legs[0] || {};
     const lastLeg = legs[legs.length - 1] || {};
@@ -167,9 +174,15 @@ export function generateTransitId(route: any): string {
     const startAddress = firstLeg.start_address?.replace(/[^a-zA-Z0-9]/g, "-") || "unknown";
     const endAddress = lastLeg.end_address?.replace(/[^a-zA-Z0-9]/g, "-") || "unknown";
     const duration =
-        route.legs?.reduce((total: number, leg: any) => total + (leg.duration?.value || 0), 0) || 0;
+        route.legs?.reduce(
+            (total: number, leg: GoogleDirectionsLeg) => total + (leg.duration?.value || 0),
+            0,
+        ) || 0;
 
-    return `transit-${startAddress.slice(0, 10)}-${endAddress.slice(0, 10)}-${duration}-${Date.now()}`;
+    return `transit-${startAddress.slice(0, 10)}-${endAddress.slice(
+        0,
+        10,
+    )}-${duration}-${Date.now()}`;
 }
 
 // Helper function to extract photo URL from Google Places photo reference
@@ -182,7 +195,7 @@ export function getPlacePhotoUrl(
 }
 
 // Helper function to calculate confidence score for places
-export function calculatePlaceConfidence(place: any): number {
+export function calculatePlaceConfidence(place: GooglePlaceData): number {
     let confidence = 0.5; // Base confidence
 
     // Higher confidence for places with more data
@@ -195,7 +208,7 @@ export function calculatePlaceConfidence(place: any): number {
 }
 
 // Helper function to calculate confidence score for transit
-export function calculateTransitConfidence(route: any): number {
+export function calculateTransitConfidence(route: GoogleDirectionsRoute): number {
     let confidence = 0.5; // Base confidence
 
     // Higher confidence for routes with more data

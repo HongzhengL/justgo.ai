@@ -5,6 +5,7 @@
 
 import AITimezoneDetector from "./aiTimezoneDetector.js";
 import { normalizeTimezone } from "../utils/timezoneParser.js";
+import logger from "../utils/logger.js";
 
 class TimeContextManager {
     constructor(conversationId) {
@@ -23,7 +24,7 @@ class TimeContextManager {
         try {
             return await this.aiTimezoneDetector.detectTimezone(message);
         } catch (error) {
-            console.error("Error detecting timezone from message with AI:", error);
+            logger.error("Error detecting timezone from message with AI:", error);
             return null;
         }
     }
@@ -41,10 +42,10 @@ class TimeContextManager {
                 this.timezoneOverride = normalizedTimezone;
                 this.conversationTimezones.set(this.conversationId, normalizedTimezone);
             } else {
-                console.warn(`Could not normalize timezone: ${timezone}`);
+                logger.warn(`Could not normalize timezone: ${timezone}`);
             }
         } catch (error) {
-            console.error("Error normalizing timezone:", error);
+            logger.error("Error normalizing timezone:", error);
         }
     }
 
@@ -73,7 +74,7 @@ class TimeContextManager {
             return timeInUserTimezone;
         } catch (error) {
             // Fallback to server time
-            console.warn("Error getting user time:", error);
+            logger.warn("Error getting user time:", error);
             return new Date().toLocaleString("en-US", {
                 year: "numeric",
                 month: "long",

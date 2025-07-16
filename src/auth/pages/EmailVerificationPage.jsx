@@ -21,7 +21,7 @@ export function EmailVerificationPage() {
                 </div>
 
                 <div className="auth-info">
-                    <p>Didn't receive the email? Check your spam folder or contact support.</p>
+                    <p>Didn&apos;t receive the email? Check your spam folder or contact support.</p>
                 </div>
             </div>
         </div>

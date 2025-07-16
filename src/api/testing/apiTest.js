@@ -5,6 +5,7 @@
 
 import { TravelAPIModule } from "../index.js";
 import mockData from "./mockData.js";
+import logger from "../../utils/logger.js";
 
 /**
  * Test Configuration
@@ -24,19 +25,19 @@ class TestLogger {
         if (!TEST_CONFIG.enableConsoleLogs) return;
 
         const timestamp = new Date().toISOString();
-        console.log(`[API-TEST ${timestamp}] ${message}`);
+        logger.info(`[API-TEST ${timestamp}] ${message}`);
 
         if (data && TEST_CONFIG.enableDetailedOutput) {
-            console.log(JSON.stringify(data, null, 2));
+            logger.info(JSON.stringify(data, null, 2));
         }
     }
 
     static error(message, error = null) {
         const timestamp = new Date().toISOString();
-        console.error(`[API-TEST-ERROR ${timestamp}] ${message}`);
+        logger.error(`[API-TEST-ERROR ${timestamp}] ${message}`);
 
         if (error) {
-            console.error(error);
+            logger.error(error);
         }
     }
 
@@ -44,11 +45,11 @@ class TestLogger {
         if (!TEST_CONFIG.enableTimingLogs) return;
 
         const duration = endTime - startTime;
-        console.log(`[API-TIMING] ${operation}: ${duration}ms`);
+        logger.info(`[API-TIMING] ${operation}: ${duration}ms`);
 
         // Check against TODO.md performance requirements
         if (duration > 3000) {
-            console.warn(`⚠️  ${operation} exceeded 3-second target: ${duration}ms`);
+            logger.warn(`⚠️  ${operation} exceeded 3-second target: ${duration}ms`);
         }
 
         return duration;
@@ -58,15 +59,15 @@ class TestLogger {
         if (!TEST_CONFIG.enableConsoleLogs) return;
 
         const line = "=".repeat(50);
-        console.log(`\n${line}`);
-        console.log(`  ${title}`);
-        console.log(`${line}\n`);
+        logger.info(`\n${line}`);
+        logger.info(`  ${title}`);
+        logger.info(`${line}\n`);
     }
 
     static subsection(title) {
         if (!TEST_CONFIG.enableConsoleLogs) return;
 
-        console.log(`\n--- ${title} ---`);
+        logger.info(`\n--- ${title} ---`);
     }
 }
 
@@ -469,13 +470,17 @@ export async function runAPITests() {
             totalTests: testResults.summary.totalTests,
             passedTests: testResults.summary.passedTests,
             failedTests: testResults.summary.failedTests,
-            successRate: `${Math.round((testResults.summary.passedTests / testResults.summary.totalTests) * 100)}%`,
+            successRate: `${Math.round(
+                (testResults.summary.passedTests / testResults.summary.totalTests) * 100,
+            )}%`,
             totalDuration: `${testResults.totalDuration}ms`,
             totalCards: testResults.summary.totalCards,
             validCards: testResults.summary.validCards,
             cardValidationRate:
                 testResults.summary.totalCards > 0
-                    ? `${Math.round((testResults.summary.validCards / testResults.summary.totalCards) * 100)}%`
+                    ? `${Math.round(
+                          (testResults.summary.validCards / testResults.summary.totalCards) * 100,
+                      )}%`
                     : "N/A",
             totalValidationErrors: testResults.summary.totalErrors,
         });

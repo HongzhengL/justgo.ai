@@ -3,6 +3,8 @@
  * Handles time formatting, timezone handling, and flight timing calculations
  */
 
+import type { SerpFlightData, SerpFlightSegment } from "../api/types.js";
+
 // Interface for layover information between flight segments
 export interface LayoverInfo {
     duration: number; // Layover duration in minutes
@@ -23,7 +25,7 @@ export interface FlightTiming {
  * @param flightData - SerpAPI flight object with flights array and layovers
  * @returns FlightTiming object with extracted timing information
  */
-export function extractFlightTiming(flightData: any): FlightTiming {
+export function extractFlightTiming(flightData: SerpFlightData): FlightTiming {
     try {
         const segments = flightData.flights || [];
 
@@ -53,7 +55,7 @@ export function extractFlightTiming(flightData: any): FlightTiming {
             layoverInfo,
         };
     } catch (error) {
-        console.error("Error extracting flight timing:", error);
+        // Error occurred("Error extracting flight timing:", error);
         // Return fallback timing data
         return {
             departureTime: "N/A",
@@ -96,7 +98,7 @@ export function formatTimeForDisplay(isoTime: string, format: "12h" | "24h" = "1
             });
         }
     } catch (error) {
-        console.error("Error formatting time for display:", error);
+        // Error occurred("Error formatting time for display:", error);
         return "N/A";
     }
 }
@@ -106,7 +108,7 @@ export function formatTimeForDisplay(isoTime: string, format: "12h" | "24h" = "1
  * @param segments - Array of flight segments from SerpAPI
  * @returns Array of LayoverInfo objects with duration, airport, overnight flag
  */
-export function calculateLayoverDuration(segments: any[]): LayoverInfo[] {
+export function calculateLayoverDuration(segments: SerpFlightSegment[]): LayoverInfo[] {
     try {
         if (!segments || segments.length <= 1) {
             // No layovers for single segment flights
@@ -124,7 +126,7 @@ export function calculateLayoverDuration(segments: any[]): LayoverInfo[] {
             const layoverAirport = currentSegment?.arrival_airport?.id;
 
             if (!arrivalTime || !nextDepartureTime || !layoverAirport) {
-                console.warn(`Missing layover data between segments ${i} and ${i + 1}`);
+                // Warning(`Missing layover data between segments ${i} and ${i + 1}`);
                 continue;
             }
 
@@ -132,7 +134,7 @@ export function calculateLayoverDuration(segments: any[]): LayoverInfo[] {
             const departureDate = new Date(nextDepartureTime);
 
             if (isNaN(arrivalDate.getTime()) || isNaN(departureDate.getTime())) {
-                console.warn(`Invalid date format in layover calculation`);
+                // Warning(`Invalid date format in layover calculation`);
                 continue;
             }
 
@@ -153,7 +155,7 @@ export function calculateLayoverDuration(segments: any[]): LayoverInfo[] {
 
         return layovers;
     } catch (error) {
-        console.error("Error calculating layover duration:", error);
+        // Error occurred("Error calculating layover duration:", error);
         return [];
     }
 }
@@ -208,7 +210,7 @@ export function convertTimezoneToLocal(timezone: string): string {
             weekday: "long",
         }).format(now);
     } catch (error) {
-        console.error("Error converting timezone to local:", error);
+        // Error occurred("Error converting timezone to local:", error);
         return new Date().toLocaleString();
     }
 }
@@ -234,7 +236,7 @@ export function formatTimeForAI(date: Date, timezone: string): string {
 
         return `Current user time: ${timeString}`;
     } catch (error) {
-        console.error("Error formatting time for AI:", error);
+        // Error occurred("Error formatting time for AI:", error);
         return `Current user time: ${date.toLocaleString()}`;
     }
 }
@@ -264,7 +266,7 @@ export function getCurrentTimeInTimezone(timezone: string): Date {
         // Parse back to Date object
         return new Date(timeString);
     } catch (error) {
-        console.error("Error getting current time in timezone:", error);
+        // Error occurred("Error getting current time in timezone:", error);
         return new Date();
     }
 }

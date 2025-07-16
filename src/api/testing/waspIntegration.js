@@ -3,6 +3,7 @@
 
 import { MockTravelAPIModule } from "./apiTest.js";
 import { validateStandardizedCard } from "../validation/cardValidator.js";
+import logger from "../../utils/logger.js";
 
 // Test configuration for Wasp operations
 export const testConfig = {
@@ -22,7 +23,7 @@ export function createMockContext(userId = 1, userEmail = "test@example.com") {
         entities: {
             // Mock Prisma entities for testing
             User: {
-                findUnique: async (params) => ({
+                findUnique: async () => ({
                     id: userId,
                     email: userEmail,
                     createdAt: new Date(),
@@ -30,7 +31,7 @@ export function createMockContext(userId = 1, userEmail = "test@example.com") {
                 }),
             },
             Itinerary: {
-                findMany: async (params) => [],
+                findMany: async () => [],
                 create: async (params) => ({
                     id: 1,
                     userId: userId,
@@ -175,7 +176,7 @@ export class TravelOperationTestSuite {
     }
 
     async runAllTests() {
-        console.log("🧪 Starting Travel Operation Tests...\n");
+        logger.info("🧪 Starting Travel Operation Tests...\n");
 
         const tests = [
             this.testSearchFlights.bind(this),
@@ -190,7 +191,7 @@ export class TravelOperationTestSuite {
             try {
                 await test();
             } catch (error) {
-                console.error(`Test failed: ${test.name} - ${error.message}`);
+                logger.error(`Test failed: ${test.name} - ${error.message}`);
                 this.testResults.push({
                     test: test.name,
                     status: "FAILED",
@@ -204,7 +205,7 @@ export class TravelOperationTestSuite {
     }
 
     async testSearchFlights() {
-        console.log("✈️  Testing searchFlights operation...");
+        logger.info("✈️  Testing searchFlights operation...");
 
         const context = createMockContext();
         const args = {
@@ -228,7 +229,7 @@ export class TravelOperationTestSuite {
             throw new Error("searchFlights returned invalid StandardizedCard format");
         }
 
-        console.log(`✅ searchFlights test passed: ${result.cardCount} valid cards returned`);
+        logger.info(`✅ searchFlights test passed: ${result.cardCount} valid cards returned`);
         this.testResults.push({
             test: "searchFlights",
             status: "PASSED",
@@ -237,7 +238,7 @@ export class TravelOperationTestSuite {
     }
 
     async testSearchPlaces() {
-        console.log("🏨 Testing searchPlaces operation...");
+        logger.info("🏨 Testing searchPlaces operation...");
 
         const context = createMockContext();
         const args = {
@@ -258,7 +259,7 @@ export class TravelOperationTestSuite {
             throw new Error("searchPlaces returned invalid StandardizedCard format");
         }
 
-        console.log(`✅ searchPlaces test passed: ${result.cardCount} valid cards returned`);
+        logger.info(`✅ searchPlaces test passed: ${result.cardCount} valid cards returned`);
         this.testResults.push({
             test: "searchPlaces",
             status: "PASSED",
@@ -267,7 +268,7 @@ export class TravelOperationTestSuite {
     }
 
     async testGetTransitInfo() {
-        console.log("🚌 Testing getTransitInfo operation...");
+        logger.info("🚌 Testing getTransitInfo operation...");
 
         const context = createMockContext();
         const args = {
@@ -289,7 +290,7 @@ export class TravelOperationTestSuite {
             throw new Error("getTransitInfo returned invalid StandardizedCard format");
         }
 
-        console.log(`✅ getTransitInfo test passed: ${result.cardCount} valid cards returned`);
+        logger.info(`✅ getTransitInfo test passed: ${result.cardCount} valid cards returned`);
         this.testResults.push({
             test: "getTransitInfo",
             status: "PASSED",
@@ -298,7 +299,7 @@ export class TravelOperationTestSuite {
     }
 
     async testAuthenticationRequired() {
-        console.log("🔐 Testing authentication requirements...");
+        logger.info("🔐 Testing authentication requirements...");
 
         const unauthenticatedContext = { user: null };
         const args = { departure: "AUS", arrival: "SFO" };
@@ -308,7 +309,7 @@ export class TravelOperationTestSuite {
             throw new Error("Expected authentication error but operation succeeded");
         } catch (error) {
             if (error.message.includes("logged in")) {
-                console.log("✅ Authentication requirement test passed");
+                logger.info("✅ Authentication requirement test passed");
                 this.testResults.push({
                     test: "authenticationRequired",
                     status: "PASSED",
@@ -320,7 +321,7 @@ export class TravelOperationTestSuite {
     }
 
     async testParameterValidation() {
-        console.log("📝 Testing parameter validation...");
+        logger.info("📝 Testing parameter validation...");
 
         const context = createMockContext();
 
@@ -330,9 +331,9 @@ export class TravelOperationTestSuite {
 
         if (!result.success) {
             // Expected - minimal parameters should use defaults
-            console.log("✅ Parameter validation handles minimal input with defaults");
+            logger.info("✅ Parameter validation handles minimal input with defaults");
         } else {
-            console.log("✅ Parameter validation accepts minimal input with defaults");
+            logger.info("✅ Parameter validation accepts minimal input with defaults");
         }
 
         this.testResults.push({
@@ -342,7 +343,7 @@ export class TravelOperationTestSuite {
     }
 
     async testStandardizedCardFormat() {
-        console.log("📋 Testing StandardizedCard format compliance...");
+        logger.info("📋 Testing StandardizedCard format compliance...");
 
         const context = createMockContext();
         const args = { departure: "LAX", arrival: "JFK" };
@@ -361,7 +362,7 @@ export class TravelOperationTestSuite {
             }
         }
 
-        console.log(`✅ StandardizedCard format test passed: All ${result.cardCount} cards valid`);
+        logger.info(`✅ StandardizedCard format test passed: All ${result.cardCount} cards valid`);
         this.testResults.push({
             test: "standardizedCardFormat",
             status: "PASSED",
@@ -370,31 +371,31 @@ export class TravelOperationTestSuite {
     }
 
     generateReport() {
-        console.log("\n📊 Travel Operation Test Report");
-        console.log("================================");
+        logger.info("\n📊 Travel Operation Test Report");
+        logger.info("================================");
 
         const passed = this.testResults.filter((r) => r.status === "PASSED").length;
         const failed = this.testResults.filter((r) => r.status === "FAILED").length;
 
-        console.log(`Total Tests: ${this.testResults.length}`);
-        console.log(`Passed: ${passed}`);
-        console.log(`Failed: ${failed}`);
-        console.log(`Success Rate: ${((passed / this.testResults.length) * 100).toFixed(1)}%`);
+        logger.info(`Total Tests: ${this.testResults.length}`);
+        logger.info(`Passed: ${passed}`);
+        logger.info(`Failed: ${failed}`);
+        logger.info(`Success Rate: ${((passed / this.testResults.length) * 100).toFixed(1)}%`);
 
         if (failed > 0) {
-            console.log("\nFailed Tests:");
+            logger.info("\nFailed Tests:");
             this.testResults
                 .filter((r) => r.status === "FAILED")
-                .forEach((r) => console.log(`❌ ${r.test}: ${r.error}`));
+                .forEach((r) => logger.info(`❌ ${r.test}: ${r.error}`));
         }
 
-        console.log("\n✅ Travel Operation Tests Complete!\n");
+        logger.info("\n✅ Travel Operation Tests Complete!\n");
     }
 }
 
 // Integration test for complete workflow
 export async function runIntegrationTest() {
-    console.log("🔗 Running Integration Test...\n");
+    logger.info("🔗 Running Integration Test...\n");
 
     const context = createMockContext();
     const mockOps = new MockTravelOperations();
@@ -411,7 +412,7 @@ export async function runIntegrationTest() {
             context,
         );
 
-        console.log(`✅ Flight search: ${flightResults.cardCount} results`);
+        logger.info(`✅ Flight search: ${flightResults.cardCount} results`);
 
         // 2. Search for places
         const placeResults = await mockOps.searchPlaces(
@@ -421,7 +422,7 @@ export async function runIntegrationTest() {
             context,
         );
 
-        console.log(`✅ Place search: ${placeResults.cardCount} results`);
+        logger.info(`✅ Place search: ${placeResults.cardCount} results`);
 
         // 3. Get transit info
         const transitResults = await mockOps.getTransitInfo(
@@ -432,7 +433,7 @@ export async function runIntegrationTest() {
             context,
         );
 
-        console.log(`✅ Transit search: ${transitResults.cardCount} results`);
+        logger.info(`✅ Transit search: ${transitResults.cardCount} results`);
 
         // 4. Validate all results follow StandardizedCard format
         const allCards = [
@@ -448,8 +449,8 @@ export async function runIntegrationTest() {
             throw new Error("Some cards failed validation");
         }
 
-        console.log(`✅ Validation: All ${allCards.length} cards pass StandardizedCard format`);
-        console.log("\n🎉 Integration Test PASSED!\n");
+        logger.info(`✅ Validation: All ${allCards.length} cards pass StandardizedCard format`);
+        logger.info("\n🎉 Integration Test PASSED!\n");
 
         return {
             success: true,
@@ -459,7 +460,7 @@ export async function runIntegrationTest() {
             transitCards: transitResults.cardCount,
         };
     } catch (error) {
-        console.error(`❌ Integration Test FAILED: ${error.message}\n`);
+        logger.error(`❌ Integration Test FAILED: ${error.message}\n`);
         return {
             success: false,
             error: error.message,

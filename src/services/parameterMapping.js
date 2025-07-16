@@ -1,5 +1,5 @@
-import { FlightSearchParams, PlaceSearchParams } from "../api/types.js";
 import { TravelAPIError } from "../api/utils/errors.js";
+import logger from "../utils/logger.js";
 
 // API mapping configurations for different travel APIs
 const API_MAPPINGS = {
@@ -292,12 +292,12 @@ export default class ParameterMappingService {
         const iataCode = cityToIATA[normalizedInput];
 
         if (iataCode) {
-            console.log(`Normalized airport: "${location}" -> ${iataCode}`);
+            logger.info(`Normalized airport: "${location}" -> ${iataCode}`);
             return iataCode;
         }
 
         // If no mapping found, return original (might be an airport name or less common city)
-        console.warn(`Unknown airport/city: "${location}" - using as-is`);
+        logger.warn(`Unknown airport/city: "${location}" - using as-is`);
         return location.trim();
     }
 }

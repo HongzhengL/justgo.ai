@@ -13,6 +13,9 @@ node_modules/
 # Log files
 .cursor/tasks/*
 
+# Pre-commit cache
+.pre-commit-cache/
+
 # Node.js
 node_modules/
 npm-debug.log*
@@ -50,3 +53,5 @@ migrations/
 CLAUDE.md
 
 tmp/
+
+nohup.out

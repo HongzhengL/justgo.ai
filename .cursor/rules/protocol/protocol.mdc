@@ -1,6 +1,6 @@
 ---
-description: 
-globs: 
+description:
+globs:
 alwaysApply: true
 ---
 # RIPER-5 IMPLEMENTATION PROTOCOL
@@ -335,7 +335,7 @@ Return to PLAN mode to address deviations.
 - **ONLY** developer can signal transitions
 - Must receive exact signals:
   - "ENTER RESEARCH MODE"
-  - "ENTER INNOVATE MODE" 
+  - "ENTER INNOVATE MODE"
   - "ENTER PLAN MODE"
   - "ENTER EXECUTE MODE"
   - "ENTER REVIEW MODE"
@@ -468,5 +468,5 @@ If unclear or invalid transition signal received:
 6. **ALWAYS** stop execution if deviation required
 7. **ALWAYS** return to PLAN mode when implementation blocked
 
-**Protocol Version:** 2.0 
+**Protocol Version:** 2.0
 **Compliance:** Mandatory for all development sessions

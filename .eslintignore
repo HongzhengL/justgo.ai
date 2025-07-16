@@ -1,0 +1,14 @@
+# ESLint ignore patterns for AI Travel Planner
+
+# Wasp build artifacts
+.wasp/
+
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+
+# TypeScript declaration files
+*.d.ts

@@ -30,11 +30,13 @@ export interface StandardizedCard {
         to?: Location;
     };
     details: {
-        [key: string]: any; // Type-specific details for "More Info" modal
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        [key: string]: any; // Type-specific details for "More Info" modal - SuperJSON compatibility required
     };
     essentialDetails: {
         // Subset of details shown on card without "More Info"
-        [key: string]: any;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        [key: string]: any; // SuperJSON compatibility required
     };
     externalLinks: {
         booking?: string; // For flights: booking URL or Google Flights search
@@ -49,6 +51,7 @@ export interface StandardizedCard {
         bookingToken?: string; // SerpAPI booking token for flights
     };
     // Index signature for SuperJSON compatibility
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     [key: string]: any;
 }
 
@@ -103,23 +106,85 @@ export interface TransitSearchParams {
 }
 
 // External API Response Types (for type safety)
+
+// SerpAPI Flight Data Structures
+export interface SerpFlightSegment {
+    departure_airport?: { id?: string; time?: string };
+    arrival_airport?: { id?: string; time?: string };
+    airline?: string;
+    airline_logo?: string;
+    flight_number?: string;
+    [key: string]: unknown;
+}
+
+export interface SerpFlightData {
+    flights?: SerpFlightSegment[];
+    layovers?: unknown[];
+    price?: number;
+    total_duration?: number;
+    departure_token?: string;
+    airline_logo?: string;
+    type?: string;
+    carbon_emissions?: unknown;
+    [key: string]: unknown;
+}
+
 export interface SerpFlightResponse {
-    search_metadata: any;
-    search_parameters: any;
-    best_flights: any[];
-    other_flights: any[];
-    price_insights: any;
-    airports: any[];
+    search_metadata: unknown;
+    search_parameters: unknown;
+    best_flights: SerpFlightData[];
+    other_flights: SerpFlightData[];
+    price_insights: unknown;
+    airports: unknown[];
+}
+
+// Google Places Data Structures
+export interface GooglePlaceData {
+    name?: string;
+    place_id?: string;
+    formatted_address?: string;
+    geometry?: {
+        location?: { lat?: number; lng?: number };
+    };
+    rating?: number;
+    price_level?: number;
+    types?: string[];
+    photos?: Array<{ photo_reference?: string }>;
+    opening_hours?: { open_now?: boolean };
+    reviews?: unknown[];
+    website?: string;
+    [key: string]: unknown;
 }
 
 export interface GooglePlacesResponse {
-    results: any[];
+    results: GooglePlaceData[];
     status: string;
     next_page_token?: string;
 }
 
+// Google Directions Data Structures
+export interface GoogleDirectionsLeg {
+    start_address?: string;
+    end_address?: string;
+    distance?: { value?: number };
+    duration?: { value?: number };
+    duration_in_traffic?: unknown;
+    steps?: Array<{ travel_mode?: string; [key: string]: unknown }>;
+    [key: string]: unknown;
+}
+
+export interface GoogleDirectionsRoute {
+    legs?: GoogleDirectionsLeg[];
+    summary?: string;
+    warnings?: unknown[];
+    waypoint_order?: unknown;
+    bounds?: unknown;
+    fare?: unknown;
+    [key: string]: unknown;
+}
+
 export interface GoogleDirectionsResponse {
-    routes: any[];
+    routes: GoogleDirectionsRoute[];
     status: string;
 }
 
