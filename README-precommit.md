@@ -6,11 +6,11 @@ This project uses [pre-commit](https://pre-commit.com/) to automatically run cod
 
 This branch adds a comprehensive pre-commit configuration that automatically:
 
--   ✨ Formats code with Prettier
--   🔍 Lints JavaScript/TypeScript with ESLint
--   📋 Validates Prisma schema files
--   🔒 Checks for security issues and merge conflicts
--   🧹 Fixes common file issues (trailing whitespace, end-of-file)
+- ✨ Formats code with Prettier
+- 🔍 Lints JavaScript/TypeScript with ESLint
+- 📋 Validates Prisma schema files
+- 🔒 Checks for security issues and merge conflicts
+- 🧹 Fixes common file issues (trailing whitespace, end-of-file)
 
 All of this happens automatically on every commit, ensuring consistent code quality across the team.
 
@@ -64,25 +64,25 @@ The pre-commit configuration includes:
 
 ### Code Formatting
 
--   **Prettier**: Formats JavaScript, TypeScript, CSS, JSON, YAML, and Markdown files
--   **Prisma Format**: Formats Prisma schema files
+- **Prettier**: Formats JavaScript, TypeScript, CSS, JSON, YAML, and Markdown files
+- **Prisma Format**: Formats Prisma schema files
 
 ### Linting
 
--   **ESLint**: Lints JavaScript/TypeScript files with React and TypeScript rules
--   **TypeScript Check**: Validates TypeScript files for type errors
+- **ESLint**: Lints JavaScript/TypeScript files with React and TypeScript rules
+- **TypeScript Check**: Validates TypeScript files for type errors
 
 ### Schema Validation
 
--   **Prisma Validate**: Validates Prisma schema syntax
+- **Prisma Validate**: Validates Prisma schema syntax
 
 ### Quality Checks
 
--   **Merge Conflict Check**: Prevents commits with merge conflict markers
--   **Large File Check**: Prevents commits with files larger than 500KB
--   **Trailing Whitespace**: Removes trailing whitespace
--   **End of File**: Ensures files end with newline
--   **Private Key Detection**: Prevents committing private keys
+- **Merge Conflict Check**: Prevents commits with merge conflict markers
+- **Large File Check**: Prevents commits with files larger than 500KB
+- **Trailing Whitespace**: Removes trailing whitespace
+- **End of File**: Ensures files end with newline
+- **Private Key Detection**: Prevents committing private keys
 
 ## Usage
 
@@ -104,9 +104,9 @@ pre-commit run eslint
 
 The configuration is optimized for performance:
 
--   TypeScript checking only runs on staged `.ts`/`.tsx` files
--   Prisma hooks only run when `schema.prisma` changes
--   ESLint automatically fixes issues when possible
+- TypeScript checking only runs on staged `.ts`/`.tsx` files
+- Prisma hooks only run when `schema.prisma` changes
+- ESLint automatically fixes issues when possible
 
 ## Troubleshooting
 
@@ -116,9 +116,9 @@ If you see "pre-commit not found", install it using one of the options above.
 
 ### Hook failures
 
--   **ESLint errors**: Run `npm run lint:fix` to auto-fix many issues
--   **TypeScript errors**: Fix type issues in your code
--   **Prettier formatting**: Prettier will auto-format files during commit
+- **ESLint errors**: Run `npm run lint:fix` to auto-fix many issues
+- **TypeScript errors**: Fix type issues in your code
+- **Prettier formatting**: Prettier will auto-format files during commit
 
 ### Bypassing hooks (not recommended)
 

@@ -131,8 +131,8 @@ export function handleAPIError(error: unknown, provider: string): TravelAPIError
         error instanceof Error
             ? error.message
             : error && typeof error === "object" && "message" in error
-            ? String((error as { message: unknown }).message)
-            : "Unknown error occurred";
+              ? String((error as { message: unknown }).message)
+              : "Unknown error occurred";
     return new TravelAPIError("UNKNOWN", errorMessage, provider);
 }
 
