@@ -24,7 +24,7 @@ app aiTravelPlanner {
     onAuthSucceededRedirectTo: "/dashboard"
   },
   emailSender: {
-    provider: SMTP,
+    provider: Dummy,
     defaultFrom: {
       name: "AI Travel Planner",
       email: "noreply@aitravelplanner.com"
@@ -162,4 +162,9 @@ query getConversationHistory {
 action saveMessage {
   fn: import { saveMessage } from "@src/operations/conversation.js",
   entities: [User, Conversation, Message]
+}
+
+action processVoiceMessage {
+  fn: import { processVoiceMessage } from "@src/operations/voice.js",
+  entities: [User, Conversation]
 }
