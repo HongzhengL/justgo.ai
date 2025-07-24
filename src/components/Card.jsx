@@ -17,7 +17,6 @@ export function Card({
         arrivalTime,
         layoverInfo,
         // Hotel-specific fields
-        description,
         rating,
         location,
         image,
@@ -164,7 +163,9 @@ export function Card({
                                     }}
                                 >
                                     {layoverInfo.map((layover, index) => (
-                                        <span key={index}>
+                                        <span
+                                            key={`${cardData.id}-layover-${layover.airport}-${layover.duration}-${layover.overnight}`}
+                                        >
                                             {layover.duration}m layover in {layover.airport}
                                             {layover.overnight && (
                                                 <span style={{ color: "#ffc107" }}>
@@ -179,7 +180,7 @@ export function Card({
                             )}
                         </div>
                     )}
-                    
+
                     {/* Hotel-specific display */}
                     {(type === "hotel" || additionalInfo?.hotelId) && (
                         <div
@@ -209,18 +210,37 @@ export function Card({
                                 />
                             )}
                             {rating && (
-                                <div style={{ fontSize: "0.9rem", color: "#ffc107", marginBottom: "0.25rem" }}>
+                                <div
+                                    style={{
+                                        fontSize: "0.9rem",
+                                        color: "#ffc107",
+                                        marginBottom: "0.25rem",
+                                    }}
+                                >
                                     {"⭐".repeat(Math.floor(rating))} {rating} stars
                                 </div>
                             )}
                             {location && (
-                                <div style={{ fontSize: "0.8rem", color: "#6c757d", marginBottom: "0.25rem" }}>
-                                    📍 {typeof location === 'object' ? location.address : location}
+                                <div
+                                    style={{
+                                        fontSize: "0.8rem",
+                                        color: "#6c757d",
+                                        marginBottom: "0.25rem",
+                                    }}
+                                >
+                                    📍 {typeof location === "object" ? location.address : location}
                                 </div>
                             )}
                             {additionalInfo?.checkIn && (
-                                <div style={{ fontSize: "0.8rem", color: "#28a745", marginBottom: "0.25rem" }}>
-                                    Check-in: {additionalInfo.checkIn} | Check-out: {additionalInfo.checkOut}
+                                <div
+                                    style={{
+                                        fontSize: "0.8rem",
+                                        color: "#28a745",
+                                        marginBottom: "0.25rem",
+                                    }}
+                                >
+                                    Check-in: {additionalInfo.checkIn} | Check-out:{" "}
+                                    {additionalInfo.checkOut}
                                 </div>
                             )}
                             {amenities && amenities.length > 0 && (
@@ -233,7 +253,9 @@ export function Card({
                     )}
 
                     {/* Price display - works for both flights and hotels */}
-                    {(price || ((type === "hotel" || additionalInfo?.hotelId) && typeof price === "string")) && (
+                    {(price ||
+                        ((type === "hotel" || additionalInfo?.hotelId) &&
+                            typeof price === "string")) && (
                         <p
                             style={{
                                 margin: "0 0 0.5rem 0",
@@ -241,7 +263,9 @@ export function Card({
                                 fontWeight: "bold",
                             }}
                         >
-                            {typeof price === "string" ? price : `${price.currency} ${price.amount}`}
+                            {typeof price === "string"
+                                ? price
+                                : `${price.currency} ${price.amount}`}
                         </p>
                     )}
                     <div style={{ fontSize: "0.8rem", color: "#888" }}>
@@ -263,7 +287,8 @@ export function Card({
                     {(externalLinks?.website || externalLinks?.booking || bookingUrl) && (
                         <button
                             onClick={() => {
-                                const url = externalLinks?.website || externalLinks?.booking || bookingUrl;
+                                const url =
+                                    externalLinks?.website || externalLinks?.booking || bookingUrl;
                                 onGoToWebsite(url);
                             }}
                             style={{
@@ -276,26 +301,31 @@ export function Card({
                                 fontSize: "0.8rem",
                             }}
                         >
-                            {type === "flight" ? "Book Flight" : (type === "hotel" || additionalInfo?.hotelId) ? "Book Hotel" : "Go to Website"}
+                            {type === "flight"
+                                ? "Book Flight"
+                                : type === "hotel" || additionalInfo?.hotelId
+                                  ? "Book Hotel"
+                                  : "Go to Website"}
                         </button>
                     )}
-                    {(type === "hotel" || additionalInfo?.hotelId) && !(externalLinks?.website || externalLinks?.booking || bookingUrl) && (
-                        <button
-                            disabled
-                            style={{
-                                padding: "0.5rem 1rem",
-                                backgroundColor: "#6c757d",
-                                color: "white",
-                                border: "none",
-                                borderRadius: "4px",
-                                cursor: "not-allowed",
-                                fontSize: "0.8rem",
-                                opacity: 0.6
-                            }}
-                        >
-                            No Offers Available
-                        </button>
-                    )}
+                    {(type === "hotel" || additionalInfo?.hotelId) &&
+                        !(externalLinks?.website || externalLinks?.booking || bookingUrl) && (
+                            <button
+                                disabled
+                                style={{
+                                    padding: "0.5rem 1rem",
+                                    backgroundColor: "#6c757d",
+                                    color: "white",
+                                    border: "none",
+                                    borderRadius: "4px",
+                                    cursor: "not-allowed",
+                                    fontSize: "0.8rem",
+                                    opacity: 0.6,
+                                }}
+                            >
+                                No Offers Available
+                            </button>
+                        )}
                     <button
                         onClick={() => onMoreInfo(cardData)}
                         style={{

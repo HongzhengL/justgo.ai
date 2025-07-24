@@ -1,0 +1,27 @@
+{
+    "mcpServers": {
+        "gemini-mcp": {
+            "command": "/home/codespace/mcp-servers/shared-mcp-env/bin/python",
+            "args": ["/home/codespace/mcp-servers/gemini-mcp/gemini_mcp_server.py"],
+            "env": {
+                "GOOGLE_API_KEY": "AIzaSyBrF712IOWGyI9SdM_RIrCsjlNKoq8_o2I",
+                "GEMINI_FLASH_MODEL": "gemini-2.5-flash",
+                "GEMINI_PRO_MODEL": "gemini-2.5-pro"
+            }
+        },
+        "github": {
+            "command": "docker",
+            "args": [
+                "run",
+                "-i",
+                "--rm",
+                "-e",
+                "GITHUB_PERSONAL_ACCESS_TOKEN",
+                "ghcr.io/github/github-mcp-server"
+            ],
+            "env": {
+                "GITHUB_PERSONAL_ACCESS_TOKEN": "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"
+            }
+        }
+    }
+}

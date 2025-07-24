@@ -142,7 +142,11 @@ export function generateFlightId(flight: SerpFlightData): string {
     const bookingTokenHash = flight.departure_token ? flight.departure_token.slice(-8) : "none";
     const counter = ++flightIdCounter;
 
-    return `flight-${departure}-${arrival}-${price}-${duration}-${bookingTokenHash}-${counter}-${Date.now()}`;
+    // Add random component to guarantee uniqueness even in rapid processing
+    const randomSuffix = Math.random().toString(36).substring(2, 8);
+    const timestamp = Date.now();
+
+    return `flight-${departure}-${arrival}-${price}-${duration}-${bookingTokenHash}-${counter}-${timestamp}-${randomSuffix}`;
 }
 
 // Helper function to extract airline names from flight segments

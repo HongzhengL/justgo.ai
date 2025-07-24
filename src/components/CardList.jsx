@@ -15,7 +15,7 @@ export function CardList({
         isOpen: false,
         cardData: null,
     });
-    
+
     if (!cards.length) {
         return null;
     }
@@ -48,9 +48,6 @@ export function CardList({
         }
     };
 
-    console.log('CardList received cards:', cards.length);
-    console.log('All cards:', cards.map(card => ({ type: card.type, title: card.title })));
-
     return (
         <>
             <div
@@ -77,7 +74,21 @@ export function CardList({
                     Search Results ({cards.length} result{cards.length !== 1 ? "s" : ""})
                 </div>
                 {cards.map((card, index) => {
-                    const stableKey = card.id || `card-${index}-${card.title?.substring(0, 20) || 'untitled'}`;
+                    // Create a stable unique key prioritizing card.id, avoiding index when possible
+                    let stableKey;
+
+                    if (card.id) {
+                        // Use card ID as primary key if available - no index needed
+                        stableKey = `card-${card.id}`;
+                    } else {
+                        // Fallback: create fingerprint from card properties
+                        const cardFingerprint = card.title
+                            ? `${card.title}-${card.subtitle || ""}-${card.price?.amount || ""}`
+                            : "untitled";
+                        stableKey = `card-${index}-${cardFingerprint
+                            .replace(/[^a-zA-Z0-9]/g, "")
+                            .substring(0, 20)}`;
+                    }
 
                     return (
                         <Card

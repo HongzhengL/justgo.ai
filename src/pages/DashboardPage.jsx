@@ -10,13 +10,13 @@ import {
     getItineraries,
     createItinerary,
     addToItinerary,
-    processVoiceMessage
+    processVoiceMessage,
 } from "wasp/client/operations";
 import { CardList } from "../components/CardList";
 import { InfoModal } from "../components/InfoModal.jsx";
 import AppLayout from "../components/layout/AppLayout.jsx";
 import useInfoModal from "../hooks/useInfoModal.js";
-import { useVoiceRecorder } from '../hooks/useVoiceRecorder';
+import { useVoiceRecorder } from "../hooks/useVoiceRecorder";
 
 export function DashboardPage() {
     const { data: user, isLoading } = useAuth();
@@ -124,7 +124,7 @@ export function DashboardPage() {
 
             // Add user message and error response
             const userMessage = {
-                id: Date.now(),
+                id: crypto.randomUUID(),
                 sender: "user",
                 text: messageText,
                 timestamp: new Date(),
@@ -132,7 +132,7 @@ export function DashboardPage() {
             };
 
             const errorMessage = {
-                id: Date.now() + 1,
+                id: crypto.randomUUID(),
                 sender: "ai",
                 text: "I'm sorry, I encountered an issue processing your request. Please try again.",
                 timestamp: new Date(),
@@ -182,41 +182,41 @@ export function DashboardPage() {
     };
 
     const handleVoiceRecording = async () => {
-        console.log('Voice recording button clicked, current state:', isRecording);
+        logger.debug("Voice recording button clicked, current state:", isRecording);
         if (isRecording) {
-            console.log('Stopping recording...');
+            logger.debug("Stopping recording...");
             const base64Audio = await stopVoiceRecording();
             if (base64Audio) {
-                console.log('Got base64 audio, length:', base64Audio.length);
+                logger.debug("Got base64 audio, length:", base64Audio.length);
                 setIsProcessing(true);
                 try {
-                    console.log('Sending audio to server...');
+                    logger.debug("Sending audio to server...");
                     const result = await processVoiceMessageFn({ audioBlob: base64Audio });
-                    console.log('Server response:', result);
+                    logger.debug("Server response:", result);
                     if (result.success && result.text) {
                         setInputValue(result.text);
                         await handleSendMessage();
                     } else {
-                        console.log('Transcription failed:', result.error);
+                        logger.warn("Transcription failed:", result.error);
                         const errorMessage = {
-                            id: Date.now(),
-                            sender: 'ai',
+                            id: crypto.randomUUID(),
+                            sender: "ai",
                             text: result.text || "I didn't quite catch that, could you try again?",
                             timestamp: new Date(),
-                            type: 'error'
+                            type: "error",
                         };
-                        setMessages(prev => [...prev, errorMessage]);
+                        setMessages((prev) => [...prev, errorMessage]);
                     }
                 } catch (error) {
-                    console.error('Error processing voice:', error);
+                    logger.error("Error processing voice:", error);
                 } finally {
                     setIsProcessing(false);
                 }
             } else {
-                console.log('No audio data received');
+                logger.debug("No audio data received");
             }
         } else {
-            console.log('Starting recording...');
+            logger.debug("Starting recording...");
             await startVoiceRecording();
         }
     };
@@ -289,9 +289,9 @@ export function DashboardPage() {
                         <button
                             onClick={handleVoiceRecording}
                             disabled={isProcessing}
-                            className={`chat-mic-button ${isRecording ? 'recording' : ''}`}
+                            className={`chat-mic-button ${isRecording ? "recording" : ""}`}
                         >
-                            {isRecording ? '🔴' : '🎤'}
+                            {isRecording ? "🔴" : "🎤"}
                         </button>
                         <textarea
                             value={inputValue}

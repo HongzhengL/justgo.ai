@@ -168,7 +168,7 @@ export const processAIMessage = async ({ message, frontendTimezone }, context) =
         const conversation = await getActiveConversation({}, context);
 
         // Save the user's message first
-        await saveMessage(
+        const savedUserMessage = await saveMessage(
             {
                 conversationId: conversation.id,
                 sender: "user",
@@ -215,10 +215,10 @@ export const processAIMessage = async ({ message, frontendTimezone }, context) =
                 title: conversation.title,
             },
             userMessage: {
-                id: conversation.messages[conversation.messages.length - 1]?.id,
+                id: savedUserMessage.id,
                 content: message,
                 sender: "user",
-                timestamp: new Date(),
+                timestamp: savedUserMessage.timestamp,
             },
             aiMessage: {
                 id: aiMessage.id,

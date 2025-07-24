@@ -247,7 +247,7 @@ export function InfoModal({
                                             {cardData.details.timingDetails.layoverInfo.map(
                                                 (layover, index) => (
                                                     <div
-                                                        key={index}
+                                                        key={`${cardData.id}-layover-${layover.airport}-${layover.duration}-${layover.overnight}`}
                                                         style={{
                                                             display: "flex",
                                                             justifyContent: "space-between",
@@ -308,7 +308,7 @@ export function InfoModal({
                                             </div>
                                             {cardData.details.segments.map((segment, index) => (
                                                 <div
-                                                    key={index}
+                                                    key={`${cardData.id}-segment-${segment.flight_number || "unknown"}-${segment.departure_airport?.id || "unknown"}-${segment.arrival_airport?.id || "unknown"}`}
                                                     style={{
                                                         padding: "0.75rem",
                                                         backgroundColor: "white",
