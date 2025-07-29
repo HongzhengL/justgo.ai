@@ -57,3 +57,6 @@ tmp/
 nohup.out
 
 .mcp.json
+
+# Environment files with secrets
+server.env
