@@ -10,17 +10,23 @@ import {
     getItineraries,
     createItinerary,
     addToItinerary,
+    processVoiceMessage
 } from "wasp/client/operations";
 import { CardList } from "../components/CardList";
 import { InfoModal } from "../components/InfoModal.jsx";
 import AppLayout from "../components/layout/AppLayout.jsx";
 import useInfoModal from "../hooks/useInfoModal.js";
+import { useVoiceRecorder } from '../hooks/useVoiceRecorder';
 
 export function DashboardPage() {
     const { data: user, isLoading } = useAuth();
     const [messages, setMessages] = useState([]);
     const [inputValue, setInputValue] = useState("");
     const [isProcessing, setIsProcessing] = useState(false);
+
+    // Voice recording hooks
+    const { isRecording, startVoiceRecording, stopVoiceRecording } = useVoiceRecorder();
+    const processVoiceMessageFn = useAction(processVoiceMessage);
 
     // Hooks for AI operations
     const processAIMessageFn = useAction(processAIMessage);
@@ -175,6 +181,46 @@ export function DashboardPage() {
         }
     };
 
+    const handleVoiceRecording = async () => {
+        console.log('Voice recording button clicked, current state:', isRecording);
+        if (isRecording) {
+            console.log('Stopping recording...');
+            const base64Audio = await stopVoiceRecording();
+            if (base64Audio) {
+                console.log('Got base64 audio, length:', base64Audio.length);
+                setIsProcessing(true);
+                try {
+                    console.log('Sending audio to server...');
+                    const result = await processVoiceMessageFn({ audioBlob: base64Audio });
+                    console.log('Server response:', result);
+                    if (result.success && result.text) {
+                        setInputValue(result.text);
+                        await handleSendMessage();
+                    } else {
+                        console.log('Transcription failed:', result.error);
+                        const errorMessage = {
+                            id: Date.now(),
+                            sender: 'ai',
+                            text: result.text || "I didn't quite catch that, could you try again?",
+                            timestamp: new Date(),
+                            type: 'error'
+                        };
+                        setMessages(prev => [...prev, errorMessage]);
+                    }
+                } catch (error) {
+                    console.error('Error processing voice:', error);
+                } finally {
+                    setIsProcessing(false);
+                }
+            } else {
+                console.log('No audio data received');
+            }
+        } else {
+            console.log('Starting recording...');
+            await startVoiceRecording();
+        }
+    };
+
     if (isLoading || conversationLoading) {
         return (
             <div style={{ padding: "2rem", textAlign: "center" }}>
@@ -240,24 +286,31 @@ export function DashboardPage() {
                 {/* Input Area */}
                 <div className="chat-input-area">
                     <div className="chat-input-row">
+                        <button
+                            onClick={handleVoiceRecording}
+                            disabled={isProcessing}
+                            className={`chat-mic-button ${isRecording ? 'recording' : ''}`}
+                        >
+                            {isRecording ? '🔴' : '🎤'}
+                        </button>
                         <textarea
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value)}
                             onKeyPress={handleKeyPress}
                             placeholder="Tell me about your travel plans... (e.g., 'I want to visit Paris next month')"
                             className="chat-input"
-                            disabled={isProcessing}
+                            disabled={isProcessing || isRecording}
                         />
                         <button
                             onClick={handleSendMessage}
-                            disabled={!inputValue.trim() || isProcessing}
+                            disabled={!inputValue.trim() || isProcessing || isRecording}
                             className="chat-send-button"
                         >
                             Send
                         </button>
                     </div>
                     <div className="chat-helper-text">
-                        Press Enter to send • Shift+Enter for new line
+                        Press Enter to send • Shift+Enter for new line • Click 🎤 to use voice
                     </div>
                 </div>
             </div>
