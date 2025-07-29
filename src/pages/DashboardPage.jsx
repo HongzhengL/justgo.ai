@@ -1,6 +1,6 @@
 import { useAuth } from "wasp/client/auth";
 import { Link } from "wasp/client/router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAction, useQuery } from "wasp/client/operations";
 import logger from "../utils/logger.js";
 import "./dashboard.css";
@@ -17,12 +17,14 @@ import { InfoModal } from "../components/InfoModal.jsx";
 import AppLayout from "../components/layout/AppLayout.jsx";
 import useInfoModal from "../hooks/useInfoModal.js";
 import { useVoiceRecorder } from "../hooks/useVoiceRecorder";
+import { ChatNavigation } from "../components/ChatNavigation.jsx";
 
 export function DashboardPage() {
     const { data: user, isLoading } = useAuth();
     const [messages, setMessages] = useState([]);
     const [inputValue, setInputValue] = useState("");
     const [isProcessing, setIsProcessing] = useState(false);
+    const messagesRef = useRef(null);
 
     // Voice recording hooks
     const { isRecording, startVoiceRecording, stopVoiceRecording } = useVoiceRecorder();
@@ -245,7 +247,7 @@ export function DashboardPage() {
             {/* Chat Container */}
             <div className="chat-container">
                 {/* Messages Area */}
-                <div className="chat-messages">
+                <div className="chat-messages" ref={messagesRef}>
                     {messages.map((message) => (
                         <div
                             key={message.id}
@@ -282,6 +284,8 @@ export function DashboardPage() {
                         </div>
                     )}
                 </div>
+
+                <ChatNavigation messagesRef={messagesRef} />
 
                 {/* Input Area */}
                 <div className="chat-input-area">
