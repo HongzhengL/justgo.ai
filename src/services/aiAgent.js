@@ -304,7 +304,7 @@ export class AIAgent {
             const flightResults = await travelAPI.searchFlights(mappedParams);
             logger.info(`Flight search completed: ${flightResults.length} results found`);
             logger.debug("Flight results:", JSON.stringify(flightResults, null, 2));
-            
+
             // Perform real hotel search with optimized approach
             logger.info("Starting hotel search with original parameters:", parameters);
             const hotelResults = await this.performAutomaticHotelSearch(parameters);
@@ -317,7 +317,9 @@ export class AIAgent {
 
             // Combine flight and hotel cards
             const allCards = [...flights, ...hotels];
-            logger.info(`Total combined cards: ${allCards.length} (${flights.length} flights + ${hotels.length} hotels)`);
+            logger.info(
+                `Total combined cards: ${allCards.length} (${flights.length} flights + ${hotels.length} hotels)`,
+            );
 
             // Generate response with search results
             const response = await this.generateFlightHotelResponse(
@@ -336,27 +338,32 @@ export class AIAgent {
                 cards: allCards,
                 parameters: parameters,
             };
-            
+
             logger.info("Final response prepared with", finalResponse.cards.length, "cards");
             logger.debug("Final response cards:", JSON.stringify(finalResponse.cards, null, 2));
-            
+
             // Debug card types in final response
             const cardTypeCounts = finalResponse.cards.reduce((acc, card) => {
                 acc[card.type] = (acc[card.type] || 0) + 1;
                 return acc;
             }, {});
             logger.info("Card type counts in final response:", cardTypeCounts);
-            
+
             // Debug hotel cards specifically
-            const hotelCards = finalResponse.cards.filter(card => card.type === 'place' && card.additionalInfo?.hotelId);
+            const hotelCards = finalResponse.cards.filter(
+                (card) => card.type === "place" && card.additionalInfo?.hotelId,
+            );
             logger.info(`Hotel cards in final response: ${hotelCards.length}`);
-            logger.debug("Hotel cards details:", hotelCards.map(card => ({
-                id: card.id,
-                title: card.title,
-                hotelId: card.additionalInfo?.hotelId,
-                hasOffers: card.additionalInfo?.hasOffers
-            })));
-            
+            logger.debug(
+                "Hotel cards details:",
+                hotelCards.map((card) => ({
+                    id: card.id,
+                    title: card.title,
+                    hotelId: card.additionalInfo?.hotelId,
+                    hasOffers: card.additionalInfo?.hasOffers,
+                })),
+            );
+
             return finalResponse;
         } catch (error) {
             logger.error("HandleFlightSearch error:", error);
@@ -729,7 +736,7 @@ export class AIAgent {
         try {
             // Extract destination city code from flight parameters
             const cityCode = extractDestinationCityCode({
-                arrival: flightParameters.destination || flightParameters.arrival
+                arrival: flightParameters.destination || flightParameters.arrival,
             });
 
             if (!cityCode) {
@@ -739,7 +746,8 @@ export class AIAgent {
 
             // Use flight dates for hotel search (check-in on arrival date)
             const checkInDate = flightParameters.outboundDate;
-            const checkOutDate = flightParameters.returnDate || 
+            const checkOutDate =
+                flightParameters.returnDate ||
                 this.calculateDefaultCheckoutDate(flightParameters.outboundDate);
 
             if (!checkInDate) {
@@ -749,13 +757,13 @@ export class AIAgent {
 
             // Import hotel search function dynamically
             const { searchHotels } = await import("../api/amadeus/hotelService.js");
-            
+
             const hotelParams = {
                 cityCode: cityCode,
                 checkInDate: checkInDate,
                 checkOutDate: checkOutDate,
                 adults: flightParameters.adults || 1,
-                filters: {}
+                filters: {},
             };
 
             logger.info("Performing automatic hotel search with params:", hotelParams);
@@ -764,14 +772,16 @@ export class AIAgent {
 
             // Transform hotel results to card format for consistency
             return this.transformHotelResultsToCards(hotelResults, cityCode);
-
         } catch (error) {
             logger.error("Automatic hotel search error:", error);
             logger.error("Error name:", error.name);
             logger.error("Error message:", error.message);
             logger.error("Error stack:", error.stack);
             logger.error("Error cause:", error.cause);
-            logger.error("Full error object:", JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+            logger.error(
+                "Full error object:",
+                JSON.stringify(error, Object.getOwnPropertyNames(error), 2),
+            );
             console.error("Console error log:", error);
             return []; // Return empty array instead of throwing to not break flight search
         }
@@ -782,19 +792,18 @@ export class AIAgent {
             const checkIn = new Date(checkInDate);
             const checkOut = new Date(checkIn);
             checkOut.setDate(checkOut.getDate() + 3); // Default 3-night stay
-            return checkOut.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+            return checkOut.toISOString().split("T")[0]; // Format as YYYY-MM-DD
         } catch (error) {
             logger.error("Error calculating checkout date:", error);
             return null;
         }
     }
 
-
     transformHotelResultsToCards(hotelResults, cityCode) {
         try {
             logger.info("Starting hotel results transformation for city:", cityCode);
             logger.debug("Raw hotel results:", JSON.stringify(hotelResults, null, 2));
-            
+
             if (!hotelResults || !hotelResults.data || !Array.isArray(hotelResults.data)) {
                 logger.warn("Invalid hotel results format:", hotelResults);
                 return [];
@@ -803,102 +812,116 @@ export class AIAgent {
             const cityName = formatCityName(cityCode);
             logger.info(`Transforming ${hotelResults.data.length} hotels for city: ${cityName}`);
 
-            const transformedHotels = hotelResults.data.map((hotel, index) => {
-                logger.debug(`Transforming hotel ${index + 1}:`, JSON.stringify(hotel, null, 2));
-                
-                // Debug the hotel structure
-                logger.debug(`Hotel ${index + 1} structure check:`, {
-                    hasHotel: !!hotel.hotel,
-                    hotelKeys: hotel.hotel ? Object.keys(hotel.hotel) : 'NO_HOTEL_OBJECT',
-                    hotelId: hotel.hotel?.hotelId,
-                    hotelName: hotel.hotel?.name,
-                    hasOffers: !!(hotel.offers && hotel.offers.length > 0),
-                    offerCount: hotel.offers ? hotel.offers.length : 0
-                });
-                
-                const hasOffers = hotel.offers && hotel.offers.length > 0;
-                const firstOffer = hasOffers ? hotel.offers[0] : null;
-                
-                const transformedHotel = {
-                    id: `hotel-${hotel.hotel?.hotelId || index}`,
-                    type: 'place', // Changed from 'hotel' to 'place' to match StandardizedCard interface
-                    title: hotel.hotel?.name || 'Hotel',
-                    subtitle: `${hotel.hotel?.rating || 'N/A'} star hotel in ${cityName}${!hasOffers ? ' (No offers available)' : ''}`,
-                    price: hasOffers && firstOffer?.price ? {
-                        amount: parseFloat(firstOffer.price.total),
-                        currency: firstOffer.price.currency
-                    } : undefined,
-                    location: {
-                        lat: hotel.hotel?.latitude,
-                        lng: hotel.hotel?.longitude,
-                        address: cityName
-                    },
-                    details: {
-                        hotel: hotel.hotel,
-                        offers: hotel.offers || [],
-                        checkIn: firstOffer?.checkInDate,
-                        checkOut: firstOffer?.checkOutDate,
-                        roomType: firstOffer?.room?.description?.text,
-                        boardType: firstOffer?.boardType,
+            const transformedHotels = hotelResults.data
+                .map((hotel, index) => {
+                    logger.debug(
+                        `Transforming hotel ${index + 1}:`,
+                        JSON.stringify(hotel, null, 2),
+                    );
+
+                    // Debug the hotel structure
+                    logger.debug(`Hotel ${index + 1} structure check:`, {
+                        hasHotel: !!hotel.hotel,
+                        hotelKeys: hotel.hotel ? Object.keys(hotel.hotel) : "NO_HOTEL_OBJECT",
                         hotelId: hotel.hotel?.hotelId,
-                        offerId: firstOffer?.id,
+                        hotelName: hotel.hotel?.name,
+                        hasOffers: !!(hotel.offers && hotel.offers.length > 0),
+                        offerCount: hotel.offers ? hotel.offers.length : 0,
+                    });
+
+                    const hasOffers = hotel.offers && hotel.offers.length > 0;
+                    const firstOffer = hasOffers ? hotel.offers[0] : null;
+
+                    const transformedHotel = {
+                        id: `hotel-${hotel.hotel?.hotelId || index}`,
+                        type: "place", // Changed from 'hotel' to 'place' to match StandardizedCard interface
+                        title: hotel.hotel?.name || "Hotel",
+                        subtitle: `${hotel.hotel?.rating || "N/A"} star hotel in ${cityName}${!hasOffers ? " (No offers available)" : ""}`,
+                        price:
+                            hasOffers && firstOffer?.price
+                                ? {
+                                      amount: parseFloat(firstOffer.price.total),
+                                      currency: firstOffer.price.currency,
+                                  }
+                                : undefined,
+                        location: {
+                            lat: hotel.hotel?.latitude,
+                            lng: hotel.hotel?.longitude,
+                            address: cityName,
+                        },
+                        details: {
+                            hotel: hotel.hotel,
+                            offers: hotel.offers || [],
+                            checkIn: firstOffer?.checkInDate,
+                            checkOut: firstOffer?.checkOutDate,
+                            roomType: firstOffer?.room?.description?.text,
+                            boardType: firstOffer?.boardType,
+                            hotelId: hotel.hotel?.hotelId,
+                            offerId: firstOffer?.id,
+                            amenities: hotel.hotel?.amenities || [],
+                            media: hotel.hotel?.media || [],
+                            hasOffers: hasOffers,
+                        },
+                        essentialDetails: {
+                            rating: hotel.hotel?.rating || "N/A",
+                            checkIn: firstOffer?.checkInDate,
+                            checkOut: firstOffer?.checkOutDate,
+                            roomType: firstOffer?.room?.description?.text || "Standard Room",
+                            price:
+                                hasOffers && firstOffer?.price
+                                    ? `${firstOffer.price.currency} ${firstOffer.price.total}`
+                                    : "Price on request",
+                        },
+                        externalLinks: {
+                            booking: hasOffers ? firstOffer?.self || null : null,
+                            website: hotel.hotel?.media?.[0]?.uri || null,
+                        },
+                        metadata: {
+                            provider: "Amadeus",
+                            confidence: hasOffers ? 0.9 : 0.7,
+                            timestamp: new Date().toISOString(),
+                            hotelId: hotel.hotel?.hotelId,
+                            offerId: firstOffer?.id,
+                            hasOffers: hasOffers,
+                        },
+                        // Legacy fields for backward compatibility
+                        description: `${hotel.hotel?.rating || "N/A"} star hotel in ${cityName}${!hasOffers ? " (No offers available)" : ""}`,
+                        rating: hotel.hotel?.rating || null,
+                        image: hotel.hotel?.media?.[0]?.uri || null,
                         amenities: hotel.hotel?.amenities || [],
-                        media: hotel.hotel?.media || [],
-                        hasOffers: hasOffers
-                    },
-                    essentialDetails: {
-                        rating: hotel.hotel?.rating || 'N/A',
-                        checkIn: firstOffer?.checkInDate,
-                        checkOut: firstOffer?.checkOutDate,
-                        roomType: firstOffer?.room?.description?.text || 'Standard Room',
-                        price: hasOffers && firstOffer?.price ? 
-                            `${firstOffer.price.currency} ${firstOffer.price.total}` : 
-                            'Price on request'
-                    },
-                    externalLinks: {
-                        booking: hasOffers ? (firstOffer?.self || null) : null,
-                        website: hotel.hotel?.media?.[0]?.uri || null
-                    },
-                    metadata: {
-                        provider: "Amadeus",
-                        confidence: hasOffers ? 0.9 : 0.7,
-                        timestamp: new Date().toISOString(),
-                        hotelId: hotel.hotel?.hotelId,
-                        offerId: firstOffer?.id,
-                        hasOffers: hasOffers
-                    },
-                    // Legacy fields for backward compatibility
-                    description: `${hotel.hotel?.rating || 'N/A'} star hotel in ${cityName}${!hasOffers ? ' (No offers available)' : ''}`,
-                    rating: hotel.hotel?.rating || null,
-                    image: hotel.hotel?.media?.[0]?.uri || null,
-                    amenities: hotel.hotel?.amenities || [],
-                    bookingUrl: hasOffers ? (firstOffer?.self || null) : null,
-                    additionalInfo: {
-                        checkIn: firstOffer?.checkInDate,
-                        checkOut: firstOffer?.checkOutDate,
-                        roomType: firstOffer?.room?.description?.text,
-                        boardType: firstOffer?.boardType,
-                        hotelId: hotel.hotel?.hotelId,
-                        offerId: firstOffer?.id,
-                        hasOffers: hasOffers
-                    }
-                };
-                
-                logger.debug(`Transformed hotel ${index + 1}:`, JSON.stringify(transformedHotel, null, 2));
-                return transformedHotel;
-            }).slice(0, 5); // Limit to 5 hotels to avoid overwhelming the user
+                        bookingUrl: hasOffers ? firstOffer?.self || null : null,
+                        additionalInfo: {
+                            checkIn: firstOffer?.checkInDate,
+                            checkOut: firstOffer?.checkOutDate,
+                            roomType: firstOffer?.room?.description?.text,
+                            boardType: firstOffer?.boardType,
+                            hotelId: hotel.hotel?.hotelId,
+                            offerId: firstOffer?.id,
+                            hasOffers: hasOffers,
+                        },
+                    };
+
+                    logger.debug(
+                        `Transformed hotel ${index + 1}:`,
+                        JSON.stringify(transformedHotel, null, 2),
+                    );
+                    return transformedHotel;
+                })
+                .slice(0, 5); // Limit to 5 hotels to avoid overwhelming the user
 
             logger.info(`Successfully transformed ${transformedHotels.length} hotels`);
             logger.debug("Final transformed hotels:", JSON.stringify(transformedHotels, null, 2));
-            logger.debug("Hotel additionalInfo check:", transformedHotels.map(hotel => ({
-                id: hotel.id,
-                type: hotel.type,
-                title: hotel.title,
-                additionalInfo: hotel.additionalInfo,
-                hasHotelId: !!hotel.additionalInfo?.hotelId
-            })));
+            logger.debug(
+                "Hotel additionalInfo check:",
+                transformedHotels.map((hotel) => ({
+                    id: hotel.id,
+                    type: hotel.type,
+                    title: hotel.title,
+                    additionalInfo: hotel.additionalInfo,
+                    hasHotelId: !!hotel.additionalInfo?.hotelId,
+                })),
+            );
             return transformedHotels;
-
         } catch (error) {
             logger.error("Error transforming hotel results:", error);
             return [];
@@ -916,9 +939,9 @@ export class AIAgent {
     ) {
         try {
             const destinationCity = extractDestinationCityCode({
-                arrival: parameters.destination || parameters.arrival
+                arrival: parameters.destination || parameters.arrival,
             });
-            const cityName = destinationCity ? formatCityName(destinationCity) : 'your destination';
+            const cityName = destinationCity ? formatCityName(destinationCity) : "your destination";
 
             // Build system message with time context
             const baseSystemMessage = `You are a helpful travel assistant. The user searched for flights and you also found hotel options for their destination.
@@ -967,12 +990,12 @@ export class AIAgent {
         } catch (error) {
             logger.error("Flight+Hotel response generation error:", error);
             const cityName = extractDestinationCityCode({
-                arrival: parameters.destination || parameters.arrival
+                arrival: parameters.destination || parameters.arrival,
             });
-            const formattedCity = cityName ? formatCityName(cityName) : 'your destination';
-            
+            const formattedCity = cityName ? formatCityName(cityName) : "your destination";
+
             return {
-                text: `Great! I found ${flightResults.length} flight options for your trip${hotelResults.length > 0 ? ` and ${hotelResults.length} hotel options in ${formattedCity}` : ''}. Take a look at the options below and let me know if you'd like me to search for more options or help you with booking!`,
+                text: `Great! I found ${flightResults.length} flight options for your trip${hotelResults.length > 0 ? ` and ${hotelResults.length} hotel options in ${formattedCity}` : ""}. Take a look at the options below and let me know if you'd like me to search for more options or help you with booking!`,
             };
         }
     }
