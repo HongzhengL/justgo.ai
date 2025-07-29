@@ -77,8 +77,8 @@ export class AIAgent {
 
             PARAMETERS:
             - intent: one of the supported intents above
-            - departure: departure city/airport IATA code (if mentioned) - REQUIRED for flights
-            - destination: destination city/airport IATA code (if mentioned) - REQUIRED for flights, maps to 'arrival' in API
+            - departure: departure airport IATA code (3-letter code) - REQUIRED for flights. Always convert city names to their primary international airport IATA code. If unable to determine IATA code, set to "ERROR: Cannot determine IATA code for [city name]"
+            - destination: destination airport IATA code (3-letter code) - REQUIRED for flights, maps to 'arrival' in API. Always convert city names to their primary international airport IATA code. If unable to determine IATA code, set to "ERROR: Cannot determine IATA code for [city name]"
             - outboundDate: departure date in YYYY-MM-DD format (if mentioned) - REQUIRED for flights
             - returnDate: return date in YYYY-MM-DD format (if mentioned) - optional for round trips
             - adults: number of adult passengers (default 1 if not specified) - integer between 1-9
@@ -88,12 +88,19 @@ export class AIAgent {
             - budget: budget information (if mentioned)
             - preferences: any specific preferences mentioned
             - query: for place searches, the type of place they're looking for
+            - iataConversionNotes: optional field to track IATA conversions (e.g., "Selected JFK for New York - multiple airports available")
 
             EXAMPLES:
             ${intentExamples}
 
             Only include fields that are clearly mentioned or can be reasonably inferred.
             If the intent is unclear, default to "general_question".
+
+            When converting city names to IATA codes:
+            - Always use the primary international airport for cities with multiple airports
+            - For example: New York → JFK, London → LHR, Paris → CDG
+            - If multiple airports exist, note this in iataConversionNotes field
+            - If you cannot determine the IATA code, use the ERROR format shown above
 
             IMPORTANT: Return only valid JSON without any markdown code block formatting or explanatory text.
         `;
