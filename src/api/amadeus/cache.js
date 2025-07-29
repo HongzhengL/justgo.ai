@@ -4,13 +4,13 @@
 const hotelCache = {};
 
 function getCachedHotels(key) {
-  if (!hotelCache[key]) return null;
-  // Optionally, add cache expiry logic here
-  return hotelCache[key];
+    if (!hotelCache[key]) return null;
+    // Optionally, add cache expiry logic here
+    return hotelCache[key];
 }
 
 function setCachedHotels(key, data) {
-  hotelCache[key] = data;
+    hotelCache[key] = data;
 }
 
-export { getCachedHotels, setCachedHotels }; 
+export { getCachedHotels, setCachedHotels };

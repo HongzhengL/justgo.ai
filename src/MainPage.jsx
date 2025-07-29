@@ -129,8 +129,9 @@ export const MainPage = () => {
                             lineHeight: "1.6",
                         }}
                     >
-                        Discover flights and hotels, explore places, and create personalized itineraries with our
-                        intelligent travel planning assistant. Get complete travel packages in one search!
+                        Discover flights and hotels, explore places, and create personalized
+                        itineraries with our intelligent travel planning assistant. Get complete
+                        travel packages in one search!
                     </p>
 
                     <div style={{ marginBottom: "3rem" }}>
@@ -218,7 +219,9 @@ export const MainPage = () => {
                             >
                                 🏨
                             </div>
-                            <h3 style={{ color: "#333", marginBottom: "1rem" }}>Smart Hotel Recommendations</h3>
+                            <h3 style={{ color: "#333", marginBottom: "1rem" }}>
+                                Smart Hotel Recommendations
+                            </h3>
                             <p style={{ color: "#6c757d", fontSize: "0.9rem" }}>
                                 Get personalized hotel suggestions based on your flight destination,
                                 with ratings, amenities, and instant booking options.

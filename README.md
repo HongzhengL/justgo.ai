@@ -7,17 +7,20 @@ JustGo.ai is an intelligent travel planning application that combines flight sea
 ## ✨ Features
 
 ### 🛫 Flight Search
+
 - Real-time flight search using SerpAPI
 - Multiple airline options with pricing
 - Flexible date and route search
 
 ### 🏨 Hotel Integration
+
 - **Automatic hotel search** in destination cities
 - **Minimum 3 hotels** always displayed
 - **Booking links** for available offers
 - **Fallback display** for hotels without offers
 
 ### 🎤 Voice Integration (Whisper)
+
 - Voice-to-text functionality using OpenAI Whisper
 - Real-time audio recording and transcription
 - Seamless integration with chat interface
@@ -25,11 +28,13 @@ JustGo.ai is an intelligent travel planning application that combines flight sea
 ## 🏃‍♂️ Quick Start
 
 ### Prerequisites
+
 - Node.js (v18+)
 - npm or yarn
 - Wasp CLI
 
 ### Installation
+
 ```bash
 # Clone the repository
 git clone <repository-url>
@@ -43,16 +48,19 @@ wasp start
 ```
 
 ### Access URLs
+
 - **Client**: `http://localhost:3002/` (or `http://localhost:3000/`)
 - **Server**: `http://localhost:3001/`
 
 ## 📚 Documentation
 
 ### For Team Members
+
 - **[Hotel Feature Guide](./HOTEL_FEATURE_GUIDE.md)** - Complete guide for testing hotel functionality
 - **[Pre-commit Setup](./README-precommit.md)** - Code quality and formatting setup
 
 ### For Developers
+
 - **API Documentation**: See `src/api/` directory
 - **Component Documentation**: See `src/components/` directory
 - **Service Documentation**: See `src/services/` directory
@@ -74,10 +82,10 @@ For detailed testing instructions, see **[HOTEL_FEATURE_GUIDE.md](./HOTEL_FEATUR
 - **Backend**: Node.js + Express
 - **Framework**: Wasp
 - **Database**: Prisma + SQLite
-- **APIs**: 
-  - SerpAPI (Flight Search)
-  - Amadeus API (Hotel Search)
-  - OpenAI Whisper (Voice Processing)
+- **APIs**:
+    - SerpAPI (Flight Search)
+    - Amadeus API (Hotel Search)
+    - OpenAI Whisper (Voice Processing)
 
 ## 📁 Project Structure
 
@@ -104,6 +112,7 @@ src/
 ## 🚨 Troubleshooting
 
 ### Port Conflicts
+
 ```bash
 # Kill all processes
 pkill -f "wasp\|node\|npm"
@@ -114,12 +123,14 @@ wasp start
 ```
 
 ### Database Issues
+
 ```bash
 # Reset database
 wasp db migrate-dev
 ```
 
 ### Authentication Issues
+
 - Clear browser cache/cookies
 - Try signing up with a new email
 - Check server logs for errors
@@ -134,6 +145,7 @@ wasp db migrate-dev
 ## 📞 Support
 
 For issues or questions:
+
 1. Check the troubleshooting section above
 2. Review the [Hotel Feature Guide](./HOTEL_FEATURE_GUIDE.md)
 3. Check server logs for error messages
@@ -141,6 +153,6 @@ For issues or questions:
 
 ---
 
-**Last Updated**: July 29, 2025  
-**Version**: 1.0  
-**Status**: ✅ Production Ready 
+**Last Updated**: July 29, 2025
+**Version**: 1.0
+**Status**: ✅ Production Ready

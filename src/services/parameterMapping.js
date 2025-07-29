@@ -1,6 +1,4 @@
 import { TravelAPIError } from "../api/utils/errors.js";
-import logger from "../utils/logger.js";
-import { getAirportCodeForFlights } from "../utils/airportMapping.js";
 
 // API mapping configurations for different travel APIs
 const API_MAPPINGS = {
@@ -225,27 +223,16 @@ export default class ParameterMappingService {
     }
 
     /**
-     * Normalizes airport codes - converts common city names to IATA codes
-     * @param {string} location - Location string (city name or IATA code)
-     * @returns {string} - IATA code or original string if not found
+     * Normalizes airport codes - basic cleanup since AI Agent handles IATA conversion
+     * @param {string} location - Location string (should already be IATA code from AI)
+     * @returns {string} - Cleaned IATA code
      */
     normalizeAirportCode(location) {
         if (!location || typeof location !== "string") {
             return location;
         }
 
-        // If already looks like IATA code (3 uppercase letters), return as-is
-        if (/^[A-Z]{3}$/.test(location.trim())) {
-            return location.trim();
-        }
-
-        // Use the comprehensive airport mapping function
-        const airportCode = getAirportCodeForFlights(location);
-        if (airportCode) {
-            return airportCode;
-        }
-
-        // Fallback - return uppercase version
+        // AI Agent should already provide IATA codes, just clean them up
         return location.toUpperCase().trim();
     }
 }

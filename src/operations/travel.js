@@ -131,21 +131,23 @@ export const searchHotels = async (params, context) => {
         if (!params.cityCode || !params.checkInDate || !params.checkOutDate) {
             throw new HttpError(
                 400,
-                "Missing required parameters: cityCode, checkInDate, checkOutDate"
+                "Missing required parameters: cityCode, checkInDate, checkOutDate",
             );
         }
 
         // Use imported hotel service
-        
+
         const hotelResults = await amadeusSearchHotels({
             cityCode: params.cityCode,
             checkInDate: params.checkInDate,
             checkOutDate: params.checkOutDate,
             adults: params.adults || 1,
-            filters: params.filters || {}
+            filters: params.filters || {},
         });
 
-        logger.info(`Found ${hotelResults?.data?.length || 0} hotel options for user ${context.user.id}`);
+        logger.info(
+            `Found ${hotelResults?.data?.length || 0} hotel options for user ${context.user.id}`,
+        );
         return hotelResults;
     } catch (error) {
         logger.error("Hotel search error:", error);
