@@ -129,8 +129,8 @@ export const MainPage = () => {
                             lineHeight: "1.6",
                         }}
                     >
-                        Discover flights, places, and create personalized itineraries with our
-                        intelligent travel planning assistant. Start your adventure today!
+                        Discover flights and hotels, explore places, and create personalized itineraries with our
+                        intelligent travel planning assistant. Get complete travel packages in one search!
                     </p>
 
                     <div style={{ marginBottom: "3rem" }}>
@@ -194,11 +194,34 @@ export const MainPage = () => {
                                 🛫
                             </div>
                             <h3 style={{ color: "#333", marginBottom: "1rem" }}>
-                                Smart Flight Search
+                                Smart Flight & Hotel Search
                             </h3>
                             <p style={{ color: "#6c757d", fontSize: "0.9rem" }}>
-                                Find the best flight deals with AI-powered search that considers
-                                your preferences and budget.
+                                Find the best flight deals and hotel options automatically. Our AI
+                                searches for both flights and accommodation in one request.
+                            </p>
+                        </div>
+
+                        <div
+                            style={{
+                                backgroundColor: "white",
+                                padding: "2rem",
+                                borderRadius: "12px",
+                                boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+                            }}
+                        >
+                            <div
+                                style={{
+                                    fontSize: "2rem",
+                                    marginBottom: "1rem",
+                                }}
+                            >
+                                🏨
+                            </div>
+                            <h3 style={{ color: "#333", marginBottom: "1rem" }}>Smart Hotel Recommendations</h3>
+                            <p style={{ color: "#6c757d", fontSize: "0.9rem" }}>
+                                Get personalized hotel suggestions based on your flight destination,
+                                with ratings, amenities, and instant booking options.
                             </p>
                         </div>
 

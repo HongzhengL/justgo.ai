@@ -1,5 +1,6 @@
 import { TravelAPIError } from "../api/utils/errors.js";
 import logger from "../utils/logger.js";
+import { getAirportCodeForFlights } from "../utils/airportMapping.js";
 
 // API mapping configurations for different travel APIs
 const API_MAPPINGS = {
@@ -238,66 +239,13 @@ export default class ParameterMappingService {
             return location.trim();
         }
 
-        // Common city name to IATA code mappings
-        const cityToIATA = {
-            // Major US cities
-            "new york": "JFK",
-            nyc: "JFK",
-            "new york city": "JFK",
-            "los angeles": "LAX",
-            la: "LAX",
-            "san francisco": "SFO",
-            sf: "SFO",
-            chicago: "ORD",
-            miami: "MIA",
-            boston: "BOS",
-            washington: "DCA",
-            dc: "DCA",
-            "washington dc": "DCA",
-            seattle: "SEA",
-            denver: "DEN",
-            atlanta: "ATL",
-            dallas: "DFW",
-            houston: "IAH",
-            phoenix: "PHX",
-            "las vegas": "LAS",
-            vegas: "LAS",
-            austin: "AUS",
-
-            // Major international cities
-            london: "LHR",
-            paris: "CDG",
-            tokyo: "NRT",
-            beijing: "PEK",
-            shanghai: "PVG",
-            "hong kong": "HKG",
-            singapore: "SIN",
-            dubai: "DXB",
-            amsterdam: "AMS",
-            frankfurt: "FRA",
-            rome: "FCO",
-            madrid: "MAD",
-            barcelona: "BCN",
-            milan: "MXP",
-            istanbul: "IST",
-            moscow: "SVO",
-            sydney: "SYD",
-            melbourne: "MEL",
-            toronto: "YYZ",
-            vancouver: "YVR",
-            montreal: "YUL",
-        };
-
-        const normalizedInput = location.toLowerCase().trim();
-        const iataCode = cityToIATA[normalizedInput];
-
-        if (iataCode) {
-            logger.info(`Normalized airport: "${location}" -> ${iataCode}`);
-            return iataCode;
+        // Use the comprehensive airport mapping function
+        const airportCode = getAirportCodeForFlights(location);
+        if (airportCode) {
+            return airportCode;
         }
 
-        // If no mapping found, return original (might be an airport name or less common city)
-        logger.warn(`Unknown airport/city: "${location}" - using as-is`);
-        return location.trim();
+        // Fallback - return uppercase version
+        return location.toUpperCase().trim();
     }
 }

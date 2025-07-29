@@ -16,6 +16,14 @@ export function Card({
         departureTime,
         arrivalTime,
         layoverInfo,
+        // Hotel-specific fields
+        description,
+        rating,
+        location,
+        image,
+        amenities,
+        bookingUrl,
+        additionalInfo,
     } = cardData;
 
     return (
@@ -58,6 +66,9 @@ export function Card({
                                     e.target.style.display = "none";
                                 }}
                             />
+                        )}
+                        {(type === "hotel" || additionalInfo?.hotelId) && (
+                            <span style={{ fontSize: "18px", marginRight: "4px" }}>🏨</span>
                         )}
                         <h4 style={{ margin: "0", color: "#333" }}>{title}</h4>
                     </div>
@@ -168,7 +179,61 @@ export function Card({
                             )}
                         </div>
                     )}
-                    {price && (
+                    
+                    {/* Hotel-specific display */}
+                    {(type === "hotel" || additionalInfo?.hotelId) && (
+                        <div
+                            className="hotel-details"
+                            style={{
+                                margin: "0 0 0.5rem 0",
+                                padding: "0.5rem",
+                                backgroundColor: "#f8f9fa",
+                                borderRadius: "4px",
+                                border: "1px solid #e9ecef",
+                            }}
+                        >
+                            {image && (
+                                <img
+                                    src={image}
+                                    alt={title}
+                                    style={{
+                                        width: "100%",
+                                        maxHeight: "120px",
+                                        objectFit: "cover",
+                                        borderRadius: "4px",
+                                        marginBottom: "0.5rem",
+                                    }}
+                                    onError={(e) => {
+                                        e.target.style.display = "none";
+                                    }}
+                                />
+                            )}
+                            {rating && (
+                                <div style={{ fontSize: "0.9rem", color: "#ffc107", marginBottom: "0.25rem" }}>
+                                    {"⭐".repeat(Math.floor(rating))} {rating} stars
+                                </div>
+                            )}
+                            {location && (
+                                <div style={{ fontSize: "0.8rem", color: "#6c757d", marginBottom: "0.25rem" }}>
+                                    📍 {typeof location === 'object' ? location.address : location}
+                                </div>
+                            )}
+                            {additionalInfo?.checkIn && (
+                                <div style={{ fontSize: "0.8rem", color: "#28a745", marginBottom: "0.25rem" }}>
+                                    Check-in: {additionalInfo.checkIn} | Check-out: {additionalInfo.checkOut}
+                                </div>
+                            )}
+                            {amenities && amenities.length > 0 && (
+                                <div style={{ fontSize: "0.7rem", color: "#6c757d" }}>
+                                    Amenities: {amenities.slice(0, 3).join(", ")}
+                                    {amenities.length > 3 && ` +${amenities.length - 3} more`}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Price display - works for both flights and hotels */}
+                    {(price || ((type === "hotel" || additionalInfo?.hotelId) && typeof price === "string")) && (
                         <p
                             style={{
                                 margin: "0 0 0.5rem 0",
@@ -176,7 +241,7 @@ export function Card({
                                 fontWeight: "bold",
                             }}
                         >
-                            {price.currency} {price.amount}
+                            {typeof price === "string" ? price : `${price.currency} ${price.amount}`}
                         </p>
                     )}
                     <div style={{ fontSize: "0.8rem", color: "#888" }}>
@@ -195,10 +260,10 @@ export function Card({
                         marginLeft: "1rem",
                     }}
                 >
-                    {(externalLinks?.website || externalLinks?.booking) && (
+                    {(externalLinks?.website || externalLinks?.booking || bookingUrl) && (
                         <button
                             onClick={() => {
-                                const url = externalLinks.website || externalLinks.booking;
+                                const url = externalLinks?.website || externalLinks?.booking || bookingUrl;
                                 onGoToWebsite(url);
                             }}
                             style={{
@@ -211,7 +276,24 @@ export function Card({
                                 fontSize: "0.8rem",
                             }}
                         >
-                            {type === "flight" ? "Book Flight" : "Go to Website"}
+                            {type === "flight" ? "Book Flight" : (type === "hotel" || additionalInfo?.hotelId) ? "Book Hotel" : "Go to Website"}
+                        </button>
+                    )}
+                    {(type === "hotel" || additionalInfo?.hotelId) && !(externalLinks?.website || externalLinks?.booking || bookingUrl) && (
+                        <button
+                            disabled
+                            style={{
+                                padding: "0.5rem 1rem",
+                                backgroundColor: "#6c757d",
+                                color: "white",
+                                border: "none",
+                                borderRadius: "4px",
+                                cursor: "not-allowed",
+                                fontSize: "0.8rem",
+                                opacity: 0.6
+                            }}
+                        >
+                            No Offers Available
                         </button>
                     )}
                     <button

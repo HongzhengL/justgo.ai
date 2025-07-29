@@ -15,6 +15,7 @@ export function CardList({
         isOpen: false,
         cardData: null,
     });
+    
     if (!cards.length) {
         return null;
     }
@@ -44,9 +45,11 @@ export function CardList({
             onAddToItinerary(cardData);
         } else {
             logger.info("Add to itinerary:", cardData);
-            // Future: Add to user's itinerary
         }
     };
+
+    console.log('CardList received cards:', cards.length);
+    console.log('All cards:', cards.map(card => ({ type: card.type, title: card.title })));
 
     return (
         <>
@@ -61,24 +64,20 @@ export function CardList({
             >
                 <div
                     style={{
-                        fontSize: "0.9rem",
-                        color: "#666",
+                        fontSize: "1rem",
+                        color: "#333",
                         marginBottom: "1rem",
-                        fontWeight: "500",
+                        fontWeight: "600",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.5rem",
                     }}
                 >
-                    Found {cards.length} result{cards.length !== 1 ? "s" : ""}:
+                    <span style={{ fontSize: "1.2rem" }}>✈️</span>
+                    Search Results ({cards.length} result{cards.length !== 1 ? "s" : ""})
                 </div>
                 {cards.map((card, index) => {
-                    // Create a stable unique key by combining card properties
-                    const cardFingerprint = card.title
-                        ? `${card.title}-${card.subtitle || ""}-${card.price?.amount || ""}`
-                        : "untitled";
-                    const stableKey = card.id
-                        ? `card-${card.id}-${index}`
-                        : `card-${index}-${cardFingerprint
-                              .replace(/[^a-zA-Z0-9]/g, "")
-                              .substring(0, 20)}`;
+                    const stableKey = card.id || `card-${index}-${card.title?.substring(0, 20) || 'untitled'}`;
 
                     return (
                         <Card

@@ -88,6 +88,11 @@ query getTransitInfo {
   entities: [User]
 }
 
+query searchHotels {
+  fn: import { searchHotels } from "@src/operations/travel.js",
+  entities: [User]
+}
+
 // Itinerary operations
 query getItineraries {
   fn: import { getItineraries } from "@src/operations/itinerary.js",
