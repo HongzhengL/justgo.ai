@@ -169,6 +169,11 @@ action saveMessage {
   entities: [User, Conversation, Message]
 }
 
+action clearConversation {
+  fn: import { clearConversation } from "@src/operations/conversation.js",
+  entities: [User, Conversation, Message]
+}
+
 action processVoiceMessage {
   fn: import { processVoiceMessage } from "@src/operations/voice.js",
   entities: [User, Conversation]

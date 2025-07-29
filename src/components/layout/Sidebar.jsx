@@ -1,9 +1,15 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { logout } from "wasp/client/auth";
+import { useAction } from "wasp/client/operations";
+import { clearConversation } from "wasp/client/operations";
+import { ConfirmDialog } from "../ConfirmDialog.jsx";
 
 export default function Sidebar({ user, onMobileMenuToggle }) {
     const location = useLocation();
+    const [showClearDialog, setShowClearDialog] = useState(false);
+    const clearConversationFn = useAction(clearConversation);
+    const [isClearing, setIsClearing] = useState(false);
 
     const isActive = (path) => {
         if (path === "/dashboard") {
@@ -14,6 +20,28 @@ export default function Sidebar({ user, onMobileMenuToggle }) {
 
     const handleLogout = () => {
         logout();
+    };
+
+    const handleClearConversation = () => {
+        setShowClearDialog(true);
+    };
+
+    const handleConfirmClear = async () => {
+        setIsClearing(true);
+        try {
+            await clearConversationFn({});
+            window.location.reload();
+        } catch (error) {
+            console.error("Failed to clear conversation:", error);
+            alert("Failed to clear conversation. Please try again.");
+        } finally {
+            setIsClearing(false);
+            setShowClearDialog(false);
+        }
+    };
+
+    const handleCancelClear = () => {
+        setShowClearDialog(false);
     };
 
     return (
@@ -53,6 +81,15 @@ export default function Sidebar({ user, onMobileMenuToggle }) {
                     <span className="nav-link-icon">📋</span>
                     My Itinerary
                 </Link>
+
+                <button
+                    onClick={handleClearConversation}
+                    className="nav-link"
+                    style={{ background: "none", border: "none", textAlign: "left", width: "100%" }}
+                >
+                    <span className="nav-link-icon">🗑️</span>
+                    Clear Chat
+                </button>
             </nav>
 
             {/* Footer with Logout */}
@@ -62,6 +99,17 @@ export default function Sidebar({ user, onMobileMenuToggle }) {
                     Logout
                 </button>
             </div>
+
+            <ConfirmDialog
+                isOpen={showClearDialog}
+                title="Clear Conversation"
+                message="Are you sure you want to clear all chat history? This action cannot be undone."
+                onConfirm={handleConfirmClear}
+                onCancel={handleCancelClear}
+                isLoading={isClearing}
+                confirmText="Clear"
+                cancelText="Cancel"
+            />
         </div>
     );
 }
