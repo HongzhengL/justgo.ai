@@ -8,6 +8,7 @@ export function CardList({
     onGoToWebsite,
     onMoreInfo,
     onAddToItinerary,
+    onBookFlight,
     addToItineraryText,
     addToItineraryIcon,
 }) {
@@ -97,6 +98,7 @@ export function CardList({
                             onGoToWebsite={handleGoToWebsite}
                             onMoreInfo={handleMoreInfo}
                             onAddToItinerary={handleAddToItinerary}
+                            onBookFlight={onBookFlight}
                             addToItineraryText={addToItineraryText}
                             addToItineraryIcon={addToItineraryIcon}
                         />

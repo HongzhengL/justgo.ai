@@ -88,6 +88,19 @@ export interface FlightSearchParams {
     hl?: string; // Google language interface (required by SerpAPI)
 }
 
+export interface FlightSearchContext {
+    departure: string;
+    arrival: string;
+    outboundDate: string;
+    returnDate?: string;
+    currency?: string;
+    adults: number;
+    children?: number;
+    travelClass?: string;
+    gl?: string;
+    hl?: string;
+}
+
 export interface PlaceSearchParams {
     query: string;
     location?: {
@@ -123,6 +136,7 @@ export interface SerpFlightData {
     price?: number;
     total_duration?: number;
     departure_token?: string;
+    booking_token?: string;
     airline_logo?: string;
     type?: string;
     carbon_emissions?: unknown;
@@ -136,6 +150,44 @@ export interface SerpFlightResponse {
     other_flights: SerpFlightData[];
     price_insights: unknown;
     airports: unknown[];
+}
+
+// SerpAPI Booking Options Data Structures
+export interface BookingOption {
+    book_with: string;
+    airline_logos: string[];
+    marketed_as: string[];
+    price: number;
+    local_prices?: Array<{
+        currency: string;
+        price: number;
+    }>;
+    option_title?: string;
+    extensions?: string[];
+    baggage_prices?: string[];
+    booking_request: {
+        url: string;
+        post_data: string;
+    };
+    booking_phone?: string;
+    estimated_phone_service_fee?: number;
+}
+
+export interface SerpBookingResponse {
+    selected_flights: SerpFlightData[];
+    baggage_prices?: {
+        together?: string[];
+        departing?: string[];
+        returning?: string[];
+    };
+    booking_options: Array<{
+        separate_tickets?: boolean;
+        together?: BookingOption;
+        departing?: BookingOption;
+        returning?: BookingOption;
+    }>;
+    price_insights?: unknown;
+    error?: string;
 }
 
 // Google Places Data Structures

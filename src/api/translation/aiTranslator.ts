@@ -258,6 +258,11 @@ Return only valid JSON array.`;
         return flights.map((flight) => {
             logger.debug("Rule-based flight translation - flight object:", flight);
             logger.debug("Rule-based flight translation - airline_logo:", flight.airline_logo);
+            logger.debug(
+                "Rule-based flight translation - departure_token:",
+                flight.departure_token,
+            );
+            logger.debug("Rule-based flight translation - booking_token:", flight.booking_token);
 
             const segments = flight.flights || [];
             const firstSegment = segments[0] || {};
@@ -301,7 +306,7 @@ Return only valid JSON array.`;
                     airlineLogos: logoData.allLogos, // Future multi-logo support - array of {airline, logo, flightNumber, segmentIndex}
                     isMultiCarrier: logoData.isMultiCarrier, // Multi-carrier detection for future UI enhancements
                     primaryAirline: logoData.primaryAirline, // Primary airline name for consistency
-                    bookingToken: flight.departure_token,
+                    bookingToken: flight.booking_token,
                     type: flight.type || "Round trip",
                     // Add detailed timing information to details section
                     timingDetails: {
@@ -323,15 +328,17 @@ Return only valid JSON array.`;
                     stops: flight.layovers ? flight.layovers.length : 0,
                 },
                 externalLinks: {
-                    booking: flight.departure_token
-                        ? `https://www.google.com/flights/booking?token=${flight.departure_token}`
-                        : `https://www.google.com/flights#search;f=${departureCode};t=${arrivalCode}`,
+                    booking: flight.booking_token
+                        ? `https://www.google.com/flights/booking?token=${flight.booking_token}`
+                        : flight.departure_token
+                          ? `https://www.google.com/flights/booking?token=${flight.departure_token}`
+                          : `https://www.google.com/flights#search;f=${departureCode};t=${arrivalCode}`,
                 },
                 metadata: {
                     provider: "SerpAPI",
                     confidence: calculateFlightConfidence(flight),
                     timestamp: new Date().toISOString(),
-                    bookingToken: flight.departure_token,
+                    bookingToken: flight.booking_token,
                 },
             };
         });

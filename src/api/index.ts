@@ -1,6 +1,7 @@
 import {
     TravelAPIInterface,
     FlightSearchParams,
+    FlightSearchContext,
     PlaceSearchParams,
     TransitSearchParams,
     StandardizedCard,
@@ -12,7 +13,7 @@ import { TravelAPIError, getUserFriendlyMessage } from "./utils/errors.js";
 import logger from "../utils/logger.js";
 
 export class TravelAPIModule implements TravelAPIInterface {
-    private serpClient?: SerpAPIClient;
+    private _serpClient?: SerpAPIClient;
     private googleMapsClient?: GoogleMapsClient;
     private translator: AITranslator;
 
@@ -23,7 +24,7 @@ export class TravelAPIModule implements TravelAPIInterface {
         const openaiApiKey = process.env.OPENAI_API_KEY;
 
         if (serpApiKey) {
-            this.serpClient = new SerpAPIClient(serpApiKey);
+            this._serpClient = new SerpAPIClient(serpApiKey);
         }
 
         if (googleMapsApiKey) {
@@ -34,8 +35,13 @@ export class TravelAPIModule implements TravelAPIInterface {
         this.translator = new AITranslator(openaiApiKey);
     }
 
+    // Getter for serpClient to allow external access for booking operations
+    get serpClient() {
+        return this._serpClient;
+    }
+
     async searchFlights(params: FlightSearchParams): Promise<StandardizedCard[]> {
-        if (!this.serpClient) {
+        if (!this._serpClient) {
             throw new TravelAPIError(
                 "INVALID_PARAMS",
                 "SerpAPI key not configured. Flight search is unavailable.",
@@ -46,7 +52,7 @@ export class TravelAPIModule implements TravelAPIInterface {
         try {
             logger.info("Searching flights with params:", params);
 
-            const serpResponse = await this.serpClient.searchFlights(params);
+            const serpResponse = await this._serpClient.searchFlights(params);
             const standardizedCards = await this.translator.translateSerpFlights(serpResponse);
 
             logger.info(`Found ${standardizedCards.length} flight options`);
@@ -127,6 +133,162 @@ export class TravelAPIModule implements TravelAPIInterface {
         }
     }
 
+    async getBookingOptions(
+        bookingToken: string,
+        context: FlightSearchContext,
+    ): Promise<StandardizedCard[]> {
+        if (!this._serpClient) {
+            throw new TravelAPIError(
+                "INVALID_PARAMS",
+                "SerpAPI key not configured. Booking options are unavailable.",
+                "SerpAPI",
+            );
+        }
+
+        try {
+            logger.info("Getting booking options with token:", bookingToken);
+            logger.info("Using search context:", context);
+
+            const bookingResponse = await this._serpClient.getBookingOptions(bookingToken, context);
+
+            // Convert booking options to StandardizedCard format
+            const bookingCards: StandardizedCard[] = [];
+
+            if (bookingResponse.booking_options) {
+                bookingResponse.booking_options.forEach((option, index) => {
+                    if (option.together) {
+                        const bookingOption = option.together;
+                        bookingCards.push({
+                            id: `booking-${index}-together`,
+                            type: "flight",
+                            title: `Book with ${bookingOption.book_with}`,
+                            subtitle: bookingOption.option_title || "Flight Booking",
+                            price: {
+                                amount: bookingOption.price,
+                                currency: "USD",
+                            },
+                            location: {
+                                from: { code: context.departure },
+                                to: { code: context.arrival },
+                            },
+                            details: {
+                                bookingRequest: bookingOption.booking_request,
+                                airlines: bookingOption.airline_logos,
+                                extensions: bookingOption.extensions || [],
+                                baggagePrices: bookingOption.baggage_prices || [],
+                                phone: bookingOption.booking_phone,
+                                estimatedFee: bookingOption.estimated_phone_service_fee,
+                            },
+                            essentialDetails: {
+                                price: `$${bookingOption.price}`,
+                                airline: bookingOption.book_with,
+                                flightNumbers: bookingOption.marketed_as?.join(", ") || "",
+                            },
+                            externalLinks: {
+                                booking: bookingOption.booking_request.url,
+                            },
+                            metadata: {
+                                provider: "SerpAPI",
+                                confidence: 0.9,
+                                timestamp: new Date().toISOString(),
+                                bookingToken,
+                            },
+                        });
+                    }
+
+                    // Handle separate tickets if needed
+                    if (option.separate_tickets && option.departing) {
+                        const departingOption = option.departing;
+                        bookingCards.push({
+                            id: `booking-${index}-departing`,
+                            type: "flight",
+                            title: `Departing with ${departingOption.book_with}`,
+                            subtitle: "Departing Flight Booking",
+                            price: {
+                                amount: departingOption.price,
+                                currency: "USD",
+                            },
+                            location: {
+                                from: { code: context.departure },
+                                to: { code: context.arrival },
+                            },
+                            details: {
+                                bookingRequest: departingOption.booking_request,
+                                airlines: departingOption.airline_logos,
+                                extensions: departingOption.extensions || [],
+                                baggagePrices: departingOption.baggage_prices || [],
+                            },
+                            essentialDetails: {
+                                price: `$${departingOption.price}`,
+                                airline: departingOption.book_with,
+                                flightNumbers: departingOption.marketed_as?.join(", ") || "",
+                            },
+                            externalLinks: {
+                                booking: departingOption.booking_request.url,
+                            },
+                            metadata: {
+                                provider: "SerpAPI",
+                                confidence: 0.9,
+                                timestamp: new Date().toISOString(),
+                                bookingToken,
+                            },
+                        });
+                    }
+
+                    if (option.separate_tickets && option.returning) {
+                        const returningOption = option.returning;
+                        bookingCards.push({
+                            id: `booking-${index}-returning`,
+                            type: "flight",
+                            title: `Returning with ${returningOption.book_with}`,
+                            subtitle: "Returning Flight Booking",
+                            price: {
+                                amount: returningOption.price,
+                                currency: "USD",
+                            },
+                            location: {
+                                from: { code: context.arrival },
+                                to: { code: context.departure },
+                            },
+                            details: {
+                                bookingRequest: returningOption.booking_request,
+                                airlines: returningOption.airline_logos,
+                                extensions: returningOption.extensions || [],
+                                baggagePrices: returningOption.baggage_prices || [],
+                            },
+                            essentialDetails: {
+                                price: `$${returningOption.price}`,
+                                airline: returningOption.book_with,
+                                flightNumbers: returningOption.marketed_as?.join(", ") || "",
+                            },
+                            externalLinks: {
+                                booking: returningOption.booking_request.url,
+                            },
+                            metadata: {
+                                provider: "SerpAPI",
+                                confidence: 0.9,
+                                timestamp: new Date().toISOString(),
+                                bookingToken,
+                            },
+                        });
+                    }
+                });
+            }
+
+            logger.info(`Found ${bookingCards.length} booking options`);
+            return bookingCards;
+        } catch (error) {
+            if (error instanceof TravelAPIError) {
+                throw error;
+            }
+            throw new TravelAPIError(
+                "UNKNOWN",
+                `Booking options failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+                "SerpAPI",
+            );
+        }
+    }
+
     // Health check methods
     async validateConfiguration(): Promise<{
         serpAPI: boolean;
@@ -140,8 +302,8 @@ export class TravelAPIModule implements TravelAPIInterface {
         };
 
         try {
-            if (this.serpClient) {
-                results.serpAPI = await this.serpClient.validateApiKey();
+            if (this._serpClient) {
+                results.serpAPI = await this._serpClient.validateApiKey();
             }
         } catch (error) {
             logger.warn("SerpAPI validation failed:", error);
@@ -173,7 +335,7 @@ export class TravelAPIModule implements TravelAPIInterface {
         transit: boolean;
     } {
         return {
-            flights: !!this.serpClient,
+            flights: !!this._serpClient,
             places: !!this.googleMapsClient,
             transit: !!this.googleMapsClient,
         };

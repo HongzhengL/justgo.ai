@@ -14,6 +14,7 @@ import {
 } from "wasp/client/operations";
 import { CardList } from "../components/CardList";
 import { InfoModal } from "../components/InfoModal.jsx";
+import { BookingOptionsModal } from "../components/BookingOptionsModal.jsx";
 import AppLayout from "../components/layout/AppLayout.jsx";
 import useInfoModal from "../hooks/useInfoModal.js";
 import { useVoiceRecorder } from "../hooks/useVoiceRecorder";
@@ -25,6 +26,12 @@ export function DashboardPage() {
     const [inputValue, setInputValue] = useState("");
     const [isProcessing, setIsProcessing] = useState(false);
     const messagesRef = useRef(null);
+
+    // Booking modal states
+    const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+    const [selectedBookingToken, setSelectedBookingToken] = useState(null);
+    const [selectedSearchContext, setSelectedSearchContext] = useState(null);
+    const [selectedFlightInfo, setSelectedFlightInfo] = useState(null);
 
     // Voice recording hooks
     const { isRecording, startVoiceRecording, stopVoiceRecording } = useVoiceRecorder();
@@ -183,6 +190,13 @@ export function DashboardPage() {
         }
     };
 
+    const handleBookFlight = (bookingToken, searchContext, flightInfo) => {
+        setSelectedBookingToken(bookingToken);
+        setSelectedSearchContext(searchContext);
+        setSelectedFlightInfo(flightInfo);
+        setIsBookingModalOpen(true);
+    };
+
     const handleVoiceRecording = async () => {
         logger.debug("Voice recording button clicked, current state:", isRecording);
         if (isRecording) {
@@ -268,6 +282,7 @@ export function DashboardPage() {
                                             }
                                             onMoreInfo={openModal}
                                             onAddToItinerary={handleAddToItinerary}
+                                            onBookFlight={handleBookFlight}
                                         />
                                     </div>
                                 )}
@@ -323,6 +338,14 @@ export function DashboardPage() {
                 {...modalProps}
                 onGoToWebsite={(url) => window.open(url, "_blank", "noopener,noreferrer")}
                 onAddToItinerary={handleAddToItinerary}
+            />
+
+            <BookingOptionsModal
+                isOpen={isBookingModalOpen}
+                onClose={() => setIsBookingModalOpen(false)}
+                bookingToken={selectedBookingToken}
+                searchContext={selectedSearchContext}
+                flightInfo={selectedFlightInfo}
             />
         </AppLayout>
     );

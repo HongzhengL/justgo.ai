@@ -93,6 +93,11 @@ query searchHotels {
   entities: [User]
 }
 
+query fetchFlightBookingOptions {
+  fn: import { fetchFlightBookingOptions } from "@src/operations/booking.js",
+  entities: [User]
+}
+
 // Itinerary operations
 query getItineraries {
   fn: import { getItineraries } from "@src/operations/itinerary.js",

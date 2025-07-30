@@ -305,14 +305,42 @@ export class AIAgent {
             logger.info(`Flight search completed: ${flightResults.length} results found`);
             logger.debug("Flight results:", JSON.stringify(flightResults, null, 2));
 
+            // Add search context to flight cards for booking options
+            const flightResultsWithContext = flightResults.map((flightCard) => {
+                if (flightCard.type === "flight" && flightCard.metadata?.bookingToken) {
+                    return {
+                        ...flightCard,
+                        metadata: {
+                            ...flightCard.metadata,
+                            searchContext: {
+                                departure: mappedParams.departure,
+                                arrival: mappedParams.arrival,
+                                outboundDate: mappedParams.outboundDate,
+                                returnDate: mappedParams.returnDate,
+                                currency: mappedParams.currency,
+                                adults: mappedParams.adults,
+                                children: mappedParams.children,
+                                travelClass: mappedParams.travelClass,
+                                gl: mappedParams.gl,
+                                hl: mappedParams.hl,
+                            },
+                        },
+                    };
+                }
+                return flightCard;
+            });
+            logger.info(
+                `Added search context to ${flightResultsWithContext.filter((card) => card.metadata?.searchContext).length} flight cards`,
+            );
+
             // Perform real hotel search with optimized approach
             logger.info("Starting hotel search with original parameters:", parameters);
             const hotelResults = await this.performAutomaticHotelSearch(parameters);
             logger.info(`Hotel search completed: ${hotelResults.length} results found`);
             logger.debug("Hotel results:", JSON.stringify(hotelResults, null, 2));
 
-            // Handle flight results - simplified since we're not using Promise.allSettled
-            const flights = flightResults;
+            // Handle flight results - use the version with search context
+            const flights = flightResultsWithContext;
             const hotels = hotelResults;
 
             // Combine flight and hotel cards

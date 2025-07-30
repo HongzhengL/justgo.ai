@@ -3,6 +3,7 @@ export function Card({
     onGoToWebsite,
     onMoreInfo,
     onAddToItinerary,
+    onBookFlight,
     addToItineraryText,
     addToItineraryIcon,
 }) {
@@ -16,6 +17,7 @@ export function Card({
         departureTime,
         arrivalTime,
         layoverInfo,
+        metadata,
         // Hotel-specific fields
         rating,
         location,
@@ -287,9 +289,20 @@ export function Card({
                     {(externalLinks?.website || externalLinks?.booking || bookingUrl) && (
                         <button
                             onClick={() => {
-                                const url =
-                                    externalLinks?.website || externalLinks?.booking || bookingUrl;
-                                onGoToWebsite(url);
+                                // Handle flight booking with new modal approach
+                                if (type === "flight" && metadata?.bookingToken && onBookFlight) {
+                                    onBookFlight(metadata.bookingToken, metadata.searchContext, {
+                                        title,
+                                        subtitle,
+                                    });
+                                } else {
+                                    // Fallback to existing behavior for non-flights or missing booking token
+                                    const url =
+                                        externalLinks?.website ||
+                                        externalLinks?.booking ||
+                                        bookingUrl;
+                                    onGoToWebsite(url);
+                                }
                             }}
                             style={{
                                 padding: "0.5rem 1rem",

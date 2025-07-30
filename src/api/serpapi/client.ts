@@ -1,7 +1,9 @@
 import axios from "axios";
 import {
     FlightSearchParams,
+    FlightSearchContext,
     SerpFlightResponse,
+    SerpBookingResponse,
     SerpFlightData,
     SerpFlightSegment,
 } from "../types.js";
@@ -103,6 +105,84 @@ export class SerpAPIClient {
         }
 
         return serpParams;
+    }
+
+    private buildBookingParams(
+        context: FlightSearchContext,
+        bookingToken: string,
+    ): Record<string, string> {
+        const bookingParams: Record<string, string> = {
+            api_key: this.apiKey,
+            engine: "google_flights",
+            departure_id: context.departure,
+            arrival_id: context.arrival,
+            outbound_date: context.outboundDate,
+            currency: context.currency || "USD",
+            adults: context.adults.toString(),
+            gl: context.gl || "us",
+            hl: context.hl || "en",
+            booking_token: bookingToken,
+        };
+
+        // Set trip type and add return date if provided
+        if (context.returnDate) {
+            bookingParams.type = "1"; // Round trip
+            bookingParams.return_date = context.returnDate;
+        } else {
+            bookingParams.type = "2"; // One-way trip
+        }
+
+        if (context.children && context.children > 0) {
+            bookingParams.children = context.children.toString();
+        }
+
+        if (context.travelClass) {
+            // Convert travel class to SerpAPI integer format
+            const travelClassMap = {
+                economy: "1",
+                premium: "2",
+                business: "3",
+                first: "4",
+            };
+            bookingParams.travel_class =
+                travelClassMap[context.travelClass as keyof typeof travelClassMap] || "1";
+        }
+
+        return bookingParams;
+    }
+
+    async getBookingOptions(
+        bookingToken: string,
+        context: FlightSearchContext,
+    ): Promise<SerpBookingResponse> {
+        const params = this.buildBookingParams(context, bookingToken);
+
+        logger.info("SerpAPI getBookingOptions - Request params:", JSON.stringify(params, null, 2));
+
+        try {
+            return await withRetry(async () => {
+                const response = await axios.get(this.baseURL, {
+                    params,
+                    timeout: this.timeout,
+                });
+
+                logger.info("SerpAPI Booking Response status:", response.status);
+                logger.info(
+                    "SerpAPI Booking Response data:",
+                    JSON.stringify(response.data, null, 2),
+                );
+
+                if (response.data.error) {
+                    logger.error("SerpAPI booking returned error:", response.data.error);
+                    throw new Error(response.data.error);
+                }
+
+                return response.data as SerpBookingResponse;
+            });
+        } catch (error: unknown) {
+            logger.error("SerpAPI getBookingOptions error:", error);
+            throw handleAPIError(error, "SerpAPI");
+        }
     }
 
     // Validate API key by making a test request
