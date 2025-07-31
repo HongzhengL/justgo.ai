@@ -82,11 +82,7 @@ export default function Sidebar({ user, onMobileMenuToggle }) {
                     My Itinerary
                 </Link>
 
-                <button
-                    onClick={handleClearConversation}
-                    className="nav-link"
-                    style={{ background: "none", border: "none", textAlign: "left", width: "100%" }}
-                >
+                <button onClick={handleClearConversation} className="nav-link nav-link-button">
                     <span className="nav-link-icon">🗑️</span>
                     Clear Chat
                 </button>

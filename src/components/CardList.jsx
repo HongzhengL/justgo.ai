@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Card } from "./Card.jsx";
 import { InfoModal } from "./InfoModal.jsx";
 import logger from "../utils/logger.js";
+import "./cardlist.css";
 
 export function CardList({
     cards = [],
@@ -51,28 +52,12 @@ export function CardList({
 
     return (
         <>
-            <div
-                style={{
-                    margin: "1rem 0",
-                    padding: "1rem",
-                    backgroundColor: "#f8f9fa",
-                    borderRadius: "8px",
-                    border: "1px solid #e9ecef",
-                }}
-            >
-                <div
-                    style={{
-                        fontSize: "1rem",
-                        color: "#333",
-                        marginBottom: "1rem",
-                        fontWeight: "600",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.5rem",
-                    }}
-                >
-                    <span style={{ fontSize: "1.2rem" }}>✈️</span>
-                    Search Results ({cards.length} result{cards.length !== 1 ? "s" : ""})
+            <div className="card-list-container">
+                <div className="card-list-header">
+                    <span className="card-list-icon">✈️</span>
+                    <span className="card-list-count">
+                        Search Results ({cards.length} result{cards.length !== 1 ? "s" : ""})
+                    </span>
                 </div>
                 {cards.map((card, index) => {
                     // Create a stable unique key prioritizing card.id, avoiding index when possible

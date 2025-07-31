@@ -1,5 +1,20 @@
 import { useEffect } from "react";
 import logger from "../utils/logger.js";
+import "./infomodal.css";
+
+// Helper function to get appropriate icons for flight features
+function getFeatureIcon(feature) {
+    const lowerFeature = feature.toLowerCase();
+    if (lowerFeature.includes("wi-fi") || lowerFeature.includes("wifi")) return "📶";
+    if (lowerFeature.includes("power") || lowerFeature.includes("outlet")) return "🔌";
+    if (lowerFeature.includes("video") || lowerFeature.includes("entertainment")) return "📺";
+    if (lowerFeature.includes("legroom")) return "💺";
+    if (lowerFeature.includes("usb")) return "🔌";
+    if (lowerFeature.includes("carbon") || lowerFeature.includes("emission")) return "🌱";
+    if (lowerFeature.includes("meal") || lowerFeature.includes("food")) return "🍽️";
+    if (lowerFeature.includes("baggage") || lowerFeature.includes("bag")) return "🧳";
+    return "•";
+}
 
 export function InfoModal({
     isOpen,
@@ -132,6 +147,73 @@ export function InfoModal({
                         </p>
                     )}
                 </div>
+
+                {/* Search Information */}
+                {cardData.type === "flight" && cardData.metadata?.searchContext && (
+                    <div style={{ marginBottom: "1.5rem" }}>
+                        <h3 className="modal-section-title">Search Details</h3>
+                        <div className="search-info-grid">
+                            <div className="search-info-item">
+                                <span className="search-info-label">Passengers:</span>
+                                <span className="search-info-value">
+                                    👥 {cardData.metadata.searchContext.adults} adult
+                                    {cardData.metadata.searchContext.adults > 1 ? "s" : ""}
+                                    {cardData.metadata.searchContext.children > 0 && (
+                                        <>
+                                            , {cardData.metadata.searchContext.children} child
+                                            {cardData.metadata.searchContext.children > 1
+                                                ? "ren"
+                                                : ""}
+                                        </>
+                                    )}
+                                </span>
+                            </div>
+                            <div className="search-info-item">
+                                <span className="search-info-label">Travel Class:</span>
+                                <span className="search-info-value">
+                                    ✈️{" "}
+                                    {cardData.metadata.searchContext.travelClass
+                                        ?.charAt(0)
+                                        .toUpperCase() +
+                                        cardData.metadata.searchContext.travelClass?.slice(1)}
+                                </span>
+                            </div>
+                            <div className="search-info-item">
+                                <span className="search-info-label">Route:</span>
+                                <span className="search-info-value">
+                                    🛫 {cardData.metadata.searchContext.departure} →{" "}
+                                    {cardData.metadata.searchContext.arrival}
+                                </span>
+                            </div>
+                            <div className="search-info-item">
+                                <span className="search-info-label">Dates:</span>
+                                <span className="search-info-value">
+                                    📅{" "}
+                                    {new Date(
+                                        cardData.metadata.searchContext.outboundDate,
+                                    ).toLocaleDateString()}
+                                    {cardData.metadata.searchContext.returnDate && (
+                                        <>
+                                            {" "}
+                                            →{" "}
+                                            {new Date(
+                                                cardData.metadata.searchContext.returnDate,
+                                            ).toLocaleDateString()}
+                                        </>
+                                    )}
+                                </span>
+                            </div>
+                            {cardData.metadata.searchContext.currency && (
+                                <div className="search-info-item">
+                                    <span className="search-info-label">Currency:</span>
+                                    <span className="search-info-value">
+                                        💰 {cardData.metadata.searchContext.currency}
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
 
                 {/* Flight timing details for flight cards */}
                 {cardData.type === "flight" && cardData.details?.timingDetails && (
@@ -287,9 +369,9 @@ export function InfoModal({
                                         </div>
                                     )}
 
-                                {/* Segment-by-segment breakdown */}
+                                {/* Detailed Flight Segments */}
                                 {cardData.details?.segments &&
-                                    cardData.details.segments.length > 1 && (
+                                    cardData.details.segments.length > 0 && (
                                         <div
                                             style={{
                                                 borderTop: "1px solid #dee2e6",
@@ -304,72 +386,166 @@ export function InfoModal({
                                                     marginBottom: "0.5rem",
                                                 }}
                                             >
-                                                Flight Segments
+                                                Flight Segments ({cardData.details.segments.length})
                                             </div>
                                             {cardData.details.segments.map((segment, index) => (
                                                 <div
                                                     key={`${cardData.id}-segment-${segment.flight_number || "unknown"}-${segment.departure_airport?.id || "unknown"}-${segment.arrival_airport?.id || "unknown"}`}
-                                                    style={{
-                                                        padding: "0.75rem",
-                                                        backgroundColor: "white",
-                                                        borderRadius: "4px",
-                                                        marginBottom:
-                                                            index <
-                                                            cardData.details.segments.length - 1
-                                                                ? "0.5rem"
-                                                                : "0",
-                                                        border: "1px solid #e9ecef",
-                                                    }}
+                                                    className="segment-card"
                                                 >
-                                                    <div
-                                                        style={{
-                                                            fontSize: "0.8rem",
-                                                            fontWeight: "bold",
-                                                            marginBottom: "0.5rem",
-                                                        }}
-                                                    >
-                                                        Segment {index + 1}: {segment.flight_number}
+                                                    {/* Segment Header */}
+                                                    <div className="segment-header">
+                                                        <div className="segment-flight-info">
+                                                            <span className="segment-number">
+                                                                Segment {index + 1}
+                                                            </span>
+                                                            <span className="flight-number">
+                                                                {segment.flight_number}
+                                                            </span>
+                                                            <span className="airline-name">
+                                                                {segment.airline}
+                                                            </span>
+                                                        </div>
+                                                        {segment.airline_logo && (
+                                                            <img
+                                                                src={segment.airline_logo}
+                                                                alt={`${segment.airline} logo`}
+                                                                className="segment-airline-logo"
+                                                                onError={(e) => {
+                                                                    e.target.style.display = "none";
+                                                                }}
+                                                            />
+                                                        )}
                                                     </div>
-                                                    <div
-                                                        style={{
-                                                            display: "flex",
-                                                            justifyContent: "space-between",
-                                                            fontSize: "0.8rem",
-                                                        }}
-                                                    >
-                                                        <span>
-                                                            {segment.departure_airport?.id} at{" "}
-                                                            {new Date(
-                                                                segment.departure_airport?.time,
-                                                            ).toLocaleTimeString("en-US", {
-                                                                hour: "numeric",
-                                                                minute: "2-digit",
-                                                                hour12: true,
-                                                            })}
-                                                        </span>
-                                                        <span>→</span>
-                                                        <span>
-                                                            {segment.arrival_airport?.id} at{" "}
-                                                            {new Date(
-                                                                segment.arrival_airport?.time,
-                                                            ).toLocaleTimeString("en-US", {
-                                                                hour: "numeric",
-                                                                minute: "2-digit",
-                                                                hour12: true,
-                                                            })}
-                                                        </span>
+
+                                                    {/* Route and Times */}
+                                                    <div className="segment-route">
+                                                        <div className="segment-airport">
+                                                            <div className="airport-code">
+                                                                {segment.departure_airport?.id}
+                                                            </div>
+                                                            <div className="airport-name">
+                                                                {segment.departure_airport?.name}
+                                                            </div>
+                                                            <div className="airport-time">
+                                                                {new Date(
+                                                                    segment.departure_airport?.time,
+                                                                ).toLocaleTimeString("en-US", {
+                                                                    hour: "numeric",
+                                                                    minute: "2-digit",
+                                                                    hour12: true,
+                                                                })}
+                                                            </div>
+                                                        </div>
+                                                        <div className="segment-arrow">
+                                                            <div className="duration-badge">
+                                                                {Math.floor(
+                                                                    (segment.duration || 0) / 60,
+                                                                )}
+                                                                h {(segment.duration || 0) % 60}m
+                                                            </div>
+                                                            →
+                                                        </div>
+                                                        <div className="segment-airport">
+                                                            <div className="airport-code">
+                                                                {segment.arrival_airport?.id}
+                                                            </div>
+                                                            <div className="airport-name">
+                                                                {segment.arrival_airport?.name}
+                                                            </div>
+                                                            <div className="airport-time">
+                                                                {new Date(
+                                                                    segment.arrival_airport?.time,
+                                                                ).toLocaleTimeString("en-US", {
+                                                                    hour: "numeric",
+                                                                    minute: "2-digit",
+                                                                    hour12: true,
+                                                                })}
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                    <div
-                                                        style={{
-                                                            fontSize: "0.7rem",
-                                                            color: "#6c757d",
-                                                            marginTop: "0.25rem",
-                                                        }}
-                                                    >
-                                                        {segment.airline} • {segment.airplane} •{" "}
-                                                        {Math.floor((segment.duration || 0) / 60)}h{" "}
-                                                        {(segment.duration || 0) % 60}m
+
+                                                    {/* Aircraft and Class Details */}
+                                                    <div className="segment-details">
+                                                        {segment.airplane && (
+                                                            <span className="detail-badge">
+                                                                ✈️ {segment.airplane}
+                                                            </span>
+                                                        )}
+                                                        {segment.travel_class && (
+                                                            <span className="detail-badge">
+                                                                🎫 {segment.travel_class}
+                                                            </span>
+                                                        )}
+                                                        {segment.legroom && (
+                                                            <span className="detail-badge">
+                                                                💺 {segment.legroom}
+                                                            </span>
+                                                        )}
                                                     </div>
+
+                                                    {/* Warning Indicators */}
+                                                    {(segment.often_delayed_by_over_30_min ||
+                                                        segment.overnight) && (
+                                                        <div className="segment-warnings">
+                                                            {segment.often_delayed_by_over_30_min && (
+                                                                <span className="warning-indicator">
+                                                                    ⚠️ Often delayed 30+ min
+                                                                </span>
+                                                            )}
+                                                            {segment.overnight && (
+                                                                <span className="info-indicator">
+                                                                    🌙 Overnight
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    )}
+
+                                                    {/* Flight Features */}
+                                                    {segment.extensions &&
+                                                        segment.extensions.length > 0 && (
+                                                            <div className="segment-features">
+                                                                <div className="features-label">
+                                                                    Features:
+                                                                </div>
+                                                                <div className="features-list">
+                                                                    {segment.extensions.map(
+                                                                        (feature, fIndex) => (
+                                                                            <span
+                                                                                key={fIndex}
+                                                                                className="feature-item"
+                                                                            >
+                                                                                {getFeatureIcon(
+                                                                                    feature,
+                                                                                )}{" "}
+                                                                                {feature}
+                                                                            </span>
+                                                                        ),
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        )}
+
+                                                    {/* Additional Info */}
+                                                    {(segment.ticket_also_sold_by ||
+                                                        segment.plane_and_crew_by) && (
+                                                        <div className="segment-additional">
+                                                            {segment.ticket_also_sold_by && (
+                                                                <div className="additional-info">
+                                                                    <strong>Also sold by:</strong>{" "}
+                                                                    {segment.ticket_also_sold_by.join(
+                                                                        ", ",
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                            {segment.plane_and_crew_by && (
+                                                                <div className="additional-info">
+                                                                    <strong>Operated by:</strong>{" "}
+                                                                    {segment.plane_and_crew_by}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             ))}
                                         </div>
@@ -417,38 +593,179 @@ export function InfoModal({
                     </div>
                 )}
 
-                {/* Detailed information */}
-                {cardData.details && Object.keys(cardData.details).length > 0 && (
+                {/* Detailed Information */}
+                {cardData.details &&
+                    Object.keys(cardData.details).filter(
+                        (key) =>
+                            ![
+                                "segments",
+                                "layovers",
+                                "timingDetails",
+                                "airlineLogo",
+                                "airlineLogos",
+                                "bookingToken",
+                            ].includes(key),
+                    ).length > 0 && (
+                        <div style={{ marginBottom: "1.5rem" }}>
+                            <h3 className="modal-section-title">
+                                {cardData.type === "flight"
+                                    ? "Flight Details"
+                                    : "Additional Information"}
+                            </h3>
+                            <div className="modal-info-grid">
+                                {Object.entries(cardData.details)
+                                    .filter(
+                                        ([key]) =>
+                                            ![
+                                                "segments",
+                                                "layovers",
+                                                "timingDetails",
+                                                "airlineLogo",
+                                                "airlineLogos",
+                                                "bookingToken",
+                                            ].includes(key),
+                                    )
+                                    .map(([key, value]) => (
+                                        <div key={key} className="modal-info-item">
+                                            <span className="modal-info-label">
+                                                {formatLabel(key)}:
+                                            </span>
+                                            <span className="modal-info-value">
+                                                {formatValue(key, value)}
+                                            </span>
+                                        </div>
+                                    ))}
+                            </div>
+                        </div>
+                    )}
+
+                {/* Booking Options */}
+                {cardData.type === "flight" && cardData.details?.bookingOptions && (
                     <div style={{ marginBottom: "1.5rem" }}>
-                        <h3
-                            style={{
-                                margin: "0 0 1rem 0",
-                                color: "#333",
-                                fontSize: "1.1rem",
-                            }}
-                        >
-                            Detailed Information
+                        <h3 className="modal-section-title">
+                            Booking Options ({cardData.details.bookingOptions.length})
                         </h3>
-                        <div
-                            style={{
-                                backgroundColor: "#f8f9fa",
-                                padding: "1rem",
-                                borderRadius: "8px",
-                                border: "1px solid #e9ecef",
-                            }}
-                        >
-                            <pre
-                                style={{
-                                    margin: 0,
-                                    fontFamily: 'Monaco, Consolas, "Courier New", monospace',
-                                    fontSize: "0.85rem",
-                                    whiteSpace: "pre-wrap",
-                                    wordBreak: "break-word",
-                                    color: "#333",
-                                }}
-                            >
-                                {JSON.stringify(cardData.details, null, 2)}
-                            </pre>
+                        <div className="booking-options-grid">
+                            {cardData.details.bookingOptions.slice(0, 6).map((option, index) => (
+                                <div key={index} className="booking-option-card">
+                                    <div className="booking-header">
+                                        <div className="booking-provider">
+                                            {option.together?.airline_logos &&
+                                                option.together.airline_logos[0] && (
+                                                    <img
+                                                        src={option.together.airline_logos[0]}
+                                                        alt="Provider logo"
+                                                        className="provider-logo"
+                                                        onError={(e) => {
+                                                            e.target.style.display = "none";
+                                                        }}
+                                                    />
+                                                )}
+                                            <span className="provider-name">
+                                                {option.together?.book_with}
+                                            </span>
+                                        </div>
+                                        <div className="booking-price">
+                                            ${option.together?.price}
+                                        </div>
+                                    </div>
+
+                                    {option.together?.option_title && (
+                                        <div className="booking-type">
+                                            {option.together.option_title}
+                                        </div>
+                                    )}
+
+                                    {option.together?.extensions && (
+                                        <div className="booking-features">
+                                            {option.together.extensions
+                                                .slice(0, 3)
+                                                .map((feature, fIndex) => (
+                                                    <span key={fIndex} className="booking-feature">
+                                                        {feature}
+                                                    </span>
+                                                ))}
+                                            {option.together.extensions.length > 3 && (
+                                                <span className="booking-feature more-features">
+                                                    +{option.together.extensions.length - 3} more
+                                                </span>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {option.together?.baggage_prices && (
+                                        <div className="baggage-info">
+                                            <div className="baggage-label">Baggage:</div>
+                                            {option.together.baggage_prices.map(
+                                                (baggage, bIndex) => (
+                                                    <span key={bIndex} className="baggage-item">
+                                                        🧳 {baggage}
+                                                    </span>
+                                                ),
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {option.together?.booking_phone && (
+                                        <div className="booking-phone">
+                                            📞 {option.together.booking_phone}
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                            {cardData.details.bookingOptions.length > 6 && (
+                                <div className="more-options-notice">
+                                    +{cardData.details.bookingOptions.length - 6} more booking
+                                    options available
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* General Baggage Policies */}
+                {cardData.type === "flight" && cardData.details?.baggagePrices && (
+                    <div style={{ marginBottom: "1.5rem" }}>
+                        <h3 className="modal-section-title">Baggage Policies</h3>
+                        <div className="baggage-policies">
+                            {cardData.details.baggagePrices.together && (
+                                <div className="baggage-section">
+                                    <div className="baggage-section-title">General Policy</div>
+                                    {cardData.details.baggagePrices.together.map(
+                                        (policy, index) => (
+                                            <div key={index} className="baggage-policy-item">
+                                                🧳 {policy}
+                                            </div>
+                                        ),
+                                    )}
+                                </div>
+                            )}
+
+                            {cardData.details.baggagePrices.departing && (
+                                <div className="baggage-section">
+                                    <div className="baggage-section-title">Departing Flight</div>
+                                    {cardData.details.baggagePrices.departing.map(
+                                        (policy, index) => (
+                                            <div key={index} className="baggage-policy-item">
+                                                🧳 {policy}
+                                            </div>
+                                        ),
+                                    )}
+                                </div>
+                            )}
+
+                            {cardData.details.baggagePrices.returning && (
+                                <div className="baggage-section">
+                                    <div className="baggage-section-title">Returning Flight</div>
+                                    {cardData.details.baggagePrices.returning.map(
+                                        (policy, index) => (
+                                            <div key={index} className="baggage-policy-item">
+                                                🧳 {policy}
+                                            </div>
+                                        ),
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
@@ -525,4 +842,77 @@ export function InfoModal({
             </div>
         </div>
     );
+}
+
+// Helper function to format field labels
+function formatLabel(key) {
+    return key
+        .split(/(?=[A-Z])|_/)
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(" ");
+}
+
+// Helper function to format field values
+function formatValue(key, value) {
+    if (value === null || value === undefined) {
+        return "N/A";
+    }
+
+    if (typeof value === "boolean") {
+        return value ? "Yes" : "No";
+    }
+
+    if (Array.isArray(value)) {
+        if (value.length === 0) return "None";
+        return value.join(", ");
+    }
+
+    if (typeof value === "object") {
+        // Handle nested objects gracefully
+        if (value.name) return value.name;
+        if (value.id) return value.id;
+        if (value.code) return value.code;
+
+        // Special handling for carbon emissions
+        if (key.toLowerCase().includes("carbon") || key.toLowerCase().includes("emission")) {
+            if (value.this_flight && value.typical_for_this_route) {
+                const thisFlightKg = Math.round(value.this_flight / 1000);
+                const typicalKg = Math.round(value.typical_for_this_route / 1000);
+                const diff = value.difference_percent || 0;
+                const diffText = diff > 0 ? `+${diff}%` : `${diff}%`;
+                return `${thisFlightKg}kg CO₂ (${diffText} vs typical ${typicalKg}kg)`;
+            }
+        }
+
+        // Handle other common object patterns
+        if (value.amount && value.currency) {
+            return `${value.currency} ${value.amount}`;
+        }
+
+        if (value.lat && value.lng) {
+            return `${value.lat}, ${value.lng}`;
+        }
+
+        // For other objects, create a readable key-value format
+        const entries = Object.entries(value);
+        if (entries.length <= 3) {
+            return entries.map(([k, v]) => `${formatLabel(k)}: ${v}`).join(", ");
+        }
+
+        return JSON.stringify(value, null, 2);
+    }
+
+    // Format duration values
+    if (key.toLowerCase().includes("duration") && typeof value === "number") {
+        const hours = Math.floor(value / 60);
+        const minutes = value % 60;
+        return `${hours}h ${minutes}m`;
+    }
+
+    // Format price values
+    if (key.toLowerCase().includes("price") && typeof value === "number") {
+        return `$${value.toFixed(2)}`;
+    }
+
+    return String(value);
 }

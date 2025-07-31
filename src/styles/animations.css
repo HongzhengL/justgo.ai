@@ -1,0 +1,261 @@
+/* Animation Keyframes and Utilities */
+@import "./variables.css";
+
+/* Keyframe Animations */
+
+/* Fade In */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Slide In from Bottom */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Slide In from Left */
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Slide In from Right */
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Shimmer for Skeleton Loading */
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+/* Pulse */
+@keyframes pulse {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* Scale Pulse */
+@keyframes scalePulse {
+    0%,
+    100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+/* Bounce */
+@keyframes bounce {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+/* Rotate */
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Typing Dots */
+@keyframes typingDot {
+    0%,
+    80%,
+    100% {
+        opacity: 0.3;
+        transform: scale(0.8);
+    }
+    40% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Success Check */
+@keyframes successCheck {
+    0% {
+        transform: scale(0) rotate(45deg);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.2) rotate(45deg);
+    }
+    100% {
+        transform: scale(1) rotate(45deg);
+        opacity: 1;
+    }
+}
+
+/* Animation Utility Classes */
+
+/* Fade In */
+.animate-fadeIn {
+    animation: fadeIn var(--transition-normal) var(--ease-out) forwards;
+}
+
+/* Slide In */
+.animate-slideIn {
+    animation: slideIn var(--transition-normal) var(--ease-out) forwards;
+}
+
+.animate-slideInLeft {
+    animation: slideInLeft var(--transition-normal) var(--ease-out) forwards;
+}
+
+.animate-slideInRight {
+    animation: slideInRight var(--transition-normal) var(--ease-out) forwards;
+}
+
+/* Pulse */
+.animate-pulse {
+    animation: pulse 2s infinite;
+}
+
+.animate-scalePulse {
+    animation: scalePulse 2s infinite;
+}
+
+/* Bounce */
+.animate-bounce {
+    animation: bounce 1s infinite;
+}
+
+/* Rotate */
+.animate-rotate {
+    animation: rotate 1s linear infinite;
+}
+
+/* Staggered Animations */
+.stagger-1 {
+    animation-delay: 100ms;
+}
+.stagger-2 {
+    animation-delay: 200ms;
+}
+.stagger-3 {
+    animation-delay: 300ms;
+}
+.stagger-4 {
+    animation-delay: 400ms;
+}
+.stagger-5 {
+    animation-delay: 500ms;
+}
+
+/* Animation Speed Modifiers */
+.animation-fast {
+    animation-duration: var(--transition-fast) !important;
+}
+
+.animation-normal {
+    animation-duration: var(--transition-normal) !important;
+}
+
+.animation-slow {
+    animation-duration: var(--transition-slow) !important;
+}
+
+/* Loading Spinner */
+.spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--neutral-200);
+    border-top-color: var(--primary-500);
+    border-radius: 50%;
+    animation: rotate 1s linear infinite;
+}
+
+.spinner-sm {
+    width: 20px;
+    height: 20px;
+    border-width: 2px;
+}
+
+.spinner-lg {
+    width: 60px;
+    height: 60px;
+    border-width: 4px;
+}
+
+/* Transition Utilities */
+.transition-opacity {
+    transition: opacity var(--transition-normal) var(--ease-in-out);
+}
+
+.transition-transform {
+    transition: transform var(--transition-normal) var(--ease-out);
+}
+
+.transition-all {
+    transition: all var(--transition-normal) var(--ease-in-out);
+}
+
+/* Hover Scale */
+.hover-scale:hover {
+    transform: scale(1.05);
+}
+
+.hover-scale-sm:hover {
+    transform: scale(1.02);
+}
+
+/* Active Scale */
+.active-scale:active {
+    transform: scale(0.98);
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

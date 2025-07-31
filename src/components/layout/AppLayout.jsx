@@ -3,6 +3,8 @@ import { useAuth } from "wasp/client/auth";
 import Sidebar from "./Sidebar.jsx";
 import MobileNavigation from "./MobileNavigation.jsx";
 import "./layout.css";
+import "../card.css";
+import "../cardlist.css";
 
 export default function AppLayout({ children }) {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
