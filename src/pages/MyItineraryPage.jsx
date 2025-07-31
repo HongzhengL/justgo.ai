@@ -5,6 +5,7 @@ import { useAuth } from "wasp/client/auth";
 import { Link } from "wasp/client/router";
 import { CardList } from "../components/CardList.jsx";
 import { InfoModal } from "../components/InfoModal.jsx";
+import { ConfirmationModal } from "../components/ConfirmationModal.jsx";
 import AppLayout from "../components/layout/AppLayout.jsx";
 import useInfoModal from "../hooks/useInfoModal.js";
 import logger from "../utils/logger.js";
@@ -111,12 +112,14 @@ export function MyItineraryPage() {
         <AppLayout>
             <div
                 style={{
-                    padding: "2rem",
+                    height: "100%",
+                    display: "flex",
+                    flexDirection: "column",
                     maxWidth: "1200px",
                     margin: "0 auto",
                 }}
             >
-                <div style={{ marginBottom: "2rem" }}>
+                <div style={{ padding: "2rem 2rem 0 2rem", marginBottom: "2rem" }}>
                     <h1
                         style={{
                             fontSize: "2rem",
@@ -138,182 +141,111 @@ export function MyItineraryPage() {
                     </p>
                 </div>
 
-                {allCards.length === 0 ? (
-                    <div
-                        style={{
-                            textAlign: "center",
-                            padding: "3rem 2rem",
-                            backgroundColor: "#f8f9fa",
-                            borderRadius: "8px",
-                            border: "1px solid #e9ecef",
-                        }}
-                    >
-                        <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🎒</div>
-                        <h2
-                            style={{
-                                fontSize: "1.5rem",
-                                color: "#495057",
-                                marginBottom: "1rem",
-                            }}
-                        >
-                            Your itinerary is empty
-                        </h2>
-                        <p
-                            style={{
-                                color: "#6c757d",
-                                marginBottom: "2rem",
-                                fontSize: "1rem",
-                            }}
-                        >
-                            Start planning your trip by searching for flights, places, and
-                            activities in the chat.
-                        </p>
-                        <Link
-                            to="/dashboard"
-                            style={{
-                                display: "inline-block",
-                                padding: "0.75rem 1.5rem",
-                                backgroundColor: "#007bff",
-                                color: "white",
-                                textDecoration: "none",
-                                borderRadius: "6px",
-                                fontWeight: "500",
-                                transition: "background-color 0.2s ease",
-                            }}
-                        >
-                            💬 Go to Chat
-                        </Link>
-                    </div>
-                ) : (
-                    <>
-                        <CardList
-                            cards={allCards}
-                            onGoToWebsite={handleGoToWebsite}
-                            onMoreInfo={handleMoreInfo}
-                            onAddToItinerary={handleRemoveFromItinerary}
-                            addToItineraryText="Remove from Itinerary"
-                            addToItineraryIcon="🗑️"
-                        />
-
-                        {/* Total Cost Summary */}
+                <div
+                    style={{
+                        flex: 1,
+                        overflowY: "auto",
+                        minHeight: 1,
+                        padding: "0 2rem 2rem 2rem",
+                    }}
+                >
+                    {allCards.length === 0 ? (
                         <div
                             style={{
-                                marginTop: "2rem",
-                                padding: "1.5rem",
-                                backgroundColor: "#e8f4f8",
+                                textAlign: "center",
+                                padding: "3rem 2rem",
+                                backgroundColor: "#f8f9fa",
                                 borderRadius: "8px",
-                                border: "1px solid #bee5eb",
+                                border: "1px solid #e9ecef",
                             }}
                         >
-                            <h3
+                            <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🎒</div>
+                            <h2
                                 style={{
-                                    fontSize: "1.25rem",
-                                    color: "#0c5460",
-                                    marginBottom: "0.5rem",
+                                    fontSize: "1.5rem",
+                                    color: "#495057",
+                                    marginBottom: "1rem",
                                 }}
                             >
-                                💰 Trip Summary
-                            </h3>
+                                Your itinerary is empty
+                            </h2>
                             <p
                                 style={{
-                                    color: "#0c5460",
-                                    margin: 0,
+                                    color: "#6c757d",
+                                    marginBottom: "2rem",
                                     fontSize: "1rem",
                                 }}
                             >
-                                Total estimated cost:{" "}
-                                {allCards
-                                    .reduce((total, card) => {
-                                        return total + (card.price?.amount || 0);
-                                    }, 0)
-                                    .toLocaleString("en-US", {
-                                        style: "currency",
-                                        currency: allCards[0]?.price?.currency || "USD",
-                                    })}
+                                Start planning your trip by searching for flights, places, and
+                                activities in the chat.
                             </p>
+                            <Link
+                                to="/dashboard"
+                                style={{
+                                    display: "inline-block",
+                                    padding: "0.75rem 1.5rem",
+                                    backgroundColor: "#007bff",
+                                    color: "white",
+                                    textDecoration: "none",
+                                    borderRadius: "6px",
+                                    fontWeight: "500",
+                                    transition: "background-color 0.2s ease",
+                                }}
+                            >
+                                💬 Go to Chat
+                            </Link>
                         </div>
-                    </>
-                )}
+                    ) : (
+                        <>
+                            <CardList
+                                cards={allCards}
+                                onGoToWebsite={handleGoToWebsite}
+                                onMoreInfo={handleMoreInfo}
+                                onAddToItinerary={handleRemoveFromItinerary}
+                                addToItineraryText="Remove from Itinerary"
+                                addToItineraryIcon="🗑️"
+                            />
 
-                {/* Remove Confirmation Dialog */}
-                {showRemoveConfirm && (
-                    <div
-                        style={{
-                            position: "fixed",
-                            top: 0,
-                            left: 0,
-                            right: 0,
-                            bottom: 0,
-                            backgroundColor: "rgba(0, 0, 0, 0.5)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            zIndex: 1000,
-                        }}
-                    >
-                        <div
-                            style={{
-                                backgroundColor: "white",
-                                padding: "2rem",
-                                borderRadius: "8px",
-                                maxWidth: "400px",
-                                margin: "1rem",
-                            }}
-                        >
-                            <h3
-                                style={{
-                                    marginBottom: "1rem",
-                                    color: "#dc3545",
-                                }}
-                            >
-                                🗑️ Remove Item
-                            </h3>
-                            <p
-                                style={{
-                                    marginBottom: "1.5rem",
-                                    color: "#495057",
-                                }}
-                            >
-                                Are you sure you want to remove &quot;{itemToRemove?.title}&quot;
-                                from your itinerary?
-                            </p>
+                            {/* Total Cost Summary */}
                             <div
                                 style={{
-                                    display: "flex",
-                                    gap: "1rem",
-                                    justifyContent: "flex-end",
+                                    marginTop: "2rem",
+                                    padding: "1.5rem",
+                                    backgroundColor: "#e8f4f8",
+                                    borderRadius: "8px",
+                                    border: "1px solid #bee5eb",
                                 }}
                             >
-                                <button
-                                    onClick={cancelRemove}
+                                <h3
                                     style={{
-                                        padding: "0.5rem 1rem",
-                                        backgroundColor: "#6c757d",
-                                        color: "white",
-                                        border: "none",
-                                        borderRadius: "4px",
-                                        cursor: "pointer",
+                                        fontSize: "1.25rem",
+                                        color: "#0c5460",
+                                        marginBottom: "0.5rem",
                                     }}
                                 >
-                                    Cancel
-                                </button>
-                                <button
-                                    onClick={confirmRemove}
+                                    💰 Trip Summary
+                                </h3>
+                                <p
                                     style={{
-                                        padding: "0.5rem 1rem",
-                                        backgroundColor: "#dc3545",
-                                        color: "white",
-                                        border: "none",
-                                        borderRadius: "4px",
-                                        cursor: "pointer",
+                                        color: "#0c5460",
+                                        margin: 0,
+                                        fontSize: "1rem",
                                     }}
                                 >
-                                    Remove
-                                </button>
+                                    Total estimated cost:{" "}
+                                    {allCards
+                                        .reduce((total, card) => {
+                                            return total + (card.price?.amount || 0);
+                                        }, 0)
+                                        .toLocaleString("en-US", {
+                                            style: "currency",
+                                            currency: allCards[0]?.price?.currency || "USD",
+                                        })}
+                                </p>
                             </div>
-                        </div>
-                    </div>
-                )}
+                        </>
+                    )}
+                </div>
 
                 {/* Info Modal */}
                 {modalProps.isOpen && modalProps.cardData && (
@@ -325,6 +257,17 @@ export function MyItineraryPage() {
                         addToItineraryIcon="🗑️"
                     />
                 )}
+
+                <ConfirmationModal
+                    isOpen={showRemoveConfirm}
+                    title="Remove Item"
+                    message={`Are you sure you want to remove "${itemToRemove?.title}" from your itinerary?`}
+                    confirmText="Remove"
+                    onConfirm={confirmRemove}
+                    onCancel={cancelRemove}
+                    confirmButtonColor="#dc3545"
+                    icon="🗑️"
+                />
             </div>
         </AppLayout>
     );

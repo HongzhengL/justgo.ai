@@ -15,6 +15,7 @@ import {
 import { CardList } from "../components/CardList";
 import { InfoModal } from "../components/InfoModal.jsx";
 import { BookingOptionsModal } from "../components/BookingOptionsModal.jsx";
+import { ConfirmationModal } from "../components/ConfirmationModal.jsx";
 import AppLayout from "../components/layout/AppLayout.jsx";
 import useInfoModal from "../hooks/useInfoModal.js";
 import { useVoiceRecorder } from "../hooks/useVoiceRecorder";
@@ -32,6 +33,10 @@ export function DashboardPage() {
     const [selectedBookingToken, setSelectedBookingToken] = useState(null);
     const [selectedSearchContext, setSelectedSearchContext] = useState(null);
     const [selectedFlightInfo, setSelectedFlightInfo] = useState(null);
+
+    // Add to itinerary confirmation modal states
+    const [showAddConfirm, setShowAddConfirm] = useState(false);
+    const [itemToAdd, setItemToAdd] = useState(null);
 
     // Voice recording hooks
     const { isRecording, startVoiceRecording, stopVoiceRecording } = useVoiceRecorder();
@@ -161,33 +166,45 @@ export function DashboardPage() {
         }
     };
 
-    const handleAddToItinerary = async (cardData) => {
-        try {
-            // Get or create a default itinerary
-            let targetItinerary = itineraries?.find((it) => it.title === "My Travel Plans");
+    const handleAddToItinerary = (cardData) => {
+        setItemToAdd(cardData);
+        setShowAddConfirm(true);
+    };
 
-            if (!targetItinerary) {
-                // Create a default itinerary
-                targetItinerary = await createItineraryFn({
-                    title: "My Travel Plans",
-                    description: "Items saved from AI travel search",
+    const confirmAdd = async () => {
+        if (itemToAdd) {
+            try {
+                // Get or create a default itinerary
+                let targetItinerary = itineraries?.find((it) => it.title === "My Travel Plans");
+
+                if (!targetItinerary) {
+                    // Create a default itinerary
+                    targetItinerary = await createItineraryFn({
+                        title: "My Travel Plans",
+                        description: "Items saved from AI travel search",
+                    });
+                }
+
+                // Add the card to the itinerary
+                await addToItineraryFn({
+                    itineraryId: targetItinerary.id,
+                    cardData: itemToAdd,
                 });
+
+                logger.info("Successfully added to itinerary:", itemToAdd.title);
+
+                setShowAddConfirm(false);
+                setItemToAdd(null);
+            } catch (error) {
+                logger.error("Error adding to itinerary:", error);
+                alert("Failed to add item to itinerary. Please try again.");
             }
-
-            // Add the card to the itinerary
-            await addToItineraryFn({
-                itineraryId: targetItinerary.id,
-                cardData: cardData,
-            });
-
-            logger.info("Successfully added to itinerary:", cardData.title);
-
-            // Show a success message (you could use a toast notification here)
-            alert(`Added "${cardData.title}" to your itinerary!`);
-        } catch (error) {
-            logger.error("Error adding to itinerary:", error);
-            alert("Failed to add item to itinerary. Please try again.");
         }
+    };
+
+    const cancelAdd = () => {
+        setShowAddConfirm(false);
+        setItemToAdd(null);
     };
 
     const handleBookFlight = (bookingToken, searchContext, flightInfo) => {
@@ -346,6 +363,17 @@ export function DashboardPage() {
                 bookingToken={selectedBookingToken}
                 searchContext={selectedSearchContext}
                 flightInfo={selectedFlightInfo}
+            />
+
+            <ConfirmationModal
+                isOpen={showAddConfirm}
+                title="Add to Itinerary"
+                message={`Are you sure you want to add "${itemToAdd?.title}" to your itinerary?`}
+                confirmText="Add"
+                onConfirm={confirmAdd}
+                onCancel={cancelAdd}
+                confirmButtonColor="#28a745"
+                icon="➕"
             />
         </AppLayout>
     );
