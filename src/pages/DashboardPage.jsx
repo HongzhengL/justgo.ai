@@ -15,6 +15,7 @@ import {
 import { CardList } from "../components/CardList";
 import { InfoModal } from "../components/InfoModal.jsx";
 import { BookingOptionsModal } from "../components/BookingOptionsModal.jsx";
+import { HotelBookingModal } from "../components/HotelBookingModal.jsx";
 import { ConfirmationModal } from "../components/ConfirmationModal.jsx";
 import AppLayout from "../components/layout/AppLayout.jsx";
 import useInfoModal from "../hooks/useInfoModal.js";
@@ -33,6 +34,11 @@ export function DashboardPage() {
     const [selectedBookingToken, setSelectedBookingToken] = useState(null);
     const [selectedSearchContext, setSelectedSearchContext] = useState(null);
     const [selectedFlightInfo, setSelectedFlightInfo] = useState(null);
+
+    // Hotel booking modal states
+    const [isHotelBookingModalOpen, setIsHotelBookingModalOpen] = useState(false);
+    const [selectedHotel, setSelectedHotel] = useState(null);
+    const [selectedHotelOffer, setSelectedHotelOffer] = useState(null);
 
     // Add to itinerary confirmation modal states
     const [showAddConfirm, setShowAddConfirm] = useState(false);
@@ -214,6 +220,51 @@ export function DashboardPage() {
         setIsBookingModalOpen(true);
     };
 
+    const handleBookHotel = (hotel, offer) => {
+        logger.info('Hotel booking initiated:', { hotel: hotel.title, offer });
+        setSelectedHotel(hotel);
+        setSelectedHotelOffer(offer);
+        setIsHotelBookingModalOpen(true);
+    };
+
+    const handleHotelBookingComplete = (bookingResult) => {
+        logger.info('Hotel booking completed:', bookingResult);
+        
+        // Different messages based on booking method
+        let successText;
+        if (bookingResult.method === 'real_browser_automation' && bookingResult.automationSuccess) {
+            successText = `🤖✨ **REAL BROWSER AUTOMATION COMPLETED!** 
+
+I've just controlled a live browser and automatically:
+• 🌐 Opened booking.com and navigated to your hotel
+• 🏨 Selected "${selectedHotel?.title}" from search results  
+• 🏠 Chose the best available room for your dates
+• 👤 Auto-filled all your personal information in the forms
+• 💳 Navigated to the booking confirmation page
+
+The automated browser window is now open and ready - just complete the payment! 🎉
+
+${bookingResult.message || ''}`;
+        } else if (bookingResult.method === 'fallback_redirect' || bookingResult.redirected) {
+            successText = `🤖 AI booking agent completed! I've pre-filled your information at ${selectedHotel?.title} and opened the booking page. ${bookingResult.message || 'Please complete the booking manually.'} 🎉`;
+        } else {
+            successText = `🎉 Hotel booking process initiated! Your booking ID: ${bookingResult.bookingId}`;
+        }
+        
+        // Add success message to chat
+        const successMessage = {
+            id: crypto.randomUUID(),
+            sender: "ai",
+            text: successText,
+            timestamp: new Date(),
+            type: "success",
+            cards: []
+        };
+        
+        setMessages(prev => [...prev, successMessage]);
+        setIsHotelBookingModalOpen(false);
+    };
+
     const handleVoiceRecording = async () => {
         logger.debug("Voice recording button clicked, current state:", isRecording);
         if (isRecording) {
@@ -300,6 +351,7 @@ export function DashboardPage() {
                                             onMoreInfo={openModal}
                                             onAddToItinerary={handleAddToItinerary}
                                             onBookFlight={handleBookFlight}
+                                            onBookHotel={handleBookHotel}
                                         />
                                     </div>
                                 )}
@@ -363,6 +415,20 @@ export function DashboardPage() {
                 bookingToken={selectedBookingToken}
                 searchContext={selectedSearchContext}
                 flightInfo={selectedFlightInfo}
+            />
+
+            <HotelBookingModal
+                isOpen={isHotelBookingModalOpen}
+                onClose={() => setIsHotelBookingModalOpen(false)}
+                hotel={selectedHotel}
+                offer={selectedHotelOffer}
+                guestInfo={{
+                    firstName: user?.firstName || '',
+                    lastName: user?.lastName || '',
+                    email: user?.email || ''
+                }}
+                onBookingComplete={handleHotelBookingComplete}
+                autoFillEnabled={true}
             />
 
             <ConfirmationModal

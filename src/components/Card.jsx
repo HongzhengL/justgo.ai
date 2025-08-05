@@ -20,6 +20,7 @@ export function Card({
     onMoreInfo,
     onAddToItinerary,
     onBookFlight,
+    onBookHotel,
     addToItineraryText,
     addToItineraryIcon,
 }) {
@@ -338,14 +339,26 @@ export function Card({
                     {(externalLinks?.website || externalLinks?.booking || bookingUrl) && (
                         <button
                             onClick={() => {
-                                // Handle flight booking with new modal approach
-                                if (type === "flight" && metadata?.bookingToken && onBookFlight) {
-                                    onBookFlight(metadata.bookingToken, metadata.searchContext, {
+                                // Handle flight booking with new modal approach - always use modal for flights if handler exists  
+                                if (type === "flight" && metadata?.searchContext && onBookFlight) {
+                                    // Use booking token if available, otherwise use fallback token to trigger error handling in modal
+                                    const bookingToken = metadata.bookingToken || 'INVALID_TOKEN_FALLBACK';
+                                    onBookFlight(bookingToken, metadata.searchContext, {
                                         title,
                                         subtitle,
                                     });
-                                } else {
-                                    // Fallback to existing behavior for non-flights or missing booking token
+                                } 
+                                // Handle hotel booking with new modal approach
+                                else if ((type === "hotel" || additionalInfo?.hotelId) && onBookHotel) {
+                                    onBookHotel(cardData, {
+                                        checkInDate: additionalInfo?.checkIn,
+                                        checkOutDate: additionalInfo?.checkOut,
+                                        price: price,
+                                        room: additionalInfo?.room
+                                    });
+                                } 
+                                else {
+                                    // Fallback to existing behavior for non-flights/hotels or missing handlers
                                     const url =
                                         externalLinks?.website ||
                                         externalLinks?.booking ||

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { useQuery } from "wasp/client/operations";
-import { fetchFlightBookingOptions } from "wasp/client/operations";
+import { useQuery, useAction } from "wasp/client/operations";
+import { fetchFlightBookingOptions, bookFlight } from "wasp/client/operations";
 import logger from "../utils/logger.js";
 
 export function BookingOptionsModal({ isOpen, onClose, bookingToken, searchContext, flightInfo }) {

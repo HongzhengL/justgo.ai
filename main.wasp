@@ -98,6 +98,11 @@ query fetchFlightBookingOptions {
   entities: [User]
 }
 
+action bookFlight {
+  fn: import { bookFlight } from "@src/operations/booking.js",
+  entities: [User]
+}
+
 // Itinerary operations
 query getItineraries {
   fn: import { getItineraries } from "@src/operations/itinerary.js",
@@ -182,4 +187,25 @@ action clearConversation {
 action processVoiceMessage {
   fn: import { processVoiceMessage } from "@src/operations/voice.js",
   entities: [User, Conversation]
+}
+
+// Hotel booking operations
+action bookHotelWithAI {
+  fn: import { bookHotelWithAI } from "@src/operations/hotelBooking.js",
+  entities: [User]
+}
+
+query getAIBookingStatus {
+  fn: import { getAIBookingStatus } from "@src/operations/hotelBooking.js",
+  entities: [User]
+}
+
+action cancelAIBooking {
+  fn: import { cancelAIBooking } from "@src/operations/hotelBooking.js",
+  entities: [User]
+}
+
+query getHotelBookingSites {
+  fn: import { getHotelBookingSites } from "@src/operations/hotelBooking.js",
+  entities: [User]
 }
