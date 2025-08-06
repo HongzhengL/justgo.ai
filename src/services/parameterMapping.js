@@ -223,16 +223,63 @@ export default class ParameterMappingService {
     }
 
     /**
-     * Normalizes airport codes - basic cleanup since AI Agent handles IATA conversion
-     * @param {string} location - Location string (should already be IATA code from AI)
-     * @returns {string} - Cleaned IATA code
+     * Normalizes airport codes - converts city names to IATA codes
+     * @param {string} location - Location string (airport code or city name)
+     * @returns {string} - Normalized IATA airport code
      */
     normalizeAirportCode(location) {
         if (!location || typeof location !== "string") {
             return location;
         }
 
-        // AI Agent should already provide IATA codes, just clean them up
-        return location.toUpperCase().trim();
+        const cleaned = location.toLowerCase().trim();
+        
+        // Common city name to primary airport code mappings
+        const CITY_TO_AIRPORT_MAP = {
+            "paris": "CDG",
+            "london": "LHR", 
+            "new york": "JFK",
+            "los angeles": "LAX",
+            "chicago": "ORD",
+            "san francisco": "SFO",
+            "miami": "MIA",
+            "dallas": "DFW",
+            "houston": "IAH",
+            "atlanta": "ATL",
+            "boston": "BOS",
+            "seattle": "SEA",
+            "denver": "DEN",
+            "las vegas": "LAS",
+            "phoenix": "PHX",
+            "tokyo": "NRT",
+            "amsterdam": "AMS",
+            "frankfurt": "FRA",
+            "rome": "FCO",
+            "madrid": "MAD",
+            "barcelona": "BCN",
+            "berlin": "BER",
+            "munich": "MUC",
+            "dubai": "DXB",
+            "singapore": "SIN",
+            "hong kong": "HKG",
+            "sydney": "SYD",
+            "melbourne": "MEL",
+            "toronto": "YYZ",
+            "vancouver": "YVR"
+        };
+
+        // Check if it's a city name that needs conversion
+        if (CITY_TO_AIRPORT_MAP[cleaned]) {
+            return CITY_TO_AIRPORT_MAP[cleaned];
+        }
+
+        // If already looks like an airport code (3 letters), return uppercase
+        const upper = location.toUpperCase().trim();
+        if (upper.length === 3 && /^[A-Z]{3}$/.test(upper)) {
+            return upper;
+        }
+
+        // For anything else, return as-is (will be validated later)
+        return upper;
     }
 }

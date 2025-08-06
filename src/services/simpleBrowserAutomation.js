@@ -15,13 +15,18 @@ export class SimpleBrowserAutomation {
      * REAL AGENTIC automation - Actually automate the booking process with timeout
      */
     async automateHotelBooking(hotelData, guestInfo, onProgress) {
+        let automationTimeout = null;
+        let isTimedOut = false;
+        
         // Add overall timeout to prevent hanging
-        const automationTimeout = setTimeout(() => {
+        automationTimeout = setTimeout(() => {
             logger.warn('⏰ Automation timeout reached - failing gracefully');
+            isTimedOut = true;
             if (this.browser) {
                 this.browser.close().catch(() => {});
+                this.browser = null;
             }
-        }, 30000); // 30 second timeout
+        }, 45000); // 45 second timeout (extended)
         
         try {
             const hotelName = hotelData.name || hotelData.title || 'Selected Hotel';
@@ -64,56 +69,62 @@ export class SimpleBrowserAutomation {
             onProgress?.({ step: 3, message: `🎯 Locating "${hotelName}" on page...` });
             await this.delay(1200);
             
-            // Skip trying to find specific hotel - just click first good hotel
-            const hotelClicked = await this.clickFirstAvailableHotel();
-            logger.info('🏨 Hotel clicked result:', hotelClicked);
+            // STEP BY STEP ROBUST AUTOMATION - Track progress properly
+            let automationSuccess = false;
+            let finalUrl = this.page.url();
             
-            if (hotelClicked) {
-                logger.info('✅ Hotel was clicked successfully, proceeding to room selection');
+            // Step 4: Navigate to hotel page  
+            onProgress?.({ step: 4, message: '🏨 Finding and opening hotel page...' });
+            
+            const hotelPageReached = await this.navigateToHotelPage();
+            if (hotelPageReached && !isTimedOut) {
+                finalUrl = this.page.url();
+                logger.info('✅ Successfully reached hotel page:', finalUrl);
                 
-                // Step 4: Select room
-                onProgress?.({ step: 4, message: '🏠 Selecting best available room...' });
-                await this.delay(1500);
+                // Step 5: Navigate to booking/reservation form
+                onProgress?.({ step: 5, message: '🎯 Opening booking form...' });
                 
-                logger.info('🏠 Starting room selection process...');
-                const roomSelected = await this.selectRoom();
-                logger.info('🏠 Room selected result:', roomSelected);
-                
-                if (roomSelected) {
-                    logger.info('✅ Room selection successful, proceeding to fill information');
+                const bookingFormReached = await this.navigateToBookingForm();
+                if (bookingFormReached && !isTimedOut) {
+                    finalUrl = this.page.url();
+                    logger.info('✅ Successfully reached booking form:', finalUrl);
                     
-                    // Step 5: Fill guest information
-                    onProgress?.({ step: 5, message: '👤 Auto-filling your information...' });
-                    await this.delay(1200);
+                    // Step 6: Fill guest information
+                    onProgress?.({ step: 6, message: '👤 Auto-filling your information...' });
                     
-                    logger.info('👤 Starting guest information filling...');
-                    
-                    // Ensure we're on a page with forms before trying to fill
-                    const bookingPageReached = await this.ensureBookingPageReached();
-                    if (bookingPageReached) {
+                    await this.delay(2000); // Give form time to load
+                    if (!isTimedOut) {
                         await this.fillGuestInformation(guestInfo);
-                    } else {
-                        logger.warn('⚠️ Could not reach booking form page - may need manual completion');
                     }
                     
-                    // Step 6: Navigate to checkout
-                    onProgress?.({ step: 6, message: '💳 Navigating to final checkout...' });
-                    await this.delay(1000);
+                    // Step 7: Navigate to checkout if possible
+                    onProgress?.({ step: 7, message: '💳 Completing checkout process...' });
                     
-                    logger.info('💳 Starting checkout navigation...');
-                    const checkoutReached = await this.navigateToCheckout();
-                    logger.info('💳 Checkout reached result:', checkoutReached);
+                    if (!isTimedOut) {
+                        const checkoutReached = await this.navigateToCheckout();
+                        if (checkoutReached) {
+                            finalUrl = this.page.url();
+                            logger.info('✅ Successfully reached checkout:', finalUrl);
+                        }
+                    }
+                    
+                    automationSuccess = true;
                 } else {
-                    logger.warn('⚠️ Could not select room, but continuing with automation...');
-                    logger.info('🔗 Will try to fill information on current page');
-                    
-                    // Try to fill information anyway in case we're already on booking page
-                    onProgress?.({ step: 5, message: '👤 Auto-filling available information...' });
-                    await this.delay(1200);
-                    await this.fillGuestInformation(guestInfo);
+                    logger.warn('⚠️ Could not reach booking form, staying on hotel page');
+                    automationSuccess = true; // Still consider success if we have hotel page
                 }
             } else {
-                logger.warn('⚠️ Could not find/click hotel, automation stopped');
+                logger.warn('⚠️ Could not reach hotel page, automation limited');
+                // Continue anyway - maybe we can still do something useful
+            }
+            
+            // Update final URL for return (only if page is still alive)
+            if (!isTimedOut && this.page && !this.page.isClosed()) {
+                try {
+                    finalUrl = this.page.url();
+                } catch (e) {
+                    logger.warn('⚠️ Could not get final URL - using last known URL');
+                }
             }
             
             // Step 7: Finalizing
@@ -127,16 +138,40 @@ export class SimpleBrowserAutomation {
             // Wait a moment to see final page
             await this.delay(2000);
             
-            const finalUrl = this.page.url();
+            // Use the finalUrl we tracked during automation
+            logger.info('🎉 REAL automation completed! Final URL:', finalUrl);
             
-            // Check if we actually made it to a booking/checkout page
+            // Enhanced analysis of what we achieved (only if browser is still alive)
+            let hasBookingForms = false;
+            let isOnHotelPage = false;
+            
+            if (!isTimedOut && this.page && !this.page.isClosed()) {
+                try {
+                    hasBookingForms = await this.page.$('input[name="firstname"], input[type="email"], input[name="guest_firstname"]');
+                    isOnHotelPage = finalUrl.includes('/hotel/') || await this.page.$('.hprt-table, .roomstable');
+                } catch (e) {
+                    logger.warn('⚠️ Could not analyze page - browser may be closed');
+                }
+            }
+            
             const isCheckoutPage = finalUrl.includes('book') || 
                                  finalUrl.includes('checkout') || 
                                  finalUrl.includes('reservation') ||
-                                 finalUrl.includes('payment');
+                                 finalUrl.includes('payment') ||
+                                 !!hasBookingForms;
             
-            logger.info('🎉 REAL automation completed! Final URL:', finalUrl);
-            logger.info('💳 Is checkout page?', isCheckoutPage);
+            // Only succeed if we made real progress
+            const isStillOnSearchResults = finalUrl.includes('searchresults') && !isOnHotelPage && !isCheckoutPage;
+            if (isStillOnSearchResults) {
+                throw new Error('Automation did not progress beyond search results');
+            }
+            
+            logger.info('💳 Analysis:', { 
+                isCheckoutPage, 
+                hasBookingForms: !!hasBookingForms, 
+                isOnHotelPage,
+                automationSuccess 
+            });
             
             // Keep browser open for user to complete payment
             // Don't close it - let user see the final checkout page
@@ -176,7 +211,10 @@ export class SimpleBrowserAutomation {
                 message: `❌ Browser automation failed: ${error.message}`
             };
         } finally {
-            clearTimeout(automationTimeout);
+            if (automationTimeout) {
+                clearTimeout(automationTimeout);
+                automationTimeout = null;
+            }
         }
     }
     
@@ -414,47 +452,56 @@ export class SimpleBrowserAutomation {
     }
     
     /**
-     * Click first available hotel - SIMPLIFIED AND FAST
+     * Navigate to a hotel page (more robust than just clicking first hotel)
      */
-    async clickFirstAvailableHotel() {
+    async navigateToHotelPage() {
         try {
-            logger.info('🎯 Looking for ANY hotel to click (fast mode)...');
+            logger.info('🏨 Navigating to hotel page...');
             
             // Handle cookie banner first
             await this.handleCookieBanner();
             await this.delay(2000);
             
-            // Just click the FIRST hotel link we find - don't be picky
-            const quickHotelSelectors = [
-                '[data-testid="title-link"]',           // Most common booking.com hotel link
-                '[data-testid="property-card"] a',      // Property card links
-                'h3 a[data-testid="title-link"]',       // Title links in h3
-                '.sr_property_block a'                  // Search result block links
+            // Try to find and click a hotel
+            const hotelSelectors = [
+                '[data-testid="title-link"]',           
+                '[data-testid="property-card"] a',      
+                'h3 a[data-testid="title-link"]',       
+                '.sr_property_block a'                  
             ];
             
-            for (const selector of quickHotelSelectors) {
+            for (const selector of hotelSelectors) {
                 try {
                     const hotels = await this.page.$$(selector);
                     logger.info(`Found ${hotels.length} hotels with selector: ${selector}`);
                     
-                    for (const hotel of hotels.slice(0, 3)) { // Try first 3 hotels only
+                    for (const hotel of hotels.slice(0, 5)) { // Try first 5 hotels
                         try {
                             if (await hotel.isVisible()) {
-                                logger.info('🚀 Clicking first available hotel...');
-                                
                                 const previousUrl = this.page.url();
                                 await hotel.click();
                                 
-                                // Wait for navigation
-                                await this.delay(4000);
+                                // Wait for navigation to complete
+                                await this.page.waitForLoadState('domcontentloaded', { timeout: 10000 });
+                                await this.delay(3000);
                                 
                                 const newUrl = this.page.url();
                                 if (newUrl !== previousUrl) {
-                                    logger.info('✅ Successfully clicked hotel, new URL:', newUrl);
-                                    return true;
+                                    // Check if we're actually on a hotel page
+                                    const isHotelPage = newUrl.includes('/hotel/') || 
+                                                       await this.page.$('.hprt-table, .roomstable, [data-testid*="rooms"]');
+                                    
+                                    if (isHotelPage) {
+                                        logger.info('✅ Successfully reached hotel page:', newUrl);
+                                        return true;
+                                    } else {
+                                        logger.info('📄 Reached page but not hotel page, trying next...');
+                                        continue;
+                                    }
                                 }
                             }
                         } catch (e) {
+                            logger.warn(`Hotel click failed: ${e.message}`);
                             continue;
                         }
                     }
@@ -463,9 +510,127 @@ export class SimpleBrowserAutomation {
                 }
             }
             
+            logger.warn('⚠️ Could not reach hotel page');
             return false;
         } catch (error) {
-            logger.error('Fast hotel click failed:', error.message);
+            logger.error('Hotel page navigation failed:', error.message);
+            return false;
+        }
+    }
+    
+    /**
+     * Navigate to booking/reservation form page
+     */
+    async navigateToBookingForm() {
+        try {
+            logger.info('📝 Navigating to booking form...');
+            
+            // Look for Reserve/Book buttons on hotel page
+            const bookingButtonSelectors = [
+                // Most common booking.com patterns
+                'button:has-text("Reserve")',
+                'button:has-text("I\'ll reserve")',
+                'a:has-text("Reserve")', 
+                'a:has-text("I\'ll reserve")',
+                
+                // Room table buttons
+                '.hprt-table button',
+                '.hprt-table a',
+                '.roomstable button',
+                
+                // Generic booking buttons
+                'button[data-testid*="select-room"]',
+                'button[data-testid*="availability"]',
+                'button.bui-button--primary',
+                'a.bui-button--primary'
+            ];
+            
+            for (const selector of bookingButtonSelectors) {
+                try {
+                    if (selector.includes(':has-text(')) {
+                        // Handle Playwright text selectors
+                        const match = selector.match(/(.+):has-text\("([^"]+)"\)/);
+                        if (match) {
+                            const [, baseSelector, text] = match;
+                            const elements = await this.page.locator(baseSelector).filter({ hasText: text }).all();
+                            
+                            for (const element of elements) {
+                                try {
+                                    if (await element.isVisible() && await element.isEnabled()) {
+                                        const buttonText = await element.textContent();
+                                        logger.info(`🎯 Clicking booking button: "${buttonText}"`);
+                                        
+                                        const previousUrl = this.page.url();
+                                        await element.click();
+                                        await this.delay(4000);
+                                        
+                                        const newUrl = this.page.url();
+                                        
+                                        // Check if we reached a booking form
+                                        const hasBookingForms = await this.page.$('input[name="firstname"], input[type="email"], input[name="guest_firstname"]');
+                                        const urlChanged = newUrl !== previousUrl;
+                                        
+                                        if (hasBookingForms || (urlChanged && (newUrl.includes('book') || newUrl.includes('reservation')))) {
+                                            logger.info('✅ Successfully reached booking form page:', newUrl);
+                                            return true;
+                                        }
+                                    }
+                                } catch (e) {
+                                    continue;
+                                }
+                            }
+                        }
+                    } else {
+                        // Regular CSS selector
+                        const buttons = await this.page.$$(selector);
+                        for (const button of buttons.slice(0, 3)) { // Try first 3 buttons
+                            try {
+                                if (await button.isVisible() && await button.isEnabled()) {
+                                    const buttonText = await button.textContent();
+                                    
+                                    // Skip obvious non-booking buttons
+                                    if (buttonText && (buttonText.toLowerCase().includes('search') || 
+                                                      buttonText.toLowerCase().includes('filter') ||
+                                                      buttonText.toLowerCase().includes('sort'))) {
+                                        continue;
+                                    }
+                                    
+                                    logger.info(`🎯 Trying button: "${buttonText}"`);
+                                    
+                                    const previousUrl = this.page.url();
+                                    await button.click();
+                                    await this.delay(4000);
+                                    
+                                    const newUrl = this.page.url();
+                                    const hasBookingForms = await this.page.$('input[name="firstname"], input[type="email"]');
+                                    const urlChanged = newUrl !== previousUrl;
+                                    
+                                    if (hasBookingForms || (urlChanged && (newUrl.includes('book') || newUrl.includes('reservation')))) {
+                                        logger.info('✅ Successfully reached booking form page:', newUrl);
+                                        return true;
+                                    }
+                                }
+                            } catch (e) {
+                                continue;
+                            }
+                        }
+                    }
+                } catch (e) {
+                    continue;
+                }
+            }
+            
+            // Check if we're already on a booking form page
+            const hasBookingForms = await this.page.$('input[name="firstname"], input[type="email"]');
+            if (hasBookingForms) {
+                logger.info('✅ Already on booking form page');
+                return true;
+            }
+            
+            logger.warn('⚠️ Could not reach booking form page');
+            return false;
+        } catch (error) {
+            logger.error('Booking form navigation failed:', error.message);
             return false;
         }
     }

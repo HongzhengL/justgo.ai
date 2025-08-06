@@ -339,14 +339,17 @@ export function Card({
                     {(externalLinks?.website || externalLinks?.booking || bookingUrl) && (
                         <button
                             onClick={() => {
-                                // Handle flight booking with new modal approach - always use modal for flights if handler exists  
-                                if (type === "flight" && metadata?.searchContext && onBookFlight) {
-                                    // Use booking token if available, otherwise use fallback token to trigger error handling in modal
-                                    const bookingToken = metadata.bookingToken || 'INVALID_TOKEN_FALLBACK';
-                                    onBookFlight(bookingToken, metadata.searchContext, {
+                                // Handle flight booking with new modal approach - only use modal if valid booking token exists  
+                                if (type === "flight" && metadata?.searchContext && metadata?.bookingToken && onBookFlight) {
+                                    // Only use modal if we have a valid booking token
+                                    onBookFlight(metadata.bookingToken, metadata.searchContext, {
                                         title,
                                         subtitle,
                                     });
+                                } 
+                                // If no booking token, fallback to direct Google Flights URL
+                                else if (type === "flight" && externalLinks?.booking) {
+                                    window.open(externalLinks.booking, "_blank", "noopener,noreferrer");
                                 } 
                                 // Handle hotel booking with new modal approach
                                 else if ((type === "hotel" || additionalInfo?.hotelId) && onBookHotel) {
