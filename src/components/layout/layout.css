@@ -41,6 +41,11 @@
     color: #ecf0f1;
 }
 
+.sidebar-logo {
+  width: 32px;
+  height: 32px;
+}
+
 .sidebar-nav {
     flex: 1;
     padding: 1rem 0;

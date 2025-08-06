@@ -459,3 +459,26 @@
     transform: scale(1);
   }
 }
+
+/* Swiper tweaks */
+.card-swiper {
+  padding-bottom: 8px;
+}
+
+.card-swiper .swiper-scrollbar {
+  background: rgba(0, 0, 0, 0.1);
+}
+.card-swiper .swiper-scrollbar-drag {
+  background: #888;
+}
+
+.card-swiper .swiper-button-next,
+.card-swiper .swiper-button-prev {
+  color: #007bff;
+}
+
+.card-swiper .swiper-button-next::after,
+.card-swiper .swiper-button-prev::after {
+  font-size: 18px;
+  font-weight: 700;
+}

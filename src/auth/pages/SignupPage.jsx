@@ -7,9 +7,7 @@ export function SignupPage() {
         <div className="auth-container">
             <div className="auth-card">
                 <h1 className="auth-title">Create Account</h1>
-                <p className="auth-subtitle">
-                    Join AI Travel Planner and start planning your next adventure
-                </p>
+                <p className="auth-subtitle">Join JustGo.AI and start planning your next adventure</p>
 
                 <SignupForm />
 

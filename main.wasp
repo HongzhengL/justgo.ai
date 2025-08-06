@@ -2,13 +2,13 @@ app aiTravelPlanner {
   wasp: {
     version: "^0.16.6"
   },
-  title: "AI Travel Planner",
+  title: "JustGo.AI",
   auth: {
     userEntity: User,
     methods: {
       email: {
         fromField: {
-          name: "AI Travel Planner",
+          name: "JustGo.AI",
           email: "noreply@aitravelplanner.com"
         },
         emailVerification: {
@@ -26,7 +26,7 @@ app aiTravelPlanner {
   emailSender: {
     provider: Dummy,
     defaultFrom: {
-      name: "AI Travel Planner",
+      name: "JustGo.AI",
       email: "noreply@aitravelplanner.com"
     }
   }

@@ -2,6 +2,8 @@ import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { logout } from "wasp/client/auth";
 
+// Logo served from public folder root
+
 export default function Sidebar({ user, onMobileMenuToggle }) {
     const location = useLocation();
 
@@ -27,7 +29,7 @@ export default function Sidebar({ user, onMobileMenuToggle }) {
                 >
                     ☰
                 </button>
-                <h1 className="sidebar-brand">🌍 AI Travel Planner</h1>
+                <h1 className="sidebar-brand">🌍 JustGo.AI</h1>
             </div>
 
             {/* User Info */}

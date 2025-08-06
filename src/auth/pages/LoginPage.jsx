@@ -7,7 +7,7 @@ export function LoginPage() {
         <div className="auth-container">
             <div className="auth-card">
                 <h1 className="auth-title">Welcome Back</h1>
-                <p className="auth-subtitle">Sign in to your AI Travel Planner account</p>
+                <p className="auth-subtitle">Sign in to your JustGo.AI account</p>
 
                 <LoginForm />
 
