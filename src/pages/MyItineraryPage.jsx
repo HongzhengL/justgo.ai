@@ -3,9 +3,9 @@ import { useQuery, useAction } from "wasp/client/operations";
 import { getItineraries, removeFromItinerary } from "wasp/client/operations";
 import { useAuth } from "wasp/client/auth";
 import { Link } from "wasp/client/router";
-import { CardList } from "../components/CardList.jsx";
 import { OrganizedCardList } from "../components/OrganizedCardList.jsx";
 import { InfoModal } from "../components/InfoModal.jsx";
+import { BookingOptionsModal } from "../components/BookingOptionsModal.jsx";
 import { ConfirmationModal } from "../components/ConfirmationModal.jsx";
 import AppLayout from "../components/layout/AppLayout.jsx";
 import useInfoModal from "../hooks/useInfoModal.js";
@@ -22,6 +22,12 @@ export function MyItineraryPage() {
 
     const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
     const [itemToRemove, setItemToRemove] = useState(null);
+
+    // Booking modal states
+    const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+    const [selectedBookingToken, setSelectedBookingToken] = useState(null);
+    const [selectedSearchContext, setSelectedSearchContext] = useState(null);
+    const [selectedFlightInfo, setSelectedFlightInfo] = useState(null);
 
     // Convert itinerary items to card format
     const allCards =
@@ -76,6 +82,13 @@ export function MyItineraryPage() {
     const cancelRemove = () => {
         setShowRemoveConfirm(false);
         setItemToRemove(null);
+    };
+
+    const handleBookFlight = (bookingToken, searchContext, flightInfo) => {
+        setSelectedBookingToken(bookingToken);
+        setSelectedSearchContext(searchContext);
+        setSelectedFlightInfo(flightInfo);
+        setIsBookingModalOpen(true);
     };
 
     if (!user) {
@@ -208,6 +221,7 @@ export function MyItineraryPage() {
                                 onGoToWebsite={handleGoToWebsite}
                                 onMoreInfo={handleMoreInfo}
                                 onAddToItinerary={handleRemoveFromItinerary}
+                                onBookFlight={handleBookFlight}
                                 addToItineraryText="Remove from Itinerary"
                                 addToItineraryIcon="Remove"
                             />
@@ -259,10 +273,19 @@ export function MyItineraryPage() {
                         {...modalProps}
                         onGoToWebsite={handleGoToWebsite}
                         onAddToItinerary={handleRemoveFromItinerary}
+                        onBookFlight={handleBookFlight}
                         addToItineraryText="Remove from Itinerary"
                         addToItineraryIcon="Remove"
                     />
                 )}
+
+                <BookingOptionsModal
+                    isOpen={isBookingModalOpen}
+                    onClose={() => setIsBookingModalOpen(false)}
+                    bookingToken={selectedBookingToken}
+                    searchContext={selectedSearchContext}
+                    flightInfo={selectedFlightInfo}
+                />
 
                 <ConfirmationModal
                     isOpen={showRemoveConfirm}
