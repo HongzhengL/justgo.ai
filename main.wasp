@@ -88,6 +88,21 @@ query getTransitInfo {
   entities: [User]
 }
 
+query searchHotels {
+  fn: import { searchHotels } from "@src/operations/travel.js",
+  entities: [User]
+}
+
+query fetchFlightBookingOptions {
+  fn: import { fetchFlightBookingOptions } from "@src/operations/booking.js",
+  entities: [User]
+}
+
+action bookFlight {
+  fn: import { bookFlight } from "@src/operations/booking.js",
+  entities: [User]
+}
+
 // Itinerary operations
 query getItineraries {
   fn: import { getItineraries } from "@src/operations/itinerary.js",
@@ -162,4 +177,35 @@ query getConversationHistory {
 action saveMessage {
   fn: import { saveMessage } from "@src/operations/conversation.js",
   entities: [User, Conversation, Message]
+}
+
+action clearConversation {
+  fn: import { clearConversation } from "@src/operations/conversation.js",
+  entities: [User, Conversation, Message]
+}
+
+action processVoiceMessage {
+  fn: import { processVoiceMessage } from "@src/operations/voice.js",
+  entities: [User, Conversation]
+}
+
+// Hotel booking operations
+action bookHotelWithAI {
+  fn: import { bookHotelWithAI } from "@src/operations/hotelBooking.js",
+  entities: [User]
+}
+
+query getAIBookingStatus {
+  fn: import { getAIBookingStatus } from "@src/operations/hotelBooking.js",
+  entities: [User]
+}
+
+action cancelAIBooking {
+  fn: import { cancelAIBooking } from "@src/operations/hotelBooking.js",
+  entities: [User]
+}
+
+query getHotelBookingSites {
+  fn: import { getHotelBookingSites } from "@src/operations/hotelBooking.js",
+  entities: [User]
 }

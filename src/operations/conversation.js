@@ -168,7 +168,7 @@ export const processAIMessage = async ({ message, frontendTimezone }, context) =
         const conversation = await getActiveConversation({}, context);
 
         // Save the user's message first
-        await saveMessage(
+        const savedUserMessage = await saveMessage(
             {
                 conversationId: conversation.id,
                 sender: "user",
@@ -215,10 +215,10 @@ export const processAIMessage = async ({ message, frontendTimezone }, context) =
                 title: conversation.title,
             },
             userMessage: {
-                id: conversation.messages[conversation.messages.length - 1]?.id,
+                id: savedUserMessage.id,
                 content: message,
                 sender: "user",
-                timestamp: new Date(),
+                timestamp: savedUserMessage.timestamp,
             },
             aiMessage: {
                 id: aiMessage.id,
@@ -236,5 +236,46 @@ export const processAIMessage = async ({ message, frontendTimezone }, context) =
             throw error;
         }
         throw new HttpError(500, "Failed to process AI message");
+    }
+};
+
+// Clear conversation - permanently delete active conversation and all messages
+export const clearConversation = async (args, context) => {
+    if (!context.user) {
+        throw new HttpError(401, "User must be logged in");
+    }
+
+    try {
+        // Find active conversation
+        const conversation = await context.entities.Conversation.findFirst({
+            where: {
+                userId: context.user.id,
+                isActive: true,
+            },
+        });
+
+        // If no conversation exists, return success
+        if (!conversation) {
+            return { success: true };
+        }
+
+        // Delete all messages first
+        await context.entities.Message.deleteMany({
+            where: { conversationId: conversation.id },
+        });
+
+        // Delete the conversation
+        await context.entities.Conversation.delete({
+            where: { id: conversation.id },
+        });
+
+        logger.info(`Cleared conversation ${conversation.id} for user ${context.user.id}`);
+        return { success: true };
+    } catch (error) {
+        logger.error("Clear conversation error:", error);
+        if (error instanceof HttpError) {
+            throw error;
+        }
+        throw new HttpError(500, "Failed to clear conversation");
     }
 };

@@ -1,5 +1,6 @@
 import { HttpError } from "wasp/server";
 import { travelAPI } from "../api/index.js";
+import { searchHotels as amadeusSearchHotels } from "../api/amadeus/hotelService.js";
 import logger from "../utils/logger.js";
 
 // Search for flights
@@ -113,6 +114,50 @@ export const getTransitInfo = async (params, context) => {
 
         // Convert API errors to user-friendly messages
         const message = travelAPI.getErrorMessage(error);
+        throw new HttpError(500, message);
+    }
+};
+
+// Search for hotels
+export const searchHotels = async (params, context) => {
+    if (!context.user) {
+        throw new HttpError(401, "User must be logged in to search hotels");
+    }
+
+    try {
+        logger.info("Hotel search request from user:", context.user.id, "with params:", params);
+
+        // Validate required parameters
+        if (!params.cityCode || !params.checkInDate || !params.checkOutDate) {
+            throw new HttpError(
+                400,
+                "Missing required parameters: cityCode, checkInDate, checkOutDate",
+            );
+        }
+
+        // Use imported hotel service
+
+        const hotelResults = await amadeusSearchHotels({
+            cityCode: params.cityCode,
+            checkInDate: params.checkInDate,
+            checkOutDate: params.checkOutDate,
+            adults: params.adults || 1,
+            filters: params.filters || {},
+        });
+
+        logger.info(
+            `Found ${hotelResults?.data?.length || 0} hotel options for user ${context.user.id}`,
+        );
+        return hotelResults;
+    } catch (error) {
+        logger.error("Hotel search error:", error);
+
+        if (error instanceof HttpError) {
+            throw error;
+        }
+
+        // Convert API errors to user-friendly messages
+        const message = error.message || "Failed to search hotels";
         throw new HttpError(500, message);
     }
 };

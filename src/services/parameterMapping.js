@@ -1,5 +1,4 @@
 import { TravelAPIError } from "../api/utils/errors.js";
-import logger from "../utils/logger.js";
 
 // API mapping configurations for different travel APIs
 const API_MAPPINGS = {
@@ -224,80 +223,66 @@ export default class ParameterMappingService {
     }
 
     /**
-     * Normalizes airport codes - converts common city names to IATA codes
-     * @param {string} location - Location string (city name or IATA code)
-     * @returns {string} - IATA code or original string if not found
+     * Normalizes airport codes - converts city names to IATA codes
+     * @param {string} location - Location string (airport code or city name)
+     * @returns {string} - Normalized IATA airport code
      */
     normalizeAirportCode(location) {
         if (!location || typeof location !== "string") {
             return location;
         }
 
-        // If already looks like IATA code (3 uppercase letters), return as-is
-        if (/^[A-Z]{3}$/.test(location.trim())) {
-            return location.trim();
-        }
+        const cleaned = location.toLowerCase().trim();
 
-        // Common city name to IATA code mappings
-        const cityToIATA = {
-            // Major US cities
+        // Common city name to primary airport code mappings
+        const CITY_TO_AIRPORT_MAP = {
+            paris: "CDG",
+            london: "LHR",
             "new york": "JFK",
-            nyc: "JFK",
-            "new york city": "JFK",
             "los angeles": "LAX",
-            la: "LAX",
-            "san francisco": "SFO",
-            sf: "SFO",
             chicago: "ORD",
+            "san francisco": "SFO",
             miami: "MIA",
-            boston: "BOS",
-            washington: "DCA",
-            dc: "DCA",
-            "washington dc": "DCA",
-            seattle: "SEA",
-            denver: "DEN",
-            atlanta: "ATL",
             dallas: "DFW",
             houston: "IAH",
-            phoenix: "PHX",
+            atlanta: "ATL",
+            boston: "BOS",
+            seattle: "SEA",
+            denver: "DEN",
             "las vegas": "LAS",
-            vegas: "LAS",
-            austin: "AUS",
-
-            // Major international cities
-            london: "LHR",
-            paris: "CDG",
+            phoenix: "PHX",
             tokyo: "NRT",
-            beijing: "PEK",
-            shanghai: "PVG",
-            "hong kong": "HKG",
-            singapore: "SIN",
-            dubai: "DXB",
             amsterdam: "AMS",
             frankfurt: "FRA",
             rome: "FCO",
             madrid: "MAD",
             barcelona: "BCN",
-            milan: "MXP",
-            istanbul: "IST",
-            moscow: "SVO",
+            berlin: "BER",
+            munich: "MUC",
+            dubai: "DXB",
+            singapore: "SIN",
+            "hong kong": "HKG",
             sydney: "SYD",
             melbourne: "MEL",
             toronto: "YYZ",
             vancouver: "YVR",
-            montreal: "YUL",
+            portugal: "LIS", // Lisbon - main Portugal airport
+            lisbon: "LIS",
+            porto: "OPO",
         };
 
-        const normalizedInput = location.toLowerCase().trim();
-        const iataCode = cityToIATA[normalizedInput];
-
-        if (iataCode) {
-            logger.info(`Normalized airport: "${location}" -> ${iataCode}`);
-            return iataCode;
+        // Check if it's a city name that needs conversion
+        if (CITY_TO_AIRPORT_MAP[cleaned]) {
+            return CITY_TO_AIRPORT_MAP[cleaned];
         }
 
-        // If no mapping found, return original (might be an airport name or less common city)
-        logger.warn(`Unknown airport/city: "${location}" - using as-is`);
-        return location.trim();
+        // If already looks like an airport code (3 letters), return uppercase
+        const upper = location.toUpperCase().trim();
+        if (upper.length === 3 && /^[A-Z]{3}$/.test(upper)) {
+            return upper;
+        }
+
+        // For anything else, return as-is (will be validated later)
+        return upper;
     }
 }

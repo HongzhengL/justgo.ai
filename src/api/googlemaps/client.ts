@@ -162,7 +162,10 @@ export function generatePlaceId(place: GooglePlaceData): string {
     const placeId = place.place_id || "";
     const rating = place.rating || 0;
 
-    return `place-${name}-${placeId.slice(-8)}-${rating}-${Date.now()}`;
+    // Add random component to guarantee uniqueness
+    const randomSuffix = Math.random().toString(36).substring(2, 8);
+
+    return `place-${name}-${placeId.slice(-8)}-${rating}-${Date.now()}-${randomSuffix}`;
 }
 
 // Helper function to generate unique ID for transit routes
@@ -179,10 +182,13 @@ export function generateTransitId(route: GoogleDirectionsRoute): string {
             0,
         ) || 0;
 
+    // Add random component to guarantee uniqueness
+    const randomSuffix = Math.random().toString(36).substring(2, 8);
+
     return `transit-${startAddress.slice(0, 10)}-${endAddress.slice(
         0,
         10,
-    )}-${duration}-${Date.now()}`;
+    )}-${duration}-${Date.now()}-${randomSuffix}`;
 }
 
 // Helper function to extract photo URL from Google Places photo reference

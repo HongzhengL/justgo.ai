@@ -1,8 +1,26 @@
+import "./card.css";
+
+// Helper function to get appropriate icons for flight features
+function getFeatureIcon(feature) {
+    const lowerFeature = feature.toLowerCase();
+    if (lowerFeature.includes("wi-fi") || lowerFeature.includes("wifi")) return "📶";
+    if (lowerFeature.includes("power") || lowerFeature.includes("outlet")) return "🔌";
+    if (lowerFeature.includes("video") || lowerFeature.includes("entertainment")) return "📺";
+    if (lowerFeature.includes("legroom")) return "💺";
+    if (lowerFeature.includes("usb")) return "🔌";
+    if (lowerFeature.includes("carbon") || lowerFeature.includes("emission")) return "🌱";
+    if (lowerFeature.includes("meal") || lowerFeature.includes("food")) return "🍽️";
+    if (lowerFeature.includes("baggage") || lowerFeature.includes("bag")) return "🧳";
+    return "•";
+}
+
 export function Card({
     cardData,
     onGoToWebsite,
     onMoreInfo,
     onAddToItinerary,
+    onBookFlight,
+    onBookHotel,
     addToItineraryText,
     addToItineraryIcon,
 }) {
@@ -16,232 +34,380 @@ export function Card({
         departureTime,
         arrivalTime,
         layoverInfo,
+        metadata,
+        // Hotel-specific fields
+        rating,
+        location,
+        image,
+        amenities,
+        bookingUrl,
+        additionalInfo,
     } = cardData;
 
     return (
-        <div
-            style={{
-                border: "1px solid #e0e0e0",
-                borderRadius: "8px",
-                padding: "1rem",
-                margin: "0.5rem 0",
-                backgroundColor: "white",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-            }}
-        >
-            <div
-                style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "flex-start",
-                }}
-            >
-                <div style={{ flex: 1 }}>
-                    <div
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "0.5rem",
-                            marginBottom: "0.5rem",
-                        }}
-                    >
+        <div className="card">
+            <div className="card-content">
+                <div className="card-main">
+                    <div className="card-header">
                         {type === "flight" && cardData.details?.airlineLogo && (
-                            <img
-                                src={cardData.details.airlineLogo}
-                                alt="Airline logo"
-                                style={{
-                                    width: "24px",
-                                    height: "24px",
-                                    objectFit: "contain",
-                                }}
-                                onError={(e) => {
-                                    e.target.style.display = "none";
-                                }}
-                            />
+                            <div className="card-icon">
+                                <img
+                                    src={cardData.details.airlineLogo}
+                                    alt="Airline logo"
+                                    onError={(e) => {
+                                        e.target.style.display = "none";
+                                    }}
+                                />
+                            </div>
                         )}
-                        <h4 style={{ margin: "0", color: "#333" }}>{title}</h4>
+                        {(type === "hotel" || additionalInfo?.hotelId) && (
+                            <span className="card-icon">🏨</span>
+                        )}
+                        <h4 className="card-title">{title}</h4>
                     </div>
-                    <p
-                        style={{
-                            margin: "0 0 0.5rem 0",
-                            color: "#666",
-                            fontSize: "0.9rem",
-                        }}
-                    >
-                        {subtitle}
-                    </p>
+                    <p className="card-subtitle">{subtitle}</p>
                     {/* Flight timing display for flight cards */}
                     {type === "flight" && (departureTime || arrivalTime) && (
-                        <div
-                            className="flight-timing"
-                            style={{
-                                margin: "0 0 0.5rem 0",
-                                padding: "0.5rem",
-                                backgroundColor: "#f8f9fa",
-                                borderRadius: "4px",
-                                border: "1px solid #e9ecef",
-                            }}
-                        >
-                            <div
-                                style={{
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    alignItems: "center",
-                                    fontSize: "0.9rem",
-                                    fontWeight: "500",
-                                }}
-                            >
-                                <div className="departure-time" style={{ color: "#28a745" }}>
-                                    <span style={{ fontSize: "0.8rem", color: "#6c757d" }}>
-                                        Depart:
+                        <div className="flight-route">
+                            <div className="flight-times">
+                                <div className="flight-time departure-time">
+                                    <span className="flight-time-label">Depart</span>
+                                    <span className="flight-time-value">
+                                        {departureTime || "N/A"}
                                     </span>
-                                    <br />
-                                    <span>{departureTime || "N/A"}</span>
                                 </div>
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: "0.5rem",
-                                        flex: 1,
-                                        justifyContent: "center",
-                                    }}
-                                >
-                                    <div
-                                        style={{
-                                            height: "1px",
-                                            backgroundColor: "#007bff",
-                                            flex: 1,
-                                        }}
-                                    ></div>
-                                    <span
-                                        style={{
-                                            fontSize: "0.7rem",
-                                            color: "#007bff",
-                                            fontWeight: "bold",
-                                        }}
-                                    >
-                                        {layoverInfo && layoverInfo.length > 0
-                                            ? `${layoverInfo.length} stop${
-                                                  layoverInfo.length > 1 ? "s" : ""
-                                              }`
-                                            : "Direct"}
-                                    </span>
-                                    <div
-                                        style={{
-                                            height: "1px",
-                                            backgroundColor: "#007bff",
-                                            flex: 1,
-                                        }}
-                                    ></div>
+                                <div className="flight-path">
+                                    <div className="flight-line"></div>
+                                    <div className="flight-path-info">
+                                        <span className="flight-stops">
+                                            {layoverInfo && layoverInfo.length > 0
+                                                ? `${layoverInfo.length} stop${
+                                                      layoverInfo.length > 1 ? "s" : ""
+                                                  }`
+                                                : "Direct"}
+                                        </span>
+                                        {cardData.details?.timingDetails?.totalDuration && (
+                                            <span className="flight-duration">
+                                                {Math.floor(
+                                                    cardData.details.timingDetails.totalDuration /
+                                                        60,
+                                                )}
+                                                h{" "}
+                                                {cardData.details.timingDetails.totalDuration % 60}m
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
-                                <div className="arrival-time" style={{ color: "#dc3545" }}>
-                                    <span style={{ fontSize: "0.8rem", color: "#6c757d" }}>
-                                        Arrive:
+                                <div className="flight-time arrival-time">
+                                    <span className="flight-time-label">Arrive</span>
+                                    <span className="flight-time-value">
+                                        {arrivalTime || "N/A"}
                                     </span>
-                                    <br />
-                                    <span>{arrivalTime || "N/A"}</span>
                                 </div>
                             </div>
                             {layoverInfo && layoverInfo.length > 0 && (
-                                <div
-                                    className="layover-info"
-                                    style={{
-                                        marginTop: "0.5rem",
-                                        fontSize: "0.7rem",
-                                        color: "#6c757d",
-                                    }}
-                                >
-                                    {layoverInfo.map((layover, index) => (
-                                        <span key={index}>
-                                            {layover.duration}m layover in {layover.airport}
+                                <div className="flight-layovers">
+                                    {layoverInfo.map((layover) => (
+                                        <span
+                                            key={`${cardData.id}-layover-${layover.airport}-${layover.duration}-${layover.overnight}`}
+                                            className="layover-item"
+                                        >
+                                            {layover.duration}m in {layover.airport}
                                             {layover.overnight && (
-                                                <span style={{ color: "#ffc107" }}>
+                                                <span className="layover-overnight">
                                                     {" "}
                                                     (overnight)
                                                 </span>
                                             )}
-                                            {index < layoverInfo.length - 1 && " • "}
                                         </span>
                                     ))}
                                 </div>
                             )}
+
+                            {/* Flight Details Section */}
+                            {type === "flight" && cardData.details && (
+                                <div className="flight-details">
+                                    {/* Passenger Information */}
+                                    {cardData.metadata?.searchContext && (
+                                        <div className="passenger-info">
+                                            <span className="passenger-badge">
+                                                👥 {cardData.metadata.searchContext.adults} adult
+                                                {cardData.metadata.searchContext.adults > 1
+                                                    ? "s"
+                                                    : ""}
+                                                {cardData.metadata.searchContext.children > 0 && (
+                                                    <>
+                                                        , {cardData.metadata.searchContext.children}{" "}
+                                                        child
+                                                        {cardData.metadata.searchContext.children >
+                                                        1
+                                                            ? "ren"
+                                                            : ""}
+                                                    </>
+                                                )}
+                                            </span>
+                                            {cardData.metadata.searchContext.travelClass && (
+                                                <span className="travel-class-badge">
+                                                    ✈️{" "}
+                                                    {cardData.metadata.searchContext.travelClass
+                                                        .charAt(0)
+                                                        .toUpperCase() +
+                                                        cardData.metadata.searchContext.travelClass.slice(
+                                                            1,
+                                                        )}
+                                                </span>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {/* Aircraft and Class Info */}
+                                    <div className="flight-aircraft-info">
+                                        {cardData.details.segments &&
+                                            cardData.details.segments.length > 0 && (
+                                                <>
+                                                    {cardData.details.segments[0].airplane && (
+                                                        <span className="aircraft-badge">
+                                                            ✈️{" "}
+                                                            {cardData.details.segments[0].airplane}
+                                                        </span>
+                                                    )}
+                                                    {cardData.details.segments[0].travel_class && (
+                                                        <span className="class-badge">
+                                                            🎫{" "}
+                                                            {
+                                                                cardData.details.segments[0]
+                                                                    .travel_class
+                                                            }
+                                                        </span>
+                                                    )}
+                                                    {cardData.details.segments[0].legroom && (
+                                                        <span className="legroom-badge">
+                                                            💺{" "}
+                                                            {cardData.details.segments[0].legroom}{" "}
+                                                            legroom
+                                                        </span>
+                                                    )}
+                                                </>
+                                            )}
+                                    </div>
+
+                                    {/* Warning Indicators */}
+                                    {cardData.details.segments &&
+                                        cardData.details.segments.some(
+                                            (segment) =>
+                                                segment.often_delayed_by_over_30_min ||
+                                                segment.overnight,
+                                        ) && (
+                                            <div className="flight-warnings">
+                                                {cardData.details.segments.some(
+                                                    (segment) =>
+                                                        segment.often_delayed_by_over_30_min,
+                                                ) && (
+                                                    <span className="warning-badge delay-warning">
+                                                        ⚠️ Often delayed 30+ min
+                                                    </span>
+                                                )}
+                                                {cardData.details.segments.some(
+                                                    (segment) => segment.overnight,
+                                                ) && (
+                                                    <span className="info-badge overnight-badge">
+                                                        🌙 Overnight flight
+                                                    </span>
+                                                )}
+                                            </div>
+                                        )}
+
+                                    {/* Flight Features */}
+                                    {cardData.details.segments &&
+                                        cardData.details.segments[0].extensions && (
+                                            <div className="flight-features">
+                                                {cardData.details.segments[0].extensions
+                                                    .slice(0, 3)
+                                                    .map((feature, index) => (
+                                                        <span key={index} className="feature-badge">
+                                                            {getFeatureIcon(feature)} {feature}
+                                                        </span>
+                                                    ))}
+                                                {cardData.details.segments[0].extensions.length >
+                                                    3 && (
+                                                    <span className="feature-badge more-features">
+                                                        +
+                                                        {cardData.details.segments[0].extensions
+                                                            .length - 3}{" "}
+                                                        more
+                                                    </span>
+                                                )}
+                                            </div>
+                                        )}
+
+                                    {/* Additional Booking Info */}
+                                    {cardData.details.segments &&
+                                        cardData.details.segments[0].ticket_also_sold_by && (
+                                            <div className="additional-sellers">
+                                                <span className="sellers-label">Also sold by:</span>
+                                                <span className="sellers-list">
+                                                    {cardData.details.segments[0].ticket_also_sold_by.join(
+                                                        ", ",
+                                                    )}
+                                                </span>
+                                            </div>
+                                        )}
+                                </div>
+                            )}
                         </div>
                     )}
-                    {price && (
-                        <p
-                            style={{
-                                margin: "0 0 0.5rem 0",
-                                color: "#007bff",
-                                fontWeight: "bold",
-                            }}
-                        >
-                            {price.currency} {price.amount}
-                        </p>
+
+                    {/* Hotel-specific display */}
+                    {(type === "hotel" || additionalInfo?.hotelId) && (
+                        <div className="hotel-details">
+                            {image && (
+                                <img
+                                    src={image}
+                                    alt={title}
+                                    className="hotel-image"
+                                    onError={(e) => {
+                                        e.target.style.display = "none";
+                                    }}
+                                />
+                            )}
+                            {rating && (
+                                <div className="hotel-rating">
+                                    <span className="hotel-stars">
+                                        {"⭐".repeat(Math.floor(rating))}
+                                    </span>
+                                    <span>{rating} stars</span>
+                                </div>
+                            )}
+                            {location && (
+                                <div className="hotel-location">
+                                    <span>📍</span>
+                                    <span>
+                                        {typeof location === "object" ? location.address : location}
+                                    </span>
+                                </div>
+                            )}
+                            {additionalInfo?.checkIn && (
+                                <div className="hotel-dates">
+                                    Check-in: {additionalInfo.checkIn} | Check-out:{" "}
+                                    {additionalInfo.checkOut}
+                                </div>
+                            )}
+                            {amenities && amenities.length > 0 && (
+                                <div className="hotel-amenities">
+                                    {amenities.slice(0, 3).map((amenity, index) => (
+                                        <span key={index} className="amenity-tag">
+                                            {amenity}
+                                        </span>
+                                    ))}
+                                    {amenities.length > 3 && (
+                                        <span className="amenity-tag">
+                                            +{amenities.length - 3} more
+                                        </span>
+                                    )}
+                                </div>
+                            )}
+                        </div>
                     )}
-                    <div style={{ fontSize: "0.8rem", color: "#888" }}>
-                        {Object.entries(essentialDetails || {}).map(([key, value]) => (
-                            <div key={key}>
-                                {key}: {value}
-                            </div>
-                        ))}
-                    </div>
+
+                    {/* Price display - works for both flights and hotels */}
+                    {(price ||
+                        ((type === "hotel" || additionalInfo?.hotelId) &&
+                            typeof price === "string")) && (
+                        <div className="card-price">
+                            {typeof price === "string" ? (
+                                price
+                            ) : (
+                                <>
+                                    <span className="card-price-currency">{price.currency}</span>
+                                    <span>{price.amount}</span>
+                                </>
+                            )}
+                        </div>
+                    )}
+                    {/* Essential details - only show for non-flight cards to avoid duplication */}
+                    {type !== "flight" && (
+                        <div className="card-details">
+                            {Object.entries(essentialDetails || {}).map(([key, value]) => (
+                                <div key={key} className="card-detail-item">
+                                    {key}: {value}
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
-                <div
-                    style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: "0.5rem",
-                        marginLeft: "1rem",
-                    }}
-                >
-                    {(externalLinks?.website || externalLinks?.booking) && (
+                <div className="card-actions">
+                    {(externalLinks?.website || externalLinks?.booking || bookingUrl) && (
                         <button
                             onClick={() => {
-                                const url = externalLinks.website || externalLinks.booking;
-                                onGoToWebsite(url);
+                                // Handle flight booking with new modal approach - only use modal if valid booking token exists
+                                if (
+                                    type === "flight" &&
+                                    metadata?.searchContext &&
+                                    metadata?.bookingToken &&
+                                    onBookFlight
+                                ) {
+                                    // Only use modal if we have a valid booking token
+                                    onBookFlight(metadata.bookingToken, metadata.searchContext, {
+                                        title,
+                                        subtitle,
+                                    });
+                                }
+                                // If no booking token, fallback to direct Google Flights URL
+                                else if (type === "flight" && externalLinks?.booking) {
+                                    window.open(
+                                        externalLinks.booking,
+                                        "_blank",
+                                        "noopener,noreferrer",
+                                    );
+                                }
+                                // Handle hotel booking with new modal approach
+                                else if (
+                                    (type === "hotel" || additionalInfo?.hotelId) &&
+                                    onBookHotel
+                                ) {
+                                    onBookHotel(cardData, {
+                                        checkInDate: additionalInfo?.checkIn,
+                                        checkOutDate: additionalInfo?.checkOut,
+                                        price: price,
+                                        room: additionalInfo?.room,
+                                    });
+                                } else {
+                                    // Fallback to existing behavior for non-flights/hotels or missing handlers
+                                    const url =
+                                        externalLinks?.website ||
+                                        externalLinks?.booking ||
+                                        bookingUrl;
+                                    onGoToWebsite(url);
+                                }
                             }}
-                            style={{
-                                padding: "0.5rem 1rem",
-                                backgroundColor: "#007bff",
-                                color: "white",
-                                border: "none",
-                                borderRadius: "4px",
-                                cursor: "pointer",
-                                fontSize: "0.8rem",
-                            }}
+                            className="card-button card-button-primary"
                         >
-                            {type === "flight" ? "Book Flight" : "Go to Website"}
+                            {type === "flight"
+                                ? "Book Flight"
+                                : type === "hotel" || additionalInfo?.hotelId
+                                  ? "Book Hotel"
+                                  : "Go to Website"}
                         </button>
                     )}
+                    {(type === "hotel" || additionalInfo?.hotelId) &&
+                        !(externalLinks?.website || externalLinks?.booking || bookingUrl) && (
+                            <button disabled className="card-button card-button-secondary">
+                                No Offers Available
+                            </button>
+                        )}
                     <button
                         onClick={() => onMoreInfo(cardData)}
-                        style={{
-                            padding: "0.5rem 1rem",
-                            backgroundColor: "#6c757d",
-                            color: "white",
-                            border: "none",
-                            borderRadius: "4px",
-                            cursor: "pointer",
-                            fontSize: "0.8rem",
-                        }}
+                        className="card-button card-button-secondary"
                     >
                         More Information
                     </button>
                     <button
                         onClick={() => onAddToItinerary(cardData)}
-                        style={{
-                            padding: "0.5rem 1rem",
-                            backgroundColor:
-                                addToItineraryText === "Remove from Itinerary"
-                                    ? "#dc3545"
-                                    : "#28a745",
-                            color: "white",
-                            border: "none",
-                            borderRadius: "4px",
-                            cursor: "pointer",
-                            fontSize: "0.8rem",
-                        }}
+                        className={`card-button ${
+                            addToItineraryText === "Remove from Itinerary"
+                                ? "card-button-danger"
+                                : "card-button-success"
+                        }`}
                     >
                         {addToItineraryIcon && `${addToItineraryIcon} `}
                         {addToItineraryText || "Add to Itinerary"}

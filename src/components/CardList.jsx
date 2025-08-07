@@ -2,12 +2,15 @@ import { useState } from "react";
 import { Card } from "./Card.jsx";
 import { InfoModal } from "./InfoModal.jsx";
 import logger from "../utils/logger.js";
+import "./cardlist.css";
 
 export function CardList({
     cards = [],
     onGoToWebsite,
     onMoreInfo,
     onAddToItinerary,
+    onBookFlight,
+    onBookHotel,
     addToItineraryText,
     addToItineraryIcon,
 }) {
@@ -15,6 +18,7 @@ export function CardList({
         isOpen: false,
         cardData: null,
     });
+
     if (!cards.length) {
         return null;
     }
@@ -44,41 +48,34 @@ export function CardList({
             onAddToItinerary(cardData);
         } else {
             logger.info("Add to itinerary:", cardData);
-            // Future: Add to user's itinerary
         }
     };
 
     return (
         <>
-            <div
-                style={{
-                    margin: "1rem 0",
-                    padding: "1rem",
-                    backgroundColor: "#f8f9fa",
-                    borderRadius: "8px",
-                    border: "1px solid #e9ecef",
-                }}
-            >
-                <div
-                    style={{
-                        fontSize: "0.9rem",
-                        color: "#666",
-                        marginBottom: "1rem",
-                        fontWeight: "500",
-                    }}
-                >
-                    Found {cards.length} result{cards.length !== 1 ? "s" : ""}:
+            <div className="card-list-container">
+                <div className="card-list-header">
+                    <span className="card-list-icon">✈️</span>
+                    <span className="card-list-count">
+                        Search Results ({cards.length} result{cards.length !== 1 ? "s" : ""})
+                    </span>
                 </div>
                 {cards.map((card, index) => {
-                    // Create a stable unique key by combining card properties
-                    const cardFingerprint = card.title
-                        ? `${card.title}-${card.subtitle || ""}-${card.price?.amount || ""}`
-                        : "untitled";
-                    const stableKey = card.id
-                        ? `card-${card.id}-${index}`
-                        : `card-${index}-${cardFingerprint
-                              .replace(/[^a-zA-Z0-9]/g, "")
-                              .substring(0, 20)}`;
+                    // Create a stable unique key prioritizing card.id, avoiding index when possible
+                    let stableKey;
+
+                    if (card.id) {
+                        // Use card ID as primary key if available - no index needed
+                        stableKey = `card-${card.id}`;
+                    } else {
+                        // Fallback: create fingerprint from card properties
+                        const cardFingerprint = card.title
+                            ? `${card.title}-${card.subtitle || ""}-${card.price?.amount || ""}`
+                            : "untitled";
+                        stableKey = `card-${index}-${cardFingerprint
+                            .replace(/[^a-zA-Z0-9]/g, "")
+                            .substring(0, 20)}`;
+                    }
 
                     return (
                         <Card
@@ -87,6 +84,8 @@ export function CardList({
                             onGoToWebsite={handleGoToWebsite}
                             onMoreInfo={handleMoreInfo}
                             onAddToItinerary={handleAddToItinerary}
+                            onBookFlight={onBookFlight}
+                            onBookHotel={onBookHotel}
                             addToItineraryText={addToItineraryText}
                             addToItineraryIcon={addToItineraryIcon}
                         />
@@ -98,6 +97,8 @@ export function CardList({
                 isOpen={modalState.isOpen}
                 onClose={handleCloseModal}
                 cardData={modalState.cardData}
+                onBookFlight={onBookFlight}
+                onBookHotel={onBookHotel}
             />
         </>
     );
