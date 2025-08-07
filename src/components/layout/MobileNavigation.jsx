@@ -25,7 +25,7 @@ export default function MobileNavigation({ user, isOpen, onClose }) {
         <div className={`mobile-navigation ${isOpen ? "open" : ""}`}>
             {/* Mobile Header */}
             <div className="mobile-header">
-                <h1 className="sidebar-brand">🌍 AI Travel Planner</h1>
+                <h1 className="sidebar-brand">JustGo.ai</h1>
                 <button
                     className="mobile-close-btn"
                     onClick={onClose}
@@ -48,8 +48,7 @@ export default function MobileNavigation({ user, isOpen, onClose }) {
                     className={`nav-link ${isActive("/dashboard") ? "active" : ""}`}
                     onClick={handleLinkClick}
                 >
-                    <span className="nav-link-icon">💬</span>
-                    Chat
+                    <span className="nav-link-icon">Chat</span>
                 </Link>
 
                 <Link
@@ -57,16 +56,14 @@ export default function MobileNavigation({ user, isOpen, onClose }) {
                     className={`nav-link ${isActive("/my-itinerary") ? "active" : ""}`}
                     onClick={handleLinkClick}
                 >
-                    <span className="nav-link-icon">📋</span>
-                    My Itinerary
+                    <span className="nav-link-icon">Itinerary</span>
                 </Link>
             </nav>
 
             {/* Footer with Logout */}
             <div className="sidebar-footer">
                 <button onClick={handleLogout} className="logout-btn">
-                    <span>🚪</span>
-                    Logout
+                    <span>Logout</span>
                 </button>
             </div>
         </div>

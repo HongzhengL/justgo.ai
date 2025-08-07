@@ -4,11 +4,13 @@ import { getItineraries, removeFromItinerary } from "wasp/client/operations";
 import { useAuth } from "wasp/client/auth";
 import { Link } from "wasp/client/router";
 import { CardList } from "../components/CardList.jsx";
+import { OrganizedCardList } from "../components/OrganizedCardList.jsx";
 import { InfoModal } from "../components/InfoModal.jsx";
 import { ConfirmationModal } from "../components/ConfirmationModal.jsx";
 import AppLayout from "../components/layout/AppLayout.jsx";
 import useInfoModal from "../hooks/useInfoModal.js";
 import logger from "../utils/logger.js";
+import { FloatingCostSummary } from "../components/FloatingCostSummary.jsx";
 
 export function MyItineraryPage() {
     const { data: user } = useAuth();
@@ -128,7 +130,7 @@ export function MyItineraryPage() {
                             marginBottom: "0.5rem",
                         }}
                     >
-                        📋 My Itinerary
+                        My Itinerary
                     </h1>
                     <p
                         style={{
@@ -159,7 +161,7 @@ export function MyItineraryPage() {
                                 border: "1px solid #e9ecef",
                             }}
                         >
-                            <div style={{ fontSize: "3rem", marginBottom: "1rem" }}>🎒</div>
+                            <div style={{ fontSize: "3rem", marginBottom: "1rem", color: "#6c757d" }}>📋</div>
                             <h2
                                 style={{
                                     fontSize: "1.5rem",
@@ -192,18 +194,18 @@ export function MyItineraryPage() {
                                     transition: "background-color 0.2s ease",
                                 }}
                             >
-                                💬 Go to Chat
+                                Go to Chat
                             </Link>
                         </div>
                     ) : (
                         <>
-                            <CardList
+                            <OrganizedCardList
                                 cards={allCards}
                                 onGoToWebsite={handleGoToWebsite}
                                 onMoreInfo={handleMoreInfo}
                                 onAddToItinerary={handleRemoveFromItinerary}
                                 addToItineraryText="Remove from Itinerary"
-                                addToItineraryIcon="🗑️"
+                                addToItineraryIcon="Remove"
                             />
 
                             {/* Total Cost Summary */}
@@ -223,7 +225,7 @@ export function MyItineraryPage() {
                                         marginBottom: "0.5rem",
                                     }}
                                 >
-                                    💰 Trip Summary
+                                    Trip Summary
                                 </h3>
                                 <p
                                     style={{
@@ -254,7 +256,7 @@ export function MyItineraryPage() {
                         onGoToWebsite={handleGoToWebsite}
                         onAddToItinerary={handleRemoveFromItinerary}
                         addToItineraryText="Remove from Itinerary"
-                        addToItineraryIcon="🗑️"
+                        addToItineraryIcon="Remove"
                     />
                 )}
 
@@ -266,8 +268,11 @@ export function MyItineraryPage() {
                     onConfirm={confirmRemove}
                     onCancel={cancelRemove}
                     confirmButtonColor="#dc3545"
-                    icon="🗑️"
+                    icon=""
                 />
+
+                {/* Floating Cost Summary */}
+                <FloatingCostSummary cards={allCards} />
             </div>
         </AppLayout>
     );

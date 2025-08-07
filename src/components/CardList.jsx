@@ -97,6 +97,8 @@ export function CardList({
                 isOpen={modalState.isOpen}
                 onClose={handleCloseModal}
                 cardData={modalState.cardData}
+                onBookFlight={onBookFlight}
+                onBookHotel={onBookHotel}
             />
         </>
     );

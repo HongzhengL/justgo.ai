@@ -13,6 +13,7 @@ import {
     processVoiceMessage,
 } from "wasp/client/operations";
 import { CardList } from "../components/CardList";
+import { OrganizedCardList } from "../components/OrganizedCardList";
 import { InfoModal } from "../components/InfoModal.jsx";
 import { BookingOptionsModal } from "../components/BookingOptionsModal.jsx";
 import { HotelBookingModal } from "../components/HotelBookingModal.jsx";
@@ -21,6 +22,7 @@ import AppLayout from "../components/layout/AppLayout.jsx";
 import useInfoModal from "../hooks/useInfoModal.js";
 import { useVoiceRecorder } from "../hooks/useVoiceRecorder";
 import { ChatNavigation } from "../components/ChatNavigation.jsx";
+import { FloatingCostSummary } from "../components/FloatingCostSummary.jsx";
 
 export function DashboardPage() {
     const { data: user, isLoading } = useAuth();
@@ -81,7 +83,7 @@ export function DashboardPage() {
                 const welcomeMessage = {
                     id: "welcome",
                     sender: "ai",
-                    text: "Hello! I'm your AI travel planner. Tell me where you'd like to go, when you want to travel, and I'll help you plan the perfect trip! 🌎✈️",
+                    text: "Hello! I'm your AI travel assistant. Tell me where you'd like to go, when you want to travel, and I'll help you plan the perfect trip.",
                     timestamp: new Date(),
                     type: "text",
                     cards: [],
@@ -324,6 +326,12 @@ ${bookingResult.message || ""}`;
         );
     }
 
+    // Get cards from the latest AI message only (current conversation)
+    const latestAIMessage = messages.slice().reverse().find(message => 
+        message.sender === "ai" && message.cards && message.cards.length > 0
+    );
+    const currentCards = latestAIMessage ? latestAIMessage.cards : [];
+
     return (
         <AppLayout>
             {/* Chat Container */}
@@ -343,7 +351,7 @@ ${bookingResult.message || ""}`;
                                 message.cards &&
                                 message.cards.length > 0 && (
                                     <div className="message-cards">
-                                        <CardList
+                                        <OrganizedCardList
                                             cards={message.cards}
                                             onGoToWebsite={(url) =>
                                                 window.open(url, "_blank", "noopener,noreferrer")
@@ -407,6 +415,8 @@ ${bookingResult.message || ""}`;
                 {...modalProps}
                 onGoToWebsite={(url) => window.open(url, "_blank", "noopener,noreferrer")}
                 onAddToItinerary={handleAddToItinerary}
+                onBookFlight={handleBookFlight}
+                onBookHotel={handleBookHotel}
             />
 
             <BookingOptionsModal
@@ -441,6 +451,9 @@ ${bookingResult.message || ""}`;
                 confirmButtonColor="#28a745"
                 icon="➕"
             />
+
+            {/* Floating Cost Summary */}
+            <FloatingCostSummary cards={currentCards} />
         </AppLayout>
     );
 }

@@ -24,6 +24,8 @@ export function InfoModal({
     onAddToItinerary,
     addToItineraryText,
     addToItineraryIcon,
+    onBookFlight,
+    onBookHotel,
 }) {
     useEffect(() => {
         const handleEscape = (e) => {
@@ -897,7 +899,29 @@ export function InfoModal({
                         return url ? (
                             <button
                                 onClick={() => {
-                                    if (onGoToWebsite) {
+                                    // For flights with booking token and search context, use booking modal
+                                    if (cardData.type === "flight" && 
+                                        cardData.metadata?.bookingToken && 
+                                        cardData.metadata?.searchContext && 
+                                        onBookFlight) {
+                                        onBookFlight(
+                                            cardData.metadata.bookingToken, 
+                                            cardData.metadata.searchContext, 
+                                            {
+                                                title: cardData.title,
+                                                subtitle: cardData.subtitle,
+                                            }
+                                        );
+                                    } 
+                                    // For hotels with booking handler
+                                    else if ((cardData.type === "hotel" || cardData.additionalInfo?.hotelId) && onBookHotel) {
+                                        onBookHotel(cardData, {
+                                            checkInDate: cardData.additionalInfo?.checkIn,
+                                            checkOutDate: cardData.additionalInfo?.checkOut,
+                                        });
+                                    }
+                                    // Fallback to direct URL
+                                    else if (onGoToWebsite) {
                                         onGoToWebsite(url);
                                     } else {
                                         window.open(url, "_blank", "noopener,noreferrer");

@@ -334,31 +334,87 @@ export class AIAgent {
             logger.debug("Original AI parameters:", JSON.stringify(parameters, null, 2));
             logger.debug("Mapped parameters for SerpAPI:", JSON.stringify(mappedParams, null, 2));
 
-            // Perform flight search with detailed logging
-            logger.info("Starting flight search with mapped params:", mappedParams);
-            const flightResults = await travelAPI.searchFlights(mappedParams);
-            logger.info(`Flight search completed: ${flightResults.length} results found`);
-            logger.debug("Flight results:", JSON.stringify(flightResults, null, 2));
+            // Perform outbound flight search with detailed logging
+            logger.info("Starting outbound flight search with mapped params:", mappedParams);
+            const outboundFlightResults = await travelAPI.searchFlights(mappedParams);
+            logger.info(`Outbound flight search completed: ${outboundFlightResults.length} results found`);
+            logger.debug("Outbound flight results:", JSON.stringify(outboundFlightResults, null, 2));
+
+            let allFlightResults = [...outboundFlightResults];
+
+            // If return date is provided, also search for return flights
+            if (mappedParams.returnDate) {
+                logger.info("========== RETURN FLIGHT SEARCH ==========");
+                logger.info(`Searching return flights from ${mappedParams.arrival} to ${mappedParams.departure} on ${mappedParams.returnDate}`);
+                
+                try {
+                    // Create return flight parameters by swapping departure and arrival
+                    const returnFlightParams = {
+                        ...mappedParams,
+                        departure: mappedParams.arrival,    // Swap: destination becomes origin
+                        arrival: mappedParams.departure,    // Swap: origin becomes destination  
+                        outboundDate: mappedParams.returnDate, // Use return date as outbound date
+                        returnDate: undefined // Clear return date for one-way return search
+                    };
+                    
+                    logger.info("Return flight search parameters:", returnFlightParams);
+                    
+                    const returnFlightResults = await travelAPI.searchFlights(returnFlightParams);
+                    logger.info(`Return flight search completed: ${returnFlightResults.length} results found`);
+                    logger.debug("Return flight results:", JSON.stringify(returnFlightResults, null, 2));
+                    
+                    // Add return flights to the results
+                    allFlightResults.push(...returnFlightResults);
+                    logger.info(`Combined flight results: ${allFlightResults.length} total (${outboundFlightResults.length} outbound + ${returnFlightResults.length} return)`);
+                    
+                } catch (returnFlightError) {
+                    logger.error("Return flight search failed:", returnFlightError);
+                    logger.error("Return flight error details:", {
+                        message: returnFlightError.message,
+                        stack: returnFlightError.stack
+                    });
+                    // Continue with just outbound flights if return search fails
+                }
+            }
+
+            const flightResults = allFlightResults;
 
             // Add search context to flight cards for booking options
-            const flightResultsWithContext = flightResults.map((flightCard) => {
+            const flightResultsWithContext = flightResults.map((flightCard, index) => {
                 if (flightCard.type === "flight" && flightCard.metadata?.bookingToken) {
+                    // Determine if this is a return flight (flights after outbound results)
+                    const isReturnFlight = index >= outboundFlightResults.length;
+                    
+                    // Set appropriate search context based on flight direction
+                    const searchContext = isReturnFlight ? {
+                        departure: mappedParams.arrival,    // Return flight swaps these
+                        arrival: mappedParams.departure,    
+                        outboundDate: mappedParams.returnDate,
+                        returnDate: undefined,
+                        currency: mappedParams.currency,
+                        adults: mappedParams.adults,
+                        children: mappedParams.children,
+                        travelClass: mappedParams.travelClass,
+                        gl: mappedParams.gl,
+                        hl: mappedParams.hl,
+                    } : {
+                        departure: mappedParams.departure,   // Original outbound flight context
+                        arrival: mappedParams.arrival,
+                        outboundDate: mappedParams.outboundDate,
+                        returnDate: mappedParams.returnDate,
+                        currency: mappedParams.currency,
+                        adults: mappedParams.adults,
+                        children: mappedParams.children,
+                        travelClass: mappedParams.travelClass,
+                        gl: mappedParams.gl,
+                        hl: mappedParams.hl,
+                    };
+
                     return {
                         ...flightCard,
                         metadata: {
                             ...flightCard.metadata,
-                            searchContext: {
-                                departure: mappedParams.departure,
-                                arrival: mappedParams.arrival,
-                                outboundDate: mappedParams.outboundDate,
-                                returnDate: mappedParams.returnDate,
-                                currency: mappedParams.currency,
-                                adults: mappedParams.adults,
-                                children: mappedParams.children,
-                                travelClass: mappedParams.travelClass,
-                                gl: mappedParams.gl,
-                                hl: mappedParams.hl,
-                            },
+                            searchContext,
                         },
                     };
                 }
@@ -1609,6 +1665,37 @@ export class AIAgent {
                         logger.error(`Hotel search error for ${destination}:`, error);
                         // Continue with other destinations - don't let hotel errors break the entire search
                     }
+                }
+            }
+
+            // Also search for hotels at final destination (e.g., Portugal before flying back)
+            if (tripPlan.finalDestination && tripPlan.finalDestination !== tripPlan.origin) {
+                logger.info(`Searching hotels in final destination: ${tripPlan.finalDestination}`);
+                try {
+                    // Check if finalDestination is a valid airport code
+                    if (tripPlan.finalDestination && tripPlan.finalDestination.length === 3 && /^[A-Z]{3}$/.test(tripPlan.finalDestination)) {
+                        const cityCode = extractDestinationCityCode({ arrival: tripPlan.finalDestination });
+                        logger.info(`Extracted city code for final destination ${tripPlan.finalDestination}: ${cityCode}`);
+                        
+                        if (cityCode && cityCode.length === 3) {
+                            const { searchHotels } = await import("../api/amadeus/hotelService.js");
+                            const hotelParams = {
+                                cityCode: cityCode,
+                                checkInDate: tripPlan.dates?.startDate || this.getDefaultTomorrowDate(),
+                                checkOutDate: tripPlan.dates?.endDate || this.getDefaultDayAfterTomorrow(),
+                                adults: 1,
+                                filters: {},
+                            };
+                            
+                            logger.info(`Hotel search params for final destination ${tripPlan.finalDestination}:`, hotelParams);
+                            const hotelResults = await searchHotels(hotelParams);
+                            const hotelCards = this.transformHotelResultsToCards(hotelResults, cityCode);
+                            results.hotels.push(...hotelCards);
+                            logger.info(`Added ${hotelCards.length} hotels for final destination ${tripPlan.finalDestination}`);
+                        }
+                    }
+                } catch (error) {
+                    logger.error(`Hotel search error for final destination ${tripPlan.finalDestination}:`, error);
                 }
             }
 

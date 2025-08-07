@@ -55,7 +55,7 @@ export default function Sidebar({ user, onMobileMenuToggle }) {
                 >
                     ☰
                 </button>
-                <h1 className="sidebar-brand">🌍 AI Travel Planner</h1>
+                <h1 className="sidebar-brand">JustGo.ai</h1>
             </div>
 
             {/* User Info */}
@@ -70,29 +70,25 @@ export default function Sidebar({ user, onMobileMenuToggle }) {
                     to="/dashboard"
                     className={`nav-link ${isActive("/dashboard") ? "active" : ""}`}
                 >
-                    <span className="nav-link-icon">💬</span>
-                    Chat
+                    <span className="nav-link-icon">Chat</span>
                 </Link>
 
                 <Link
                     to="/my-itinerary"
                     className={`nav-link ${isActive("/my-itinerary") ? "active" : ""}`}
                 >
-                    <span className="nav-link-icon">📋</span>
-                    My Itinerary
+                    <span className="nav-link-icon">Itinerary</span>
                 </Link>
 
                 <button onClick={handleClearConversation} className="nav-link nav-link-button">
-                    <span className="nav-link-icon">🗑️</span>
-                    Clear Chat
+                    <span className="nav-link-icon">Clear</span>
                 </button>
             </nav>
 
             {/* Footer with Logout */}
             <div className="sidebar-footer">
                 <button onClick={handleLogout} className="logout-btn">
-                    <span>🚪</span>
-                    Logout
+                    <span>Logout</span>
                 </button>
             </div>
 

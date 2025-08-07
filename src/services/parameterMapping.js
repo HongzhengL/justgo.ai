@@ -262,10 +262,13 @@ export default class ParameterMappingService {
             dubai: "DXB",
             singapore: "SIN",
             "hong kong": "HKG",
-            sydney: "SYD",
-            melbourne: "MEL",
-            toronto: "YYZ",
-            vancouver: "YVR",
+            "sydney": "SYD",
+            "melbourne": "MEL",
+            "toronto": "YYZ",
+            "vancouver": "YVR",
+            "portugal": "LIS",  // Lisbon - main Portugal airport
+            "lisbon": "LIS",
+            "porto": "OPO"
         };
 
         // Check if it's a city name that needs conversion
