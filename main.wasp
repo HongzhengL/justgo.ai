@@ -24,7 +24,7 @@ app aiTravelPlanner {
     onAuthSucceededRedirectTo: "/dashboard"
   },
   emailSender: {
-    provider: Dummy,
+    provider: SMTP,
     defaultFrom: {
       name: "AI Travel Planner",
       email: "noreply@aitravelplanner.com"
