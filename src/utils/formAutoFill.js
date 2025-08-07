@@ -7,14 +7,14 @@ export const createBookingAutoFillScript = (guestInfo, bookingDetails) => {
     const autoFillScript = `
     (function() {
         console.log('🤖 AI Travel Assistant: Auto-filling booking form...');
-        
+
         const guestInfo = ${JSON.stringify(guestInfo)};
         const bookingDetails = ${JSON.stringify(bookingDetails)};
-        
+
         // Function to fill input by various selectors
         function fillInput(selectors, value) {
             if (!value) return false;
-            
+
             for (const selector of selectors) {
                 const elements = document.querySelectorAll(selector);
                 for (const element of elements) {
@@ -30,17 +30,17 @@ export const createBookingAutoFillScript = (guestInfo, bookingDetails) => {
             }
             return false;
         }
-        
+
         // Function to select option in dropdown
         function selectOption(selectors, value) {
             if (!value) return false;
-            
+
             for (const selector of selectors) {
                 const elements = document.querySelectorAll(selector);
                 for (const element of elements) {
                     if (element && element.tagName === 'SELECT') {
                         for (let option of element.options) {
-                            if (option.text.toLowerCase().includes(value.toLowerCase()) || 
+                            if (option.text.toLowerCase().includes(value.toLowerCase()) ||
                                 option.value.toLowerCase().includes(value.toLowerCase())) {
                                 element.value = option.value;
                                 element.dispatchEvent(new Event('change', { bubbles: true }));
@@ -53,7 +53,7 @@ export const createBookingAutoFillScript = (guestInfo, bookingDetails) => {
             }
             return false;
         }
-        
+
         // Wait for page to be ready
         function waitForElements(callback) {
             if (document.readyState === 'complete') {
@@ -64,13 +64,13 @@ export const createBookingAutoFillScript = (guestInfo, bookingDetails) => {
                 });
             }
         }
-        
+
         // Main auto-fill function
         function performAutoFill() {
             console.log('🚀 Starting form auto-fill process...');
-            
+
             let fieldsProcessed = 0;
-            
+
             // Fill first name
             if (fillInput([
                 'input[name*="first"]', 'input[name*="First"]', 'input[name*="fname"]',
@@ -80,7 +80,7 @@ export const createBookingAutoFillScript = (guestInfo, bookingDetails) => {
             ], guestInfo.firstName)) {
                 fieldsProcessed++;
             }
-            
+
             // Fill last name
             if (fillInput([
                 'input[name*="last"]', 'input[name*="Last"]', 'input[name*="lname"]',
@@ -90,7 +90,7 @@ export const createBookingAutoFillScript = (guestInfo, bookingDetails) => {
             ], guestInfo.lastName)) {
                 fieldsProcessed++;
             }
-            
+
             // Fill email
             if (fillInput([
                 'input[type="email"]', 'input[name*="email"]', 'input[name*="Email"]',
@@ -100,7 +100,7 @@ export const createBookingAutoFillScript = (guestInfo, bookingDetails) => {
             ], guestInfo.email)) {
                 fieldsProcessed++;
             }
-            
+
             // Fill phone
             if (fillInput([
                 'input[type="tel"]', 'input[name*="phone"]', 'input[name*="Phone"]',
@@ -111,7 +111,7 @@ export const createBookingAutoFillScript = (guestInfo, bookingDetails) => {
             ], guestInfo.phone)) {
                 fieldsProcessed++;
             }
-            
+
             // Fill address if available
             if (guestInfo.address && fillInput([
                 'input[name*="address"]', 'input[name*="Address"]', 'input[name*="street"]',
@@ -121,7 +121,7 @@ export const createBookingAutoFillScript = (guestInfo, bookingDetails) => {
             ], guestInfo.address)) {
                 fieldsProcessed++;
             }
-            
+
             // Fill special requests if available
             if (guestInfo.specialRequests && fillInput([
                 'textarea[name*="comment"]', 'textarea[name*="request"]', 'textarea[name*="special"]',
@@ -131,7 +131,7 @@ export const createBookingAutoFillScript = (guestInfo, bookingDetails) => {
             ], guestInfo.specialRequests)) {
                 fieldsProcessed++;
             }
-            
+
             // Show completion message
             if (fieldsProcessed > 0) {
                 // Create success notification
@@ -161,41 +161,41 @@ export const createBookingAutoFillScript = (guestInfo, bookingDetails) => {
                     </div>
                 \`;
                 document.body.appendChild(notification);
-                
+
                 // Remove notification after 5 seconds
                 setTimeout(() => {
                     if (notification.parentNode) {
                         notification.parentNode.removeChild(notification);
                     }
                 }, 5000);
-                
+
                 console.log(\`🎉 Auto-fill completed! Processed \${fieldsProcessed} fields.\`);
             } else {
                 console.log('⚠️ No fillable fields found on this page');
             }
         }
-        
+
         // Execute auto-fill when page is ready
         waitForElements(performAutoFill);
-        
+
         // Also try again after additional delay for dynamic content
         setTimeout(performAutoFill, 3000);
-        
+
     })();
     `;
-    
+
     return autoFillScript;
 };
 
 export const createAutoFillBookmarklet = (guestInfo, bookingDetails) => {
     const script = createBookingAutoFillScript(guestInfo, bookingDetails);
-    const minifiedScript = script.replace(/\s+/g, ' ').replace(/\/\*.*?\*\//g, '');
+    const minifiedScript = script.replace(/\s+/g, " ").replace(/\/\*.*?\*\//g, "");
     return `javascript:${encodeURIComponent(minifiedScript)}`;
 };
 
 export const generateAutoFillInstructions = (guestInfo, bookingDetails) => {
     const bookmarklet = createAutoFillBookmarklet(guestInfo, bookingDetails);
-    
+
     return {
         bookmarklet,
         instructions: [
@@ -204,11 +204,12 @@ export const generateAutoFillInstructions = (guestInfo, bookingDetails) => {
             "3. Set the name to 'AI Auto-Fill'",
             "4. Paste the code as the URL",
             "5. Go to the booking page",
-            "6. Click the 'AI Auto-Fill' bookmark to fill the form automatically"
+            "6. Click the 'AI Auto-Fill' bookmark to fill the form automatically",
         ],
         quickMethod: {
-            description: "Quick Method: Click the button below to automatically open booking.com with the auto-fill script ready",
-            action: "open_with_script"
-        }
+            description:
+                "Quick Method: Click the button below to automatically open booking.com with the auto-fill script ready",
+            action: "open_with_script",
+        },
     };
 };

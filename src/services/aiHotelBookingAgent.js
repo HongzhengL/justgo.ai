@@ -9,11 +9,11 @@ class AIHotelBookingAgent {
     constructor() {
         this.isBooking = false;
         this.bookingSteps = [
-            'Analyzing booking requirements',
-            'Finding optimal booking site', 
-            'Preparing guest information',
-            'Building targeted booking URL',
-            'Finalizing booking setup'
+            "Analyzing booking requirements",
+            "Finding optimal booking site",
+            "Preparing guest information",
+            "Building targeted booking URL",
+            "Finalizing booking setup",
         ];
         this.currentStep = 0;
     }
@@ -25,14 +25,14 @@ class AIHotelBookingAgent {
      */
     async startAutomatedBooking(bookingData) {
         const { hotel, offer, guestInfo, preferences = {} } = bookingData;
-        
-        logger.info('🤖 AI Hotel Booking Agent starting TARGETED AGENTIC automated booking:', {
+
+        logger.info("🤖 AI Hotel Booking Agent starting TARGETED AGENTIC automated booking:", {
             hotelName: hotel.name || hotel.title,
             hotelId: hotel.hotelId,
             checkIn: offer.checkInDate,
             checkOut: offer.checkOutDate,
             guest: `${guestInfo.firstName} ${guestInfo.lastName}`,
-            location: hotel.location || hotel.address
+            location: hotel.location || hotel.address,
         });
 
         this.isBooking = true;
@@ -53,46 +53,46 @@ class AIHotelBookingAgent {
                 title: hotel.title || hotel.name,
                 hotelId: hotel.hotelId,
                 location: hotel.location || hotel.address,
-                offers: hotel.offers || []
+                offers: hotel.offers || [],
             };
 
             // Complete UI animation steps properly
-            logger.info('🤖 Starting booking automation UI...');
-            
+            logger.info("🤖 Starting booking automation UI...");
+
             // Step 1: Analyzing requirements
             await this.delay(800);
-            onProgress?.({ step: 1, message: '🔍 Analyzing booking requirements...' });
-            
+            onProgress?.({ step: 1, message: "🔍 Analyzing booking requirements..." });
+
             // Step 2: Finding optimal site
             await this.delay(1200);
-            onProgress?.({ step: 2, message: '🌐 Finding optimal booking site...' });
-            
+            onProgress?.({ step: 2, message: "🌐 Finding optimal booking site..." });
+
             // Step 3: Preparing guest information
             await this.delay(1000);
-            onProgress?.({ step: 3, message: '👤 Preparing guest information...' });
-            
+            onProgress?.({ step: 3, message: "👤 Preparing guest information..." });
+
             // Step 4: Building booking URL
             await this.delay(900);
-            onProgress?.({ step: 4, message: '🔗 Building targeted booking URL...' });
-            
+            onProgress?.({ step: 4, message: "🔗 Building targeted booking URL..." });
+
             // Step 5: Final preparation
             await this.delay(800);
-            onProgress?.({ step: 5, message: '✨ Finalizing booking setup...' });
-            
+            onProgress?.({ step: 5, message: "✨ Finalizing booking setup..." });
+
             // Generate the booking URL instead of complex automation
             const bookingUrl = this.generateTargetedFallbackUrl(hotel, offer, guestInfo);
-            
+
             const automationResult = {
                 success: true,
                 checkoutUrl: bookingUrl,
                 browserOpen: false,
                 openFinalPage: true,
                 message: `🎯 Ready to book "${hotel.name || hotel.title}" - Opening booking page...`,
-                fallback: false // This is actually the intended behavior now
+                fallback: false, // This is actually the intended behavior now
             };
-            
+
             // Execute REAL browser automation that actually works
-            logger.info('🤖 Running REAL browser automation in background...');
+            logger.info("🤖 Running REAL browser automation in background...");
 
             // Enhanced automation result with hotel-specific details
             const finalConfirmation = {
@@ -101,25 +101,25 @@ class AIHotelBookingAgent {
                 bookingUrl: automationResult.checkoutUrl,
                 timestamp: new Date().toISOString(),
                 bookingSite: this.detectBookingSite(automationResult.checkoutUrl),
-                method: 'ui_automation_redirect',
+                method: "ui_automation_redirect",
                 hotelName: hotel.name || hotel.title,
                 hotelTargeted: true,
                 automationLog: [
-                    '✅ Analyzed booking requirements',
-                    '✅ Found optimal booking site',
-                    '✅ Prepared guest information',
-                    '✅ Built targeted booking URL',
-                    '✅ Ready for booking redirect'
+                    "✅ Analyzed booking requirements",
+                    "✅ Found optimal booking site",
+                    "✅ Prepared guest information",
+                    "✅ Built targeted booking URL",
+                    "✅ Ready for booking redirect",
                 ],
-                fallback: false
+                fallback: false,
             };
 
-            logger.info('✅ AI Agentic booking completed for specific hotel:', {
+            logger.info("✅ AI Agentic booking completed for specific hotel:", {
                 hotel: finalConfirmation.hotelName,
                 bookingId: finalConfirmation.bookingId,
-                site: finalConfirmation.bookingSite
+                site: finalConfirmation.bookingSite,
             });
-            
+
             return {
                 success: true,
                 bookingId: finalConfirmation.bookingId,
@@ -130,15 +130,14 @@ class AIHotelBookingAgent {
                 fallback: false,
                 openFinalPage: automationResult.openFinalPage,
                 aiBookingLog: this.getBookingLog(),
-                hotelSpecific: true
+                hotelSpecific: true,
             };
-
         } catch (error) {
-            logger.error('❌ AI Agentic booking encountered issue:', error);
-            
+            logger.error("❌ AI Agentic booking encountered issue:", error);
+
             // Generate enhanced fallback URL with hotel targeting
             const fallbackUrl = this.generateTargetedFallbackUrl(hotel, offer, guestInfo);
-            
+
             return {
                 success: true, // Always provide a working solution
                 bookingId: `HTL-FALLBACK-${Date.now()}`,
@@ -150,33 +149,33 @@ class AIHotelBookingAgent {
                 message: `⚠️ Browser automation is currently being fixed. Opening booking page manually for "${hotel.name || hotel.title}".`,
                 currentStep: this.bookingSteps[this.currentStep],
                 aiBookingLog: this.getBookingLog(),
-                hotelSpecific: true
+                hotelSpecific: true,
             };
         } finally {
             this.isBooking = false;
         }
     }
-    
+
     /**
      * Detect booking site from URL
      */
     detectBookingSite(url) {
-        if (!url) return 'unknown';
-        if (url.includes('expedia.com')) return 'Expedia';
-        if (url.includes('hotels.com')) return 'Hotels.com';
-        if (url.includes('booking.com')) return 'Booking.com';
-        return 'booking-site';
+        if (!url) return "unknown";
+        if (url.includes("expedia.com")) return "Expedia";
+        if (url.includes("hotels.com")) return "Hotels.com";
+        if (url.includes("booking.com")) return "Booking.com";
+        return "booking-site";
     }
-    
+
     /**
      * Generate simple working fallback URL
      */
     generateTargetedFallbackUrl(hotel, offer, guestInfo) {
-        const hotelName = hotel.name || hotel.title || 'Hotel';
-        let locationStr = '';
-        
+        const hotelName = hotel.name || hotel.title || "Hotel";
+        let locationStr = "";
+
         // Enhanced location extraction
-        if (typeof hotel.location === 'string') {
+        if (typeof hotel.location === "string") {
             locationStr = hotel.location;
         } else if (hotel.location?.address) {
             locationStr = hotel.location.address;
@@ -185,36 +184,36 @@ class AIHotelBookingAgent {
         } else if (hotel.subtitle) {
             locationStr = hotel.subtitle;
         } else {
-            locationStr = 'Los Angeles, CA'; // Default fallback
+            locationStr = "Los Angeles, CA"; // Default fallback
         }
-        
+
         // Build simple search query
         const searchQuery = `${hotelName} ${locationStr}`.trim();
-        
+
         // Use booking.com with manual parameter building (NO URLSearchParams)
-        const baseUrl = 'https://www.booking.com/searchresults.html';
+        const baseUrl = "https://www.booking.com/searchresults.html";
         const params = [
             `ss=${encodeURIComponent(searchQuery)}`,
             `checkin=${offer.checkInDate}`,
             `checkout=${offer.checkOutDate}`,
-            'group_adults=1',
-            'group_children=0',  
-            'no_rooms=1',
-            'selected_currency=USD',
-            'sb_travel_purpose=leisure',
-            'src=index',
-            'nflt=review_score%3D80%3B', // Filter for good ratings
-            'order=distance_from_search' // Order by relevance
+            "group_adults=1",
+            "group_children=0",
+            "no_rooms=1",
+            "selected_currency=USD",
+            "sb_travel_purpose=leisure",
+            "src=index",
+            "nflt=review_score%3D80%3B", // Filter for good ratings
+            "order=distance_from_search", // Order by relevance
         ];
-        
-        const targetedUrl = `${baseUrl}?${params.join('&')}`;
-        
-        logger.info('🎯 Generated simple working fallback URL for:', {
+
+        const targetedUrl = `${baseUrl}?${params.join("&")}`;
+
+        logger.info("🎯 Generated simple working fallback URL for:", {
             hotel: hotelName,
             location: locationStr,
-            url: targetedUrl
+            url: targetedUrl,
         });
-        
+
         return targetedUrl;
     }
 
@@ -224,16 +223,16 @@ class AIHotelBookingAgent {
      * Analyze booking requirements and determine optimal strategy
      */
     async analyzeBookingRequirements(hotel, offer, guestInfo) {
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+
         const strategy = {
             bookingSite: this.determineBestBookingSite(hotel),
             bookingApproach: this.determineBookingApproach(hotel, offer),
             riskFactors: this.identifyRiskFactors(hotel, offer, guestInfo),
-            fallbackOptions: this.prepareFallbackOptions(hotel, offer)
+            fallbackOptions: this.prepareFallbackOptions(hotel, offer),
         };
 
-        logger.info('Booking strategy determined:', strategy);
+        logger.info("Booking strategy determined:", strategy);
         return strategy;
     }
 
@@ -241,19 +240,19 @@ class AIHotelBookingAgent {
      * Select the optimal booking site based on availability and rates
      */
     async selectOptimalBookingSite(hotel, offer) {
-        await new Promise(resolve => setTimeout(resolve, 1200));
-        
+        await new Promise((resolve) => setTimeout(resolve, 1200));
+
         const availableSites = [
-            { name: 'booking.com', reliability: 0.95, fees: 'low' },
-            { name: 'expedia.com', reliability: 0.90, fees: 'medium' },
-            { name: 'hotels.com', reliability: 0.88, fees: 'medium' },
-            { name: hotel.directBookingUrl, reliability: 0.85, fees: 'none' }
-        ].filter(site => site.name);
+            { name: "booking.com", reliability: 0.95, fees: "low" },
+            { name: "expedia.com", reliability: 0.9, fees: "medium" },
+            { name: "hotels.com", reliability: 0.88, fees: "medium" },
+            { name: hotel.directBookingUrl, reliability: 0.85, fees: "none" },
+        ].filter((site) => site.name);
 
         // Simulate site selection logic
         const selectedSite = availableSites[0];
-        logger.info('Selected booking site:', selectedSite.name);
-        
+        logger.info("Selected booking site:", selectedSite.name);
+
         return selectedSite;
     }
 
@@ -261,25 +260,25 @@ class AIHotelBookingAgent {
      * Automatically fill guest information forms
      */
     async fillGuestInformation(bookingSite, guestInfo) {
-        await new Promise(resolve => setTimeout(resolve, 1800));
-        
+        await new Promise((resolve) => setTimeout(resolve, 1800));
+
         const formFields = {
             firstName: guestInfo.firstName,
             lastName: guestInfo.lastName,
             email: guestInfo.email,
             phone: guestInfo.phone,
             address: guestInfo.address,
-            specialRequests: guestInfo.specialRequests
+            specialRequests: guestInfo.specialRequests,
         };
 
         // Simulate form filling with AI
-        logger.info('Filling guest information forms:', Object.keys(formFields));
-        
+        logger.info("Filling guest information forms:", Object.keys(formFields));
+
         // In a real implementation, this would use web automation tools like:
         // - Puppeteer/Playwright for browser automation
         // - Computer vision for form field recognition
         // - Natural language processing for handling form variations
-        
+
         return { success: true, fieldsCompleted: Object.keys(formFields).length };
     }
 
@@ -287,17 +286,17 @@ class AIHotelBookingAgent {
      * Select room preferences and options
      */
     async selectRoomPreferences(bookingSite, offer, preferences) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
         const selections = {
-            roomType: preferences.roomType || offer.room?.type || 'standard',
-            bedType: preferences.bedType || 'any',
-            smokingPreference: preferences.smoking || 'non-smoking',
-            floor: preferences.floor || 'any',
-            view: preferences.view || 'any'
+            roomType: preferences.roomType || offer.room?.type || "standard",
+            bedType: preferences.bedType || "any",
+            smokingPreference: preferences.smoking || "non-smoking",
+            floor: preferences.floor || "any",
+            view: preferences.view || "any",
         };
 
-        logger.info('Selecting room preferences:', selections);
+        logger.info("Selecting room preferences:", selections);
         return selections;
     }
 
@@ -305,14 +304,14 @@ class AIHotelBookingAgent {
      * Prepare checkout redirect with pre-filled information
      */
     async prepareCheckoutRedirect(bookingSite, guestInfo, offer) {
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+
         // Build a comprehensive pre-filled booking URL
-        const hotelName = encodeURIComponent(offer.hotel?.name || offer.hotel?.title || 'hotel');
-        
+        const hotelName = encodeURIComponent(offer.hotel?.name || offer.hotel?.title || "hotel");
+
         // Fix location handling to avoid [object Object]
-        let locationStr = '';
-        if (typeof offer.hotel?.location === 'string') {
+        let locationStr = "";
+        if (typeof offer.hotel?.location === "string") {
             locationStr = offer.hotel.location;
         } else if (offer.hotel?.location?.address) {
             locationStr = offer.hotel.location.address;
@@ -321,34 +320,34 @@ class AIHotelBookingAgent {
         } else if (offer.hotel?.subtitle) {
             locationStr = offer.hotel.subtitle;
         } else {
-            locationStr = 'Los Angeles'; // Default fallback
+            locationStr = "Los Angeles"; // Default fallback
         }
         const location = encodeURIComponent(locationStr);
-        
+
         // Create simple booking.com search URL
         const searchString = `${hotelName} ${locationStr}`.trim();
-        
+
         // Build simple parameters
         const simpleParams = [
             `ss=${encodeURIComponent(searchString)}`,
             `checkin=${offer.checkInDate}`,
             `checkout=${offer.checkOutDate}`,
-            'group_adults=1',
-            'group_children=0',
-            'no_rooms=1',
-            'selected_currency=USD'
+            "group_adults=1",
+            "group_children=0",
+            "no_rooms=1",
+            "selected_currency=USD",
         ];
-        
+
         // Simple URL without complex parameters
-        const checkoutUrl = `https://www.booking.com/searchresults.html?${simpleParams.join('&')}`;
-        
-        logger.info('Generated comprehensive booking URL:', {
+        const checkoutUrl = `https://www.booking.com/searchresults.html?${simpleParams.join("&")}`;
+
+        logger.info("Generated comprehensive booking URL:", {
             guestName: `${guestInfo.firstName} ${guestInfo.lastName}`,
             hotel: offer.hotel?.name || offer.hotel?.title,
             dates: `${offer.checkInDate} to ${offer.checkOutDate}`,
-            url: checkoutUrl
+            url: checkoutUrl,
         });
-        
+
         return checkoutUrl;
     }
 
@@ -358,10 +357,10 @@ class AIHotelBookingAgent {
     async updateStep(stepDescription) {
         this.currentStep++;
         logger.info(`AI Booking Step ${this.currentStep}: ${stepDescription}`);
-        
+
         // Simulate AI processing time
         const processingTime = Math.random() * 1000 + 500;
-        await new Promise(resolve => setTimeout(resolve, processingTime));
+        await new Promise((resolve) => setTimeout(resolve, processingTime));
     }
 
     /**
@@ -373,11 +372,11 @@ class AIHotelBookingAgent {
         // - Rate availability
         // - Booking success rates
         // - User preferences
-        
+
         if (hotel.chain && hotel.directBookingUrl) {
-            return 'direct';
+            return "direct";
         }
-        return 'booking.com'; // Default fallback
+        return "booking.com"; // Default fallback
     }
 
     /**
@@ -385,12 +384,12 @@ class AIHotelBookingAgent {
      */
     determineBookingApproach(hotel, offer) {
         const approaches = {
-            direct: hotel.directBookingUrl ? 'available' : 'not_available',
-            ota: 'available', // Online Travel Agency
-            gds: 'available'  // Global Distribution System
+            direct: hotel.directBookingUrl ? "available" : "not_available",
+            ota: "available", // Online Travel Agency
+            gds: "available", // Global Distribution System
         };
-        
-        return 'ota'; // Default to OTA for best availability
+
+        return "ota"; // Default to OTA for best availability
     }
 
     /**
@@ -398,23 +397,23 @@ class AIHotelBookingAgent {
      */
     identifyRiskFactors(hotel, offer, guestInfo) {
         const risks = [];
-        
+
         if (!hotel.rating || hotel.rating < 3) {
-            risks.push('low_hotel_rating');
+            risks.push("low_hotel_rating");
         }
-        
+
         if (offer.price && offer.price.total > 500) {
-            risks.push('high_price_point');
+            risks.push("high_price_point");
         }
-        
+
         const checkInDate = new Date(offer.checkInDate);
         const today = new Date();
         const daysUntilCheckIn = Math.ceil((checkInDate - today) / (1000 * 60 * 60 * 24));
-        
+
         if (daysUntilCheckIn < 1) {
-            risks.push('same_day_booking');
+            risks.push("same_day_booking");
         }
-        
+
         return risks;
     }
 
@@ -423,10 +422,10 @@ class AIHotelBookingAgent {
      */
     prepareFallbackOptions(hotel, offer) {
         return [
-            { site: 'booking.com', priority: 1 },
-            { site: 'expedia.com', priority: 2 },
-            { site: 'hotels.com', priority: 3 },
-            { site: 'direct', priority: 4 }
+            { site: "booking.com", priority: 1 },
+            { site: "expedia.com", priority: 2 },
+            { site: "hotels.com", priority: 3 },
+            { site: "direct", priority: 4 },
         ];
     }
 
@@ -437,9 +436,11 @@ class AIHotelBookingAgent {
         return {
             totalSteps: this.bookingSteps.length,
             completedSteps: this.currentStep,
-            currentStep: this.currentStep < this.bookingSteps.length ? 
-                        this.bookingSteps[this.currentStep] : 'completed',
-            isActive: this.isBooking
+            currentStep:
+                this.currentStep < this.bookingSteps.length
+                    ? this.bookingSteps[this.currentStep]
+                    : "completed",
+            isActive: this.isBooking,
         };
     }
 
@@ -448,11 +449,11 @@ class AIHotelBookingAgent {
      */
     async cancelBooking() {
         if (this.isBooking) {
-            logger.info('AI Hotel booking cancelled by user');
+            logger.info("AI Hotel booking cancelled by user");
             this.isBooking = false;
-            return { success: true, message: 'Booking cancelled successfully' };
+            return { success: true, message: "Booking cancelled successfully" };
         }
-        return { success: false, message: 'No active booking to cancel' };
+        return { success: false, message: "No active booking to cancel" };
     }
 
     /**
@@ -462,8 +463,8 @@ class AIHotelBookingAgent {
         return {
             isBooking: this.isBooking,
             currentStep: this.currentStep,
-            currentStepDescription: this.bookingSteps[this.currentStep] || 'completed',
-            progress: Math.round((this.currentStep / this.bookingSteps.length) * 100)
+            currentStepDescription: this.bookingSteps[this.currentStep] || "completed",
+            progress: Math.round((this.currentStep / this.bookingSteps.length) * 100),
         };
     }
 
@@ -471,7 +472,7 @@ class AIHotelBookingAgent {
      * Simple delay utility for UI animation
      */
     async delay(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
+        return new Promise((resolve) => setTimeout(resolve, ms));
     }
 }
 

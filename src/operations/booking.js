@@ -10,14 +10,15 @@ export const fetchFlightBookingOptions = async (args, context) => {
     }
 
     // Handle missing or invalid booking tokens by returning fallback immediately
-    if (!args.bookingToken || args.bookingToken === 'INVALID_TOKEN_FALLBACK') {
+    if (!args.bookingToken || args.bookingToken === "INVALID_TOKEN_FALLBACK") {
         logger.info("Invalid or missing booking token, returning fallback URL");
-        
+
         // Create a fallback URL with flight details from search context
         const searchParams = new URLSearchParams();
         if (args.searchContext.departure) searchParams.append("f", args.searchContext.departure);
         if (args.searchContext.arrival) searchParams.append("t", args.searchContext.arrival);
-        if (args.searchContext.outboundDate) searchParams.append("d", args.searchContext.outboundDate);
+        if (args.searchContext.outboundDate)
+            searchParams.append("d", args.searchContext.outboundDate);
         if (args.searchContext.returnDate) searchParams.append("r", args.searchContext.returnDate);
 
         const fallbackUrl = `https://www.google.com/flights#search;${searchParams.toString()}`;
@@ -32,7 +33,7 @@ export const fetchFlightBookingOptions = async (args, context) => {
             debugInfo: {
                 tokenLength: args.bookingToken ? args.bookingToken.length : 0,
                 tokenPreview: args.bookingToken || "null",
-                reason: "Missing or invalid booking token"
+                reason: "Missing or invalid booking token",
             },
         };
     }
@@ -113,23 +114,22 @@ export const bookFlight = async (args, context) => {
         throw new HttpError(401, "User must be logged in to book flights");
     }
 
-    logger.info('Processing flight booking request:', {
-        bookingToken: args.bookingToken ? `${args.bookingToken.slice(0, 20)}...` : 'none',
-        method: args.bookingMethod || 'unknown'
+    logger.info("Processing flight booking request:", {
+        bookingToken: args.bookingToken ? `${args.bookingToken.slice(0, 20)}...` : "none",
+        method: args.bookingMethod || "unknown",
     });
 
     try {
         // For now, we just return success and let the frontend handle the redirect
         // In a real implementation, this would process the actual booking
-        
+
         return {
             success: true,
-            message: 'Booking initiated successfully',
+            message: "Booking initiated successfully",
             bookingToken: args.bookingToken,
             method: args.bookingMethod,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
         };
-
     } catch (error) {
         logger.error("Error processing flight booking:", error);
         throw new HttpError(500, "Failed to process flight booking: " + error.message);

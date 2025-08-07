@@ -775,57 +775,74 @@ export function InfoModal({
                     {(() => {
                         // Helper function to get the best URL for hotels
                         const getHotelBookingUrl = () => {
-                            if (cardData.type === "hotel" || cardData.additionalInfo?.hotelId || cardData.details?.hotelId) {
+                            if (
+                                cardData.type === "hotel" ||
+                                cardData.additionalInfo?.hotelId ||
+                                cardData.details?.hotelId
+                            ) {
                                 // First try direct hotel booking URL if available and not an API URL
-                                if (cardData.externalLinks?.website && 
-                                    !cardData.externalLinks.website.includes('api.amadeus.com') &&
-                                    !cardData.externalLinks.website.includes('booking.com/searchresults') &&
-                                    !cardData.externalLinks.website.includes('booking.com/hotel')) {
+                                if (
+                                    cardData.externalLinks?.website &&
+                                    !cardData.externalLinks.website.includes("api.amadeus.com") &&
+                                    !cardData.externalLinks.website.includes(
+                                        "booking.com/searchresults",
+                                    ) &&
+                                    !cardData.externalLinks.website.includes("booking.com/hotel")
+                                ) {
                                     return cardData.externalLinks.website;
                                 }
-                                
+
                                 // Try booking link from offers if available
-                                if (cardData.externalLinks?.booking && 
-                                    !cardData.externalLinks.booking.includes('api.amadeus.com')) {
+                                if (
+                                    cardData.externalLinks?.booking &&
+                                    !cardData.externalLinks.booking.includes("api.amadeus.com")
+                                ) {
                                     return cardData.externalLinks.booking;
                                 }
-                                
+
                                 // Generate a proper booking.com search with hotel details
-                                const hotelName = encodeURIComponent(cardData.title || cardData.name || '');
-                                let locationStr = '';
-                                
+                                const hotelName = encodeURIComponent(
+                                    cardData.title || cardData.name || "",
+                                );
+                                let locationStr = "";
+
                                 // Better location handling
-                                if (typeof cardData.location === 'string') {
+                                if (typeof cardData.location === "string") {
                                     locationStr = cardData.location;
                                 } else if (cardData.location?.address) {
                                     locationStr = cardData.location.address;
                                 } else if (cardData.subtitle) {
                                     // Extract location from subtitle if possible
-                                    const locationMatch = cardData.subtitle.match(/in (.+?)(?:\s|$)/);
-                                    locationStr = locationMatch ? locationMatch[1] : cardData.subtitle;
+                                    const locationMatch =
+                                        cardData.subtitle.match(/in (.+?)(?:\s|$)/);
+                                    locationStr = locationMatch
+                                        ? locationMatch[1]
+                                        : cardData.subtitle;
                                 } else {
-                                    locationStr = 'Los Angeles'; // Default fallback
+                                    locationStr = "Los Angeles"; // Default fallback
                                 }
-                                
+
                                 const location = encodeURIComponent(locationStr);
-                                
+
                                 // Extract dates from multiple possible sources
                                 let checkin = null;
                                 let checkout = null;
-                                
+
                                 // Try to get dates from various sources in order of preference
-                                checkin = cardData.details?.checkIn || 
-                                         cardData.essentialDetails?.checkIn ||
-                                         cardData.additionalInfo?.checkIn || 
-                                         cardData.additionalInfo?.checkInDate ||
-                                         cardData.metadata?.searchContext?.outboundDate;
-                                         
-                                checkout = cardData.details?.checkOut || 
-                                          cardData.essentialDetails?.checkOut ||
-                                          cardData.additionalInfo?.checkOut || 
-                                          cardData.additionalInfo?.checkOutDate ||
-                                          cardData.metadata?.searchContext?.returnDate;
-                                
+                                checkin =
+                                    cardData.details?.checkIn ||
+                                    cardData.essentialDetails?.checkIn ||
+                                    cardData.additionalInfo?.checkIn ||
+                                    cardData.additionalInfo?.checkInDate ||
+                                    cardData.metadata?.searchContext?.outboundDate;
+
+                                checkout =
+                                    cardData.details?.checkOut ||
+                                    cardData.essentialDetails?.checkOut ||
+                                    cardData.additionalInfo?.checkOut ||
+                                    cardData.additionalInfo?.checkOutDate ||
+                                    cardData.metadata?.searchContext?.returnDate;
+
                                 // If we still don't have dates, use reasonable defaults
                                 if (!checkin || !checkout) {
                                     const today = new Date();
@@ -833,43 +850,50 @@ export function InfoModal({
                                     tomorrow.setDate(today.getDate() + 1);
                                     const dayAfter = new Date(today);
                                     dayAfter.setDate(today.getDate() + 3); // 2-night stay default
-                                    
-                                    checkin = checkin || tomorrow.toISOString().split('T')[0];
-                                    checkout = checkout || dayAfter.toISOString().split('T')[0];
+
+                                    checkin = checkin || tomorrow.toISOString().split("T")[0];
+                                    checkout = checkout || dayAfter.toISOString().split("T")[0];
                                 }
-                                
+
                                 // Create a comprehensive search URL that actually works
                                 const searchParams = new URLSearchParams({
                                     ss: `${hotelName} ${locationStr}`.trim(),
                                     checkin: checkin,
                                     checkout: checkout,
-                                    group_adults: cardData.metadata?.searchContext?.adults || '1',
-                                    group_children: cardData.metadata?.searchContext?.children || '0',
-                                    no_rooms: '1',
-                                    selected_currency: cardData.metadata?.searchContext?.currency || 'USD',
-                                    sb_travel_purpose: 'leisure',
-                                    order: 'popularity' // Show most popular/relevant results first
+                                    group_adults: cardData.metadata?.searchContext?.adults || "1",
+                                    group_children:
+                                        cardData.metadata?.searchContext?.children || "0",
+                                    no_rooms: "1",
+                                    selected_currency:
+                                        cardData.metadata?.searchContext?.currency || "USD",
+                                    sb_travel_purpose: "leisure",
+                                    order: "popularity", // Show most popular/relevant results first
                                 });
-                                
+
                                 // Add location-specific parameters to get better results
                                 if (cardData.location || cardData.subtitle) {
                                     const locationInfo = cardData.location || cardData.subtitle;
-                                    if (typeof locationInfo === 'string' && locationInfo.includes('Los Angeles')) {
-                                        searchParams.append('region', '20014'); // LA region ID
+                                    if (
+                                        typeof locationInfo === "string" &&
+                                        locationInfo.includes("Los Angeles")
+                                    ) {
+                                        searchParams.append("region", "20014"); // LA region ID
                                     }
                                 }
-                                
+
                                 const bookingUrl = `https://www.booking.com/searchresults.html?${searchParams.toString()}`;
-                                
+
                                 return bookingUrl;
                             }
-                            
+
                             // For flights and other types, use existing logic
-                            return cardData.externalLinks?.website || cardData.externalLinks?.booking;
+                            return (
+                                cardData.externalLinks?.website || cardData.externalLinks?.booking
+                            );
                         };
-                        
+
                         const url = getHotelBookingUrl();
-                        
+
                         return url ? (
                             <button
                                 onClick={() => {
@@ -890,10 +914,13 @@ export function InfoModal({
                                     fontWeight: "500",
                                 }}
                             >
-                                {cardData.type === "flight" ? "Book Flight" : 
-                                 cardData.type === "hotel" ? 
-                                    (cardData.details?.hasOffers ? "Book This Hotel" : "Find & Book Hotel") : 
-                                 "Go to Website"}
+                                {cardData.type === "flight"
+                                    ? "Book Flight"
+                                    : cardData.type === "hotel"
+                                      ? cardData.details?.hasOffers
+                                          ? "Book This Hotel"
+                                          : "Find & Book Hotel"
+                                      : "Go to Website"}
                             </button>
                         ) : null;
                     })()}

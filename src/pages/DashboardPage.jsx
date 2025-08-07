@@ -221,36 +221,36 @@ export function DashboardPage() {
     };
 
     const handleBookHotel = (hotel, offer) => {
-        logger.info('Hotel booking initiated:', { hotel: hotel.title, offer });
+        logger.info("Hotel booking initiated:", { hotel: hotel.title, offer });
         setSelectedHotel(hotel);
         setSelectedHotelOffer(offer);
         setIsHotelBookingModalOpen(true);
     };
 
     const handleHotelBookingComplete = (bookingResult) => {
-        logger.info('Hotel booking completed:', bookingResult);
-        
+        logger.info("Hotel booking completed:", bookingResult);
+
         // Different messages based on booking method
         let successText;
-        if (bookingResult.method === 'real_browser_automation' && bookingResult.automationSuccess) {
-            successText = `🤖✨ **REAL BROWSER AUTOMATION COMPLETED!** 
+        if (bookingResult.method === "real_browser_automation" && bookingResult.automationSuccess) {
+            successText = `🤖✨ **REAL BROWSER AUTOMATION COMPLETED!**
 
 I've just controlled a live browser and automatically:
 • 🌐 Opened booking.com and navigated to your hotel
-• 🏨 Selected "${selectedHotel?.title}" from search results  
+• 🏨 Selected "${selectedHotel?.title}" from search results
 • 🏠 Chose the best available room for your dates
 • 👤 Auto-filled all your personal information in the forms
 • 💳 Navigated to the booking confirmation page
 
 The automated browser window is now open and ready - just complete the payment! 🎉
 
-${bookingResult.message || ''}`;
-        } else if (bookingResult.method === 'fallback_redirect' || bookingResult.redirected) {
-            successText = `🤖 AI booking agent completed! I've pre-filled your information at ${selectedHotel?.title} and opened the booking page. ${bookingResult.message || 'Please complete the booking manually.'} 🎉`;
+${bookingResult.message || ""}`;
+        } else if (bookingResult.method === "fallback_redirect" || bookingResult.redirected) {
+            successText = `🤖 AI booking agent completed! I've pre-filled your information at ${selectedHotel?.title} and opened the booking page. ${bookingResult.message || "Please complete the booking manually."} 🎉`;
         } else {
             successText = `🎉 Hotel booking process initiated! Your booking ID: ${bookingResult.bookingId}`;
         }
-        
+
         // Add success message to chat
         const successMessage = {
             id: crypto.randomUUID(),
@@ -258,10 +258,10 @@ ${bookingResult.message || ''}`;
             text: successText,
             timestamp: new Date(),
             type: "success",
-            cards: []
+            cards: [],
         };
-        
-        setMessages(prev => [...prev, successMessage]);
+
+        setMessages((prev) => [...prev, successMessage]);
         setIsHotelBookingModalOpen(false);
     };
 
@@ -423,9 +423,9 @@ ${bookingResult.message || ''}`;
                 hotel={selectedHotel}
                 offer={selectedHotelOffer}
                 guestInfo={{
-                    firstName: user?.firstName || '',
-                    lastName: user?.lastName || '',
-                    email: user?.email || ''
+                    firstName: user?.firstName || "",
+                    lastName: user?.lastName || "",
+                    email: user?.email || "",
                 }}
                 onBookingComplete={handleHotelBookingComplete}
                 autoFillEnabled={true}

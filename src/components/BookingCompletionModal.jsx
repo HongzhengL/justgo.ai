@@ -1,14 +1,8 @@
-import React, { useState } from 'react';
-import { createAutoFillBookmarklet, generateAutoFillInstructions } from '../utils/formAutoFill.js';
+import React, { useState } from "react";
+import { createAutoFillBookmarklet, generateAutoFillInstructions } from "../utils/formAutoFill.js";
 
-export function BookingCompletionModal({ 
-    isOpen, 
-    onClose, 
-    bookingData,
-    guestInfo,
-    bookingUrl 
-}) {
-    const [step, setStep] = useState('summary'); // 'summary', 'autofill', 'instructions'
+export function BookingCompletionModal({ isOpen, onClose, bookingData, guestInfo, bookingUrl }) {
+    const [step, setStep] = useState("summary"); // 'summary', 'autofill', 'instructions'
     const [copied, setCopied] = useState(false);
 
     if (!isOpen || !bookingData) return null;
@@ -24,8 +18,8 @@ export function BookingCompletionModal({
 
     const openWithAutoFill = () => {
         // Create a new window with the booking URL
-        const newWindow = window.open(bookingUrl, '_blank');
-        
+        const newWindow = window.open(bookingUrl, "_blank");
+
         // Wait a moment for the page to load, then inject the auto-fill script
         setTimeout(() => {
             if (newWindow && !newWindow.closed) {
@@ -33,21 +27,21 @@ export function BookingCompletionModal({
                     const script = `
                         // Wait for page to fully load
                         if (document.readyState === 'complete') {
-                            ${createBookingAutoFillScript(guestInfo, bookingData).replace('(function() {', '').replace('})();', '')}
+                            ${createBookingAutoFillScript(guestInfo, bookingData).replace("(function() {", "").replace("})();", "")}
                         } else {
                             window.addEventListener('load', function() {
                                 setTimeout(function() {
-                                    ${createBookingAutoFillScript(guestInfo, bookingData).replace('(function() {', '').replace('})();', '')}
+                                    ${createBookingAutoFillScript(guestInfo, bookingData).replace("(function() {", "").replace("})();", "")}
                                 }, 2000);
                             });
                         }
                     `;
-                    
+
                     newWindow.eval(script);
                 } catch (error) {
-                    console.log('Cross-origin restrictions prevent auto-fill injection');
+                    console.log("Cross-origin restrictions prevent auto-fill injection");
                     // Fall back to bookmarklet method
-                    setStep('instructions');
+                    setStep("instructions");
                 }
             }
         }, 3000);
@@ -55,24 +49,31 @@ export function BookingCompletionModal({
 
     return (
         <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content booking-completion-modal" onClick={(e) => e.stopPropagation()}>
+            <div
+                className="modal-content booking-completion-modal"
+                onClick={(e) => e.stopPropagation()}
+            >
                 <div className="modal-header">
                     <h2>🎉 Booking Prepared Successfully!</h2>
-                    <button className="modal-close" onClick={onClose}>×</button>
+                    <button className="modal-close" onClick={onClose}>
+                        ×
+                    </button>
                 </div>
 
                 <div className="modal-body">
-                    {step === 'summary' && (
+                    {step === "summary" && (
                         <div className="booking-summary-step">
                             <div className="success-icon">✅</div>
                             <h3>Your AI booking assistant has prepared everything!</h3>
-                            
+
                             <div className="booking-summary-card">
                                 <h4>📋 Booking Summary</h4>
                                 <div className="summary-details">
                                     <div className="detail-row">
                                         <span className="label">Guest:</span>
-                                        <span className="value">{guestInfo.firstName} {guestInfo.lastName}</span>
+                                        <span className="value">
+                                            {guestInfo.firstName} {guestInfo.lastName}
+                                        </span>
                                     </div>
                                     <div className="detail-row">
                                         <span className="label">Email:</span>
@@ -93,7 +94,9 @@ export function BookingCompletionModal({
                                     {guestInfo.specialRequests && (
                                         <div className="detail-row">
                                             <span className="label">Special Requests:</span>
-                                            <span className="value">{guestInfo.specialRequests}</span>
+                                            <span className="value">
+                                                {guestInfo.specialRequests}
+                                            </span>
                                         </div>
                                     )}
                                 </div>
@@ -102,15 +105,15 @@ export function BookingCompletionModal({
                             <div className="next-steps">
                                 <h4>🚀 Choose Your Next Step:</h4>
                                 <div className="action-buttons">
-                                    <button 
+                                    <button
                                         className="btn btn-primary auto-fill-btn"
-                                        onClick={() => setStep('autofill')}
+                                        onClick={() => setStep("autofill")}
                                     >
                                         🤖 Use AI Auto-Fill (Recommended)
                                     </button>
-                                    <button 
+                                    <button
                                         className="btn btn-secondary"
-                                        onClick={() => window.open(bookingUrl, '_blank')}
+                                        onClick={() => window.open(bookingUrl, "_blank")}
                                     >
                                         📝 Manual Fill (Traditional Way)
                                     </button>
@@ -119,12 +122,15 @@ export function BookingCompletionModal({
                         </div>
                     )}
 
-                    {step === 'autofill' && (
+                    {step === "autofill" && (
                         <div className="autofill-step">
                             <div className="autofill-header">
                                 <span className="robot-icon">🤖</span>
                                 <h3>AI Form Auto-Fill Ready!</h3>
-                                <p>Our AI will automatically fill all your information on the booking page</p>
+                                <p>
+                                    Our AI will automatically fill all your information on the
+                                    booking page
+                                </p>
                             </div>
 
                             <div className="autofill-features">
@@ -143,15 +149,15 @@ export function BookingCompletionModal({
                             </div>
 
                             <div className="autofill-actions">
-                                <button 
+                                <button
                                     className="btn btn-primary auto-fill-btn"
                                     onClick={openWithAutoFill}
                                 >
                                     🚀 Open Booking Page with AI Auto-Fill
                                 </button>
-                                <button 
+                                <button
                                     className="btn btn-outline"
-                                    onClick={() => setStep('instructions')}
+                                    onClick={() => setStep("instructions")}
                                 >
                                     📖 Show Bookmarklet Instructions
                                 </button>
@@ -159,7 +165,7 @@ export function BookingCompletionModal({
                         </div>
                     )}
 
-                    {step === 'instructions' && (
+                    {step === "instructions" && (
                         <div className="instructions-step">
                             <h3>📖 Bookmarklet Auto-Fill Instructions</h3>
                             <p>For maximum compatibility, use this bookmarklet method:</p>
@@ -178,24 +184,24 @@ export function BookingCompletionModal({
                                 <div className="code-box">
                                     <code>{autoFillData.bookmarklet}</code>
                                 </div>
-                                <button 
+                                <button
                                     className="btn btn-copy"
                                     onClick={() => copyToClipboard(autoFillData.bookmarklet)}
                                 >
-                                    {copied ? '✅ Copied!' : '📋 Copy Bookmarklet'}
+                                    {copied ? "✅ Copied!" : "📋 Copy Bookmarklet"}
                                 </button>
                             </div>
 
                             <div className="quick-actions">
-                                <button 
+                                <button
                                     className="btn btn-primary"
-                                    onClick={() => window.open(bookingUrl, '_blank')}
+                                    onClick={() => window.open(bookingUrl, "_blank")}
                                 >
                                     🔗 Open Booking Page
                                 </button>
-                                <button 
+                                <button
                                     className="btn btn-secondary"
-                                    onClick={() => setStep('autofill')}
+                                    onClick={() => setStep("autofill")}
                                 >
                                     ← Back to Auto-Fill
                                 </button>
@@ -208,11 +214,8 @@ export function BookingCompletionModal({
                     <button className="btn btn-secondary" onClick={onClose}>
                         Close
                     </button>
-                    {step !== 'summary' && (
-                        <button 
-                            className="btn btn-outline" 
-                            onClick={() => setStep('summary')}
-                        >
+                    {step !== "summary" && (
+                        <button className="btn btn-outline" onClick={() => setStep("summary")}>
                             ← Back to Summary
                         </button>
                     )}
@@ -404,7 +407,7 @@ export function BookingCompletionModal({
                     border-radius: 8px;
                     padding: 1rem;
                     margin: 1rem 0;
-                    font-family: 'Courier New', monospace;
+                    font-family: "Courier New", monospace;
                     font-size: 0.75rem;
                     word-break: break-all;
                     max-height: 100px;

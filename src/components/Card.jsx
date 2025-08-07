@@ -339,28 +339,39 @@ export function Card({
                     {(externalLinks?.website || externalLinks?.booking || bookingUrl) && (
                         <button
                             onClick={() => {
-                                // Handle flight booking with new modal approach - only use modal if valid booking token exists  
-                                if (type === "flight" && metadata?.searchContext && metadata?.bookingToken && onBookFlight) {
+                                // Handle flight booking with new modal approach - only use modal if valid booking token exists
+                                if (
+                                    type === "flight" &&
+                                    metadata?.searchContext &&
+                                    metadata?.bookingToken &&
+                                    onBookFlight
+                                ) {
                                     // Only use modal if we have a valid booking token
                                     onBookFlight(metadata.bookingToken, metadata.searchContext, {
                                         title,
                                         subtitle,
                                     });
-                                } 
+                                }
                                 // If no booking token, fallback to direct Google Flights URL
                                 else if (type === "flight" && externalLinks?.booking) {
-                                    window.open(externalLinks.booking, "_blank", "noopener,noreferrer");
-                                } 
+                                    window.open(
+                                        externalLinks.booking,
+                                        "_blank",
+                                        "noopener,noreferrer",
+                                    );
+                                }
                                 // Handle hotel booking with new modal approach
-                                else if ((type === "hotel" || additionalInfo?.hotelId) && onBookHotel) {
+                                else if (
+                                    (type === "hotel" || additionalInfo?.hotelId) &&
+                                    onBookHotel
+                                ) {
                                     onBookHotel(cardData, {
                                         checkInDate: additionalInfo?.checkIn,
                                         checkOutDate: additionalInfo?.checkOut,
                                         price: price,
-                                        room: additionalInfo?.room
+                                        room: additionalInfo?.room,
                                     });
-                                } 
-                                else {
+                                } else {
                                     // Fallback to existing behavior for non-flights/hotels or missing handlers
                                     const url =
                                         externalLinks?.website ||
