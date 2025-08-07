@@ -327,9 +327,10 @@ ${bookingResult.message || ""}`;
     }
 
     // Get cards from the latest AI message only (current conversation)
-    const latestAIMessage = messages.slice().reverse().find(message => 
-        message.sender === "ai" && message.cards && message.cards.length > 0
-    );
+    const latestAIMessage = messages
+        .slice()
+        .reverse()
+        .find((message) => message.sender === "ai" && message.cards && message.cards.length > 0);
     const currentCards = latestAIMessage ? latestAIMessage.cards : [];
 
     return (

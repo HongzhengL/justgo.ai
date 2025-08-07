@@ -161,7 +161,11 @@ export function MyItineraryPage() {
                                 border: "1px solid #e9ecef",
                             }}
                         >
-                            <div style={{ fontSize: "3rem", marginBottom: "1rem", color: "#6c757d" }}>📋</div>
+                            <div
+                                style={{ fontSize: "3rem", marginBottom: "1rem", color: "#6c757d" }}
+                            >
+                                📋
+                            </div>
                             <h2
                                 style={{
                                     fontSize: "1.5rem",

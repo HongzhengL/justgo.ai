@@ -900,21 +900,27 @@ export function InfoModal({
                             <button
                                 onClick={() => {
                                     // For flights with booking token and search context, use booking modal
-                                    if (cardData.type === "flight" && 
-                                        cardData.metadata?.bookingToken && 
-                                        cardData.metadata?.searchContext && 
-                                        onBookFlight) {
+                                    if (
+                                        cardData.type === "flight" &&
+                                        cardData.metadata?.bookingToken &&
+                                        cardData.metadata?.searchContext &&
+                                        onBookFlight
+                                    ) {
                                         onBookFlight(
-                                            cardData.metadata.bookingToken, 
-                                            cardData.metadata.searchContext, 
+                                            cardData.metadata.bookingToken,
+                                            cardData.metadata.searchContext,
                                             {
                                                 title: cardData.title,
                                                 subtitle: cardData.subtitle,
-                                            }
+                                            },
                                         );
-                                    } 
+                                    }
                                     // For hotels with booking handler
-                                    else if ((cardData.type === "hotel" || cardData.additionalInfo?.hotelId) && onBookHotel) {
+                                    else if (
+                                        (cardData.type === "hotel" ||
+                                            cardData.additionalInfo?.hotelId) &&
+                                        onBookHotel
+                                    ) {
                                         onBookHotel(cardData, {
                                             checkInDate: cardData.additionalInfo?.checkIn,
                                             checkOutDate: cardData.additionalInfo?.checkOut,

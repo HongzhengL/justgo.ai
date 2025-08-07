@@ -19,7 +19,7 @@ export function OrganizedCardList({
         isOpen: false,
         cardData: null,
     });
-    
+
     const [collapsedSections, setCollapsedSections] = useState({
         outbound: false,
         return: false,
@@ -39,30 +39,35 @@ export function OrganizedCardList({
         hotels: [],
         activities: [],
         rentalCars: [],
-        other: []
+        other: [],
     };
 
     // Collect all flights and analyze them
-    const flights = cards.filter(card => card.type === 'flight');
-    
+    const flights = cards.filter((card) => card.type === "flight");
+
     if (flights.length > 0) {
-        console.log('Analyzing flights:', flights.map(f => f.title));
-        
+        console.log(
+            "Analyzing flights:",
+            flights.map((f) => f.title),
+        );
+
         // Extract flight routes
-        const routes = flights.map(flight => {
-            const title = flight.title || '';
-            if (title.includes('→')) {
-                const [origin, destination] = title.split('→').map(s => s.trim());
-                return { flight, origin, destination, title };
-            }
-            return { flight, origin: '', destination: '', title };
-        }).filter(r => r.origin && r.destination);
+        const routes = flights
+            .map((flight) => {
+                const title = flight.title || "";
+                if (title.includes("→")) {
+                    const [origin, destination] = title.split("→").map((s) => s.trim());
+                    return { flight, origin, destination, title };
+                }
+                return { flight, origin: "", destination: "", title };
+            })
+            .filter((r) => r.origin && r.destination);
 
         if (routes.length >= 2) {
             // For multi-city trips, use smart detection
             // Group by origin airport - the most common origin is likely the home base
             const originGroups = {};
-            routes.forEach(route => {
+            routes.forEach((route) => {
                 if (!originGroups[route.origin]) {
                     originGroups[route.origin] = [];
                 }
@@ -71,27 +76,28 @@ export function OrganizedCardList({
 
             // Find the airport that appears most as an origin OR destination
             const airportCounts = {};
-            routes.forEach(route => {
+            routes.forEach((route) => {
                 airportCounts[route.origin] = (airportCounts[route.origin] || 0) + 1;
                 airportCounts[route.destination] = (airportCounts[route.destination] || 0) + 1;
             });
 
-            const homeBase = Object.keys(airportCounts).reduce((a, b) => 
-                airportCounts[a] > airportCounts[b] ? a : b);
+            const homeBase = Object.keys(airportCounts).reduce((a, b) =>
+                airportCounts[a] > airportCounts[b] ? a : b,
+            );
 
-            console.log('Smart flight analysis:', {
-                routes: routes.map(r => r.title),
+            console.log("Smart flight analysis:", {
+                routes: routes.map((r) => r.title),
                 airportCounts,
-                homeBase
+                homeBase,
             });
 
             // Categorize flights
-            routes.forEach(route => {
+            routes.forEach((route) => {
                 // A flight is a return flight if it goes TO the home base
                 const isReturn = route.destination === homeBase && route.origin !== homeBase;
-                
+
                 console.log(`Flight ${route.title}: homeBase=${homeBase}, isReturn=${isReturn}`);
-                
+
                 if (isReturn) {
                     organizedCards.returnFlights.push(route.flight);
                 } else {
@@ -100,43 +106,52 @@ export function OrganizedCardList({
             });
 
             // Add any flights without arrows to outbound
-            flights.forEach(flight => {
-                if (!flight.title || !flight.title.includes('→')) {
+            flights.forEach((flight) => {
+                if (!flight.title || !flight.title.includes("→")) {
                     organizedCards.outboundFlights.push(flight);
                 }
             });
         } else {
             // If we have fewer than 2 flights with routes, just put them in outbound
-            flights.forEach(flight => {
+            flights.forEach((flight) => {
                 organizedCards.outboundFlights.push(flight);
             });
         }
     }
 
-    cards.forEach(card => {
+    cards.forEach((card) => {
         // Debug logging
-        console.log('Card type:', card.type, 'Title:', card.title);
-        
+        console.log("Card type:", card.type, "Title:", card.title);
+
         // Skip flights as they're already processed above
-        if (card.type === 'flight') {
+        if (card.type === "flight") {
             return;
-        } else if (card.type === 'hotel' || 
-                   card.additionalInfo?.hotelId || 
-                   card.details?.hotelId ||
-                   (card.title && (card.title.toLowerCase().includes('hotel') || 
-                                   card.title.toLowerCase().includes('resort') ||
-                                   card.title.toLowerCase().includes('inn') ||
-                                   card.title.toLowerCase().includes('suites')))) {
+        } else if (
+            card.type === "hotel" ||
+            card.additionalInfo?.hotelId ||
+            card.details?.hotelId ||
+            (card.title &&
+                (card.title.toLowerCase().includes("hotel") ||
+                    card.title.toLowerCase().includes("resort") ||
+                    card.title.toLowerCase().includes("inn") ||
+                    card.title.toLowerCase().includes("suites")))
+        ) {
             organizedCards.hotels.push(card);
-        } else if (card.type === 'activity' ||
-                   (card.title && (card.title.toLowerCase().includes('activity') ||
-                                   card.title.toLowerCase().includes('tour') ||
-                                   card.title.toLowerCase().includes('attraction')))) {
+        } else if (
+            card.type === "activity" ||
+            (card.title &&
+                (card.title.toLowerCase().includes("activity") ||
+                    card.title.toLowerCase().includes("tour") ||
+                    card.title.toLowerCase().includes("attraction")))
+        ) {
             organizedCards.activities.push(card);
-        } else if (card.type === 'rental_car' || 
-                   (card.title && (card.title.toLowerCase().includes('car rental') ||
-                                   card.title.toLowerCase().includes('vehicle') ||
-                                   card.title.toLowerCase().includes('car hire')))) {
+        } else if (
+            card.type === "rental_car" ||
+            (card.title &&
+                (card.title.toLowerCase().includes("car rental") ||
+                    card.title.toLowerCase().includes("vehicle") ||
+                    card.title.toLowerCase().includes("car hire")))
+        ) {
             organizedCards.rentalCars.push(card);
         } else {
             organizedCards.other.push(card);
@@ -172,9 +187,9 @@ export function OrganizedCardList({
     };
 
     const toggleSection = (section) => {
-        setCollapsedSections(prev => ({
+        setCollapsedSections((prev) => ({
             ...prev,
-            [section]: !prev[section]
+            [section]: !prev[section],
         }));
     };
 
@@ -185,20 +200,20 @@ export function OrganizedCardList({
 
         return (
             <div className="organized-section">
-                <div 
-                    className="section-header" 
+                <div
+                    className="section-header"
                     onClick={() => toggleSection(sectionKey)}
                     style={{ borderLeftColor: color }}
                 >
                     <div className="section-title">
                         <span className="section-name">{title}</span>
-                        <span className="section-count">{cards.length} option{cards.length !== 1 ? 's' : ''}</span>
+                        <span className="section-count">
+                            {cards.length} option{cards.length !== 1 ? "s" : ""}
+                        </span>
                     </div>
-                    <button className="collapse-button">
-                        {isCollapsed ? 'Show' : 'Hide'}
-                    </button>
+                    <button className="collapse-button">{isCollapsed ? "Show" : "Hide"}</button>
                 </div>
-                
+
                 {!isCollapsed && (
                     <div className="section-content">
                         {cards.map((card, index) => {
@@ -238,8 +253,11 @@ export function OrganizedCardList({
     const getFlightRouteTitle = (flights) => {
         if (flights.length === 0) return "";
         const firstFlight = flights[0];
-        if (firstFlight.title && firstFlight.title.includes('→')) {
-            return firstFlight.title.split('→').map(part => part.trim()).join(' → ');
+        if (firstFlight.title && firstFlight.title.includes("→")) {
+            return firstFlight.title
+                .split("→")
+                .map((part) => part.trim())
+                .join(" → ");
         }
         return "";
     };
@@ -253,59 +271,37 @@ export function OrganizedCardList({
                 <div className="organized-header">
                     <h2 className="results-title">
                         Travel Options
-                        <span className="total-count">
-                            {cards.length} total results
-                        </span>
+                        <span className="total-count">{cards.length} total results</span>
                     </h2>
                 </div>
 
                 {/* Outbound Flights */}
                 {renderSection(
-                    outboundRoute || 'Outbound Flights',
+                    outboundRoute || "Outbound Flights",
                     organizedCards.outboundFlights,
-                    'outbound',
-                    '#3b82f6'
+                    "outbound",
+                    "#3b82f6",
                 )}
 
                 {/* Return Flights */}
                 {renderSection(
-                    returnRoute || 'Return Flights',
+                    returnRoute || "Return Flights",
                     organizedCards.returnFlights,
-                    'return',
-                    '#8b5cf6'
+                    "return",
+                    "#8b5cf6",
                 )}
 
                 {/* Hotels */}
-                {renderSection(
-                    'Hotels',
-                    organizedCards.hotels,
-                    'hotels',
-                    '#f59e0b'
-                )}
+                {renderSection("Hotels", organizedCards.hotels, "hotels", "#f59e0b")}
 
                 {/* Activities */}
-                {renderSection(
-                    'Activities',
-                    organizedCards.activities,
-                    'activities',
-                    '#10b981'
-                )}
+                {renderSection("Activities", organizedCards.activities, "activities", "#10b981")}
 
                 {/* Rental Cars */}
-                {renderSection(
-                    'Car Rentals',
-                    organizedCards.rentalCars,
-                    'rentalCars',
-                    '#f97316'
-                )}
+                {renderSection("Car Rentals", organizedCards.rentalCars, "rentalCars", "#f97316")}
 
                 {/* Other Results */}
-                {renderSection(
-                    'Other',
-                    organizedCards.other,
-                    'other',
-                    '#6b7280'
-                )}
+                {renderSection("Other", organizedCards.other, "other", "#6b7280")}
             </div>
 
             <InfoModal
