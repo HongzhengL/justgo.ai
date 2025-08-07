@@ -1,0 +1,115 @@
+digraph AITravelPlanner {
+    // Simplified, presentation-friendly configuration
+    rankdir=TB;
+    node [shape=box, style="rounded,filled", fontname="Arial Bold", fontsize=14, height=0.8, width=2.5];
+    edge [fontname="Arial", fontsize=12, penwidth=2];
+    compound=true;
+    ranksep=1.0;
+    nodesep=0.8;
+
+    // Title
+    label="AI Travel Planner - Technology Architecture";
+    labelloc="t";
+    fontsize=22;
+    fontname="Arial Bold";
+
+    // Frontend Layer - Blue
+    subgraph cluster_frontend {
+        label="Frontend";
+        style="filled,rounded";
+        fillcolor="#E3F2FD";
+        fontsize=18;
+        fontcolor="#1565C0";
+        penwidth=2;
+
+        react [label="React 18\n+ TypeScript", fillcolor="#64B5F6", fontcolor="white", fontsize=16];
+        vite [label="Vite\nBuild Tool", fillcolor="#64B5F6", fontcolor="white", fontsize=16];
+    }
+
+    // Backend Layer - Green
+    subgraph cluster_backend {
+        label="Backend";
+        style="filled,rounded";
+        fillcolor="#E8F5E9";
+        fontsize=18;
+        fontcolor="#2E7D32";
+        penwidth=2;
+
+        wasp [label="Wasp Framework\n+ Node.js", fillcolor="#66BB6A", fontcolor="white", fontsize=16];
+        api [label="API Services\n+ Business Logic", fillcolor="#66BB6A", fontcolor="white", fontsize=16];
+    }
+
+    // AI Layer - Orange (Highlighted)
+    subgraph cluster_ai {
+        label="🤖 AI & Automation";
+        style="filled,rounded,bold";
+        fillcolor="#FFF3E0";
+        fontsize=18;
+        fontcolor="#E65100";
+        penwidth=3;
+        color="#FF6F00";
+
+        openai [label="OpenAI GPT-4o\n+ Whisper", fillcolor="#FF9800", fontcolor="white", fontsize=16];
+        automation [label="Browser Automation\nPuppeteer/Playwright", fillcolor="#FF9800", fontcolor="white", fontsize=16];
+    }
+
+    // Database - Purple
+    subgraph cluster_database {
+        label="Database";
+        style="filled,rounded";
+        fillcolor="#F3E5F5";
+        fontsize=18;
+        fontcolor="#6A1B9A";
+        penwidth=2;
+
+        postgres [label="PostgreSQL\n+ Prisma ORM", fillcolor="#9C27B0", fontcolor="white", fontsize=16];
+    }
+
+    // External APIs - Teal
+    subgraph cluster_apis {
+        label="Travel APIs";
+        style="filled,rounded";
+        fillcolor="#E0F2F1";
+        fontsize=18;
+        fontcolor="#00695C";
+        penwidth=2;
+
+        travel [label="SerpAPI (Flights)\nAmadeus (Hotels)\nGoogle Maps", fillcolor="#00897B", fontcolor="white", fontsize=16];
+    }
+
+    // DevOps & Quality - Red (Industry Standard)
+    subgraph cluster_devops {
+        label="🏭 DevOps & Quality (Industry Standard)";
+        style="filled,rounded,bold";
+        fillcolor="#FFEBEE";
+        fontsize=18;
+        fontcolor="#C62828";
+        penwidth=2;
+        color="#D32F2F";
+
+        precommit [label="Pre-commit Hooks\n• Prettier • ESLint\n• TypeScript • Prisma", fillcolor="#EF5350", fontcolor="white", fontsize=16];
+        cicd [label="GitHub Actions CI/CD\n• Automated Testing\n• Build Verification", fillcolor="#EF5350", fontcolor="white", fontsize=16];
+        deploy [label="Production Deploy\nNetlify(Frontend)\n+ Heroku(Backend)\n+ Docker", fillcolor="#EF5350", fontcolor="white", fontsize=16];
+    }
+
+    // Main Data Flow - Simplified
+    react -> wasp [label="REST API", color="#2196F3", penwidth=3, fontsize=14];
+    wasp -> api [color="#4CAF50", penwidth=2];
+
+    // AI Flow - Highlighted
+    api -> openai [label="AI Processing", color="#FF6F00", penwidth=4, fontsize=14, fontcolor="#E65100"];
+    api -> automation [label="Booking", color="#FF6F00", penwidth=3, fontsize=14, fontcolor="#E65100"];
+
+    // Database Flow
+    api -> postgres [label="Data Storage", color="#9C27B0", penwidth=3, fontsize=14];
+
+    // External API Flow
+    api -> travel [label="Search", color="#00897B", penwidth=3, fontsize=14];
+
+    // DevOps Flow - Industry Standard
+    precommit -> wasp [label="Code Quality\nGate", color="#D32F2F", penwidth=2, fontsize=13, style="dashed"];
+    precommit -> react [label="Code Quality\nGate", color="#D32F2F", penwidth=2, fontsize=13, style="dashed"];
+    cicd -> deploy [label="Automated\nPipeline", color="#D32F2F", penwidth=3, fontsize=13];
+    deploy -> react [color="#D32F2F", style="dashed", penwidth=2];
+    deploy -> wasp [color="#D32F2F", style="dashed", penwidth=2];
+}
