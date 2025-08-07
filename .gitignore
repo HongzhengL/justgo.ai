@@ -60,3 +60,6 @@ nohup.out
 
 # Environment files with secrets
 server.env
+
+# Local Netlify folder
+.netlify
