@@ -114,18 +114,24 @@ export class AIAgent {
             - currency: price currency preference (optional) - defaults to USD
             - budget: budget information (if mentioned)
             - preferences: any specific preferences mentioned
-            - query: for place searches, the type of place they're looking for
+            - query: for place searches, the EXACT phrase they used for what they're looking for (e.g., "Indian restaurants", "Chinese food", "Italian cuisine", "museums", "parks")
             - checkInDate: check-in date in YYYY-MM-DD format (for hotel searches)
             - checkOutDate: check-out date in YYYY-MM-DD format (for hotel searches)
             - destinations: array of destinations for trip planning (e.g., ["LAX", "Yosemite", "SFO"])
             - flightSegments: array of flight segments for multi-segment trips (e.g., [{"from": "LAX", "to": "ORD", "date": "2025-08-15"}, {"from": "MSN", "to": "LAX", "date": "2025-08-19"}])
             - transportation: transportation preferences (flights, rental car, etc.)
-            - activities: specific activities or interests mentioned (e.g., "clubbing", "nightlife", "museums", "hiking", "food tours")
+            - activities: specific activities or interests mentioned (e.g., "clubbing", "nightlife", "museums", "hiking", "food tours", "Indian restaurants", "Italian food")
             - tripType: type of trip (multi-city, road trip, etc.)
             - iataConversionNotes: optional field to track IATA conversions (e.g., "Selected JFK for New York - multiple airports available")
 
             EXAMPLES:
             ${intentExamples}
+
+            PLACE SEARCH EXAMPLES:
+            - "Indian restaurants in Munich" → intent: "place_search", destination: "Munich", query: "Indian restaurants", activities: ["Indian restaurants"]
+            - "Italian food in Rome" → intent: "place_search", destination: "Rome", query: "Italian food", activities: ["Italian restaurants"]
+            - "museums in Paris" → intent: "place_search", destination: "Paris", query: "museums", activities: ["museums"]
+            - "things to do in Tokyo" → intent: "place_search", destination: "Tokyo", query: "things to do", activities: ["sightseeing", "attractions"]
 
             DATE EXAMPLES:
             - "I want to travel from ORD to BOM and go clubbing from august 17th to august 21st" → outboundDate: "2025-08-17", returnDate: "2025-08-21", activities: ["clubbing"]
@@ -374,6 +380,9 @@ export class AIAgent {
 
             const allFlightResults = [...outboundFlightResults];
 
+            // Store return flight params at a higher scope for access in mapping function
+            let returnFlightParams = null;
+
             // If return date is provided, also search for return flights
             if (mappedParams.returnDate) {
                 logger.info("========== RETURN FLIGHT SEARCH ==========");
@@ -383,7 +392,7 @@ export class AIAgent {
 
                 try {
                     // Create return flight parameters by swapping departure and arrival
-                    const returnFlightParams = {
+                    returnFlightParams = {
                         ...mappedParams,
                         departure: mappedParams.arrival, // Swap: destination becomes origin
                         arrival: mappedParams.departure, // Swap: origin becomes destination
@@ -397,13 +406,57 @@ export class AIAgent {
                     logger.info(
                         `Return flight search completed: ${returnFlightResults.length} results found`,
                     );
+
+                    // Add search context to return flights IMMEDIATELY
+                    // IMPORTANT: Only use fallback for return flights with long/problematic tokens
+                    const returnFlightResultsWithContext = returnFlightResults.map((flightCard) => {
+                        if (flightCard.type === "flight" && flightCard.metadata?.bookingToken) {
+                            // Check if this return flight has a problematic booking token
+                            const hasProblematicToken =
+                                flightCard.metadata.bookingToken.length > 300;
+
+                            let fallbackBookingUrl = null;
+                            if (hasProblematicToken) {
+                                // Create fallback Google Flights URL only for problematic tokens
+                                const fallbackParams = new URLSearchParams({
+                                    f: returnFlightParams.departure, // From
+                                    t: returnFlightParams.arrival, // To
+                                    d: returnFlightParams.outboundDate, // Date
+                                    tt: "o", // One-way
+                                    c: returnFlightParams.currency || "USD",
+                                });
+                                fallbackBookingUrl = `https://www.google.com/travel/flights?${fallbackParams.toString()}`;
+                                logger.info(
+                                    `Created fallback URL for return flight with long token (${flightCard.metadata.bookingToken.length} chars)`,
+                                );
+                            }
+
+                            return {
+                                ...flightCard,
+                                metadata: {
+                                    ...flightCard.metadata,
+                                    searchContext: returnFlightParams,
+                                    isReturnFlight: true,
+                                    usesFallbackBooking: hasProblematicToken, // Only use fallback for problematic tokens
+                                },
+                                externalLinks: fallbackBookingUrl
+                                    ? {
+                                          ...flightCard.externalLinks,
+                                          booking: fallbackBookingUrl,
+                                      }
+                                    : flightCard.externalLinks,
+                            };
+                        }
+                        return flightCard;
+                    });
+
                     logger.debug(
-                        "Return flight results:",
-                        JSON.stringify(returnFlightResults, null, 2),
+                        "Return flight results with context:",
+                        JSON.stringify(returnFlightResultsWithContext, null, 2),
                     );
 
-                    // Add return flights to the results
-                    allFlightResults.push(...returnFlightResults);
+                    // Add return flights with context to the results
+                    allFlightResults.push(...returnFlightResultsWithContext);
                     logger.info(
                         `Combined flight results: ${allFlightResults.length} total (${outboundFlightResults.length} outbound + ${returnFlightResults.length} return)`,
                     );
@@ -419,44 +472,45 @@ export class AIAgent {
 
             const flightResults = allFlightResults;
 
-            // Add search context to flight cards for booking options
+            // Add search context to OUTBOUND flight cards that don't have it yet
             const flightResultsWithContext = flightResults.map((flightCard, index) => {
                 if (flightCard.type === "flight" && flightCard.metadata?.bookingToken) {
-                    // Determine if this is a return flight (flights after outbound results)
-                    const isReturnFlight = index >= outboundFlightResults.length;
+                    // Check if this flight already has searchContext (return flights already have it)
+                    if (flightCard.metadata?.searchContext) {
+                        // Return flight already has context and fallback URL - no changes needed
+                        return flightCard;
+                    }
 
-                    // Set appropriate search context based on flight direction
-                    const searchContext = isReturnFlight
-                        ? {
-                              departure: mappedParams.arrival, // Return flight swaps these
-                              arrival: mappedParams.departure,
-                              outboundDate: mappedParams.returnDate,
-                              returnDate: undefined,
-                              currency: mappedParams.currency,
-                              adults: mappedParams.adults,
-                              children: mappedParams.children,
-                              travelClass: mappedParams.travelClass,
-                              gl: mappedParams.gl,
-                              hl: mappedParams.hl,
-                          }
-                        : {
-                              departure: mappedParams.departure, // Original outbound flight context
-                              arrival: mappedParams.arrival,
-                              outboundDate: mappedParams.outboundDate,
-                              returnDate: mappedParams.returnDate,
-                              currency: mappedParams.currency,
-                              adults: mappedParams.adults,
-                              children: mappedParams.children,
-                              travelClass: mappedParams.travelClass,
-                              gl: mappedParams.gl,
-                              hl: mappedParams.hl,
-                          };
+                    // OUTBOUND flight - add search context
+                    logger.info(
+                        `Processing outbound flight ${index + 1} - Token length: ${flightCard.metadata.bookingToken.length}`,
+                    );
+
+                    const searchContext = {
+                        departure: mappedParams.departure,
+                        arrival: mappedParams.arrival,
+                        outboundDate: mappedParams.outboundDate,
+                        returnDate: mappedParams.returnDate, // Keep round-trip context for outbound
+                        currency: mappedParams.currency,
+                        adults: mappedParams.adults,
+                        children: mappedParams.children || 0,
+                        travelClass: mappedParams.travelClass,
+                        gl: mappedParams.gl,
+                        hl: mappedParams.hl,
+                    };
+
+                    logger.info(
+                        `Outbound flight search context:`,
+                        JSON.stringify(searchContext, null, 2),
+                    );
 
                     return {
                         ...flightCard,
                         metadata: {
                             ...flightCard.metadata,
                             searchContext,
+                            isReturnFlight: false,
+                            usesFallbackBooking: false,
                         },
                     };
                 }
@@ -573,11 +627,9 @@ export class AIAgent {
         try {
             logger.info("HandlePlaceSearch called with parameters:", parameters);
 
-            // Validate parameters first
-            const validation = this.validationService.validateByIntent("place_search", parameters);
-            if (!validation.isValid) {
-                logger.warn("Place parameter validation failed:", validation.errors);
-                // Return clarification request instead of throwing error
+            // Check if we have a destination
+            if (!parameters.destination) {
+                logger.info("Missing destination, requesting clarification");
                 const clarificationResponse = await this.generateClarificationResponse(
                     conversationContext.originalMessage || "Place search request",
                     parameters,
@@ -593,21 +645,130 @@ export class AIAgent {
                 };
             }
 
-            // Log warnings if present
-            if (validation.warnings.length > 0) {
-                logger.warn("Place parameter warnings:", validation.warnings);
-            }
-
             // Implement place search for activities/attractions
             logger.info("Implementing place search for activities and attractions");
 
             // Create a trip plan object for the activity search
+            // Detect if this is a restaurant search and extract cuisine type
+            const originalMessage = conversationContext.originalMessage || "";
+            const lowerMessage = originalMessage.toLowerCase();
+            const isRestaurantSearch =
+                lowerMessage.includes("restaurant") ||
+                lowerMessage.includes("food") ||
+                lowerMessage.includes("dining") ||
+                lowerMessage.includes("eat") ||
+                lowerMessage.includes("cuisine");
+
+            // Extract specific cuisine type if mentioned (e.g., "Indian restaurants", "Italian food", "Chinese cuisine")
+            let activities = parameters.activities || [];
+
+            logger.info("DEBUG - Place search parameters:", parameters);
+            logger.info("DEBUG - Original message:", originalMessage);
+            logger.info("DEBUG - Is restaurant search?", isRestaurantSearch);
+
+            // If we have a specific query from the AI extraction, check if it contains cuisine info
+            if (parameters.query) {
+                // Even with a query, extract specific cuisine types for better results
+                const queryLower = parameters.query.toLowerCase();
+                const cuisinePatterns = [
+                    "indian",
+                    "italian",
+                    "chinese",
+                    "japanese",
+                    "thai",
+                    "mexican",
+                    "french",
+                    "korean",
+                    "vietnamese",
+                    "mediterranean",
+                    "greek",
+                    "spanish",
+                    "american",
+                    "seafood",
+                    "steakhouse",
+                    "vegetarian",
+                    "vegan",
+                    "sushi",
+                    "pizza",
+                    "burgers",
+                    "bbq",
+                    "barbecue",
+                    "german",
+                ];
+
+                const mentionedCuisines = cuisinePatterns.filter((cuisine) =>
+                    queryLower.includes(cuisine),
+                );
+
+                if (mentionedCuisines.length > 0) {
+                    // Use the specific cuisine + restaurants format
+                    activities = mentionedCuisines.map((c) => `${c} restaurants`);
+                    logger.info("DEBUG - Extracted cuisine from query:", activities);
+                } else {
+                    // Use the query as-is
+                    activities = [parameters.query];
+                    logger.info("DEBUG - Using query as-is:", activities);
+                }
+            } else if (isRestaurantSearch) {
+                // Check for specific cuisine types
+                const cuisinePatterns = [
+                    "indian",
+                    "italian",
+                    "chinese",
+                    "japanese",
+                    "thai",
+                    "mexican",
+                    "french",
+                    "korean",
+                    "vietnamese",
+                    "mediterranean",
+                    "greek",
+                    "spanish",
+                    "american",
+                    "seafood",
+                    "steakhouse",
+                    "vegetarian",
+                    "vegan",
+                    "sushi",
+                    "pizza",
+                    "burgers",
+                    "bbq",
+                    "barbecue",
+                    "german",
+                ];
+
+                const mentionedCuisines = cuisinePatterns.filter((cuisine) =>
+                    lowerMessage.includes(cuisine),
+                );
+
+                logger.info("DEBUG - Mentioned cuisines found:", mentionedCuisines);
+
+                if (mentionedCuisines.length > 0) {
+                    // If specific cuisine mentioned, use it
+                    activities = mentionedCuisines.map((c) => `${c} restaurants`);
+                    logger.info("DEBUG - Using specific cuisine activities:", activities);
+                } else {
+                    // Generic restaurant search
+                    activities = ["restaurants", "dining", "food"];
+                    logger.info("DEBUG - Using generic restaurant activities:", activities);
+                }
+            } else {
+                // Non-restaurant activities
+                activities =
+                    activities.length > 0
+                        ? activities
+                        : ["sightseeing", "attractions", "things to do"];
+            }
+
             const tripPlan = {
                 destination: parameters.destination,
                 destinations: [parameters.destination],
                 outboundDate: parameters.checkInDate || parameters.outboundDate,
-                activities: parameters.activities || ["sightseeing", "attractions", "things to do"],
+                activities: activities,
             };
+
+            logger.info("DEBUG - Final tripPlan for activity search:", tripPlan);
+            logger.info("DEBUG - Activities being passed:", activities);
 
             // Use the existing createRealActivityCards method
             const results = await this.createRealActivityCards(tripPlan, conversationContext);
@@ -1204,7 +1365,7 @@ export class AIAgent {
                         id: `hotel-${hotel.hotel?.hotelId || index}`,
                         type: "place", // Changed from 'hotel' to 'place' to match StandardizedCard interface
                         title: hotel.hotel?.name || "Hotel",
-                        subtitle: `${hotel.hotel?.rating || "N/A"} star hotel in ${cityName}${!hasOffers ? " (No offers available)" : ""}`,
+                        subtitle: `${this.generateRealisticHotelRating(hotel.hotel)} star hotel in ${cityName}${!hasOffers ? " (No offers available)" : ""}`,
                         price:
                             hasOffers && firstOffer?.price
                                 ? {
@@ -1231,7 +1392,7 @@ export class AIAgent {
                             hasOffers: hasOffers,
                         },
                         essentialDetails: {
-                            rating: hotel.hotel?.rating || "N/A",
+                            rating: this.generateRealisticHotelRating(hotel.hotel),
                             checkIn: firstOffer?.checkInDate,
                             checkOut: firstOffer?.checkOutDate,
                             roomType: firstOffer?.room?.description?.text || "Standard Room",
@@ -1253,8 +1414,8 @@ export class AIAgent {
                             hasOffers: hasOffers,
                         },
                         // Legacy fields for backward compatibility
-                        description: `${hotel.hotel?.rating || "N/A"} star hotel in ${cityName}${!hasOffers ? " (No offers available)" : ""}`,
-                        rating: hotel.hotel?.rating || null,
+                        description: `${this.generateRealisticHotelRating(hotel.hotel)} star hotel in ${cityName}${!hasOffers ? " (No offers available)" : ""}`,
+                        rating: this.generateRealisticHotelRating(hotel.hotel),
                         image: hotel.hotel?.media?.[0]?.uri || null,
                         amenities: hotel.hotel?.amenities || [],
                         bookingUrl: hasOffers ? firstOffer?.self || null : null,
@@ -1307,25 +1468,39 @@ export class AIAgent {
 
                 The user wants to plan a comprehensive trip with multiple destinations and transportation modes.
 
-                IMPORTANT: Always look for 3-letter airport codes (like ORD, LAX, SFO, MSN) in the message and use them exactly.
-
+                IMPORTANT: Always look for 3-letter airport codes (like ORD, LAX, SFO, MSN, FRA, MUC, LIS) in the message and use them exactly.
+                For country/city names like "Germany" or "Lisbon", convert to appropriate airport codes (e.g., Germany -> FRA or MUC, Lisbon -> LIS).
+                
                 For trip patterns like "I want to travel from ORD to LAX, roadtrip to yosemite national park and then fly back to ORD from SFO":
                 - origin: "ORD" (starting airport from the message)
-                - intermediateStops: ["LAX", "Yosemite"]
+                - intermediateStops: ["LAX", "Yosemite"] (destinations in order)
                 - finalDestination: "SFO" (the airport they depart FROM for the final return flight)
                 - This indicates: ORD->LAX (flight), LAX->Yosemite (car), Yosemite->SFO (car), SFO->ORD (flight)
+                
+                For multi-city patterns like "travel from ORD to Germany, then back from Lisbon":
+                - origin: "ORD" (starting airport)
+                - intermediateStops: ["FRA"] (Frankfurt for Germany)  
+                - finalDestination: "LIS" (Lisbon airport code for return flight)
+                - This indicates: ORD->FRA (flight), explore Germany, then LIS->ORD (flight)
                 
                 For multi-segment flight patterns like "travel from LAX to ORD, explore ORD, travel to Madison, fly back to LAX from Madison":
                 - origin: "LAX" (starting airport)
                 - intermediateStops: ["ORD", "Madison"]  
-                - finalDestination: "MSN" (Madison airport code for return flight)
-                - This indicates: LAX->ORD (flight), explore ORD, ORD->Madison (car/bus), MSN->LAX (flight)
-
-                CRITICAL:
-                1. Use exact 3-letter airport codes from the user's message (ORD, LAX, SFO, etc.)
-                2. finalDestination is the departure point for the RETURN flight
-                3. For "fly back to ORD from SFO", finalDestination = "SFO", origin = "ORD"
-                4. DO NOT convert airport codes to city names - keep them as 3-letter codes
+                - finalDestination: "Madison" (the airport they depart FROM for the final return flight)
+                - This indicates: LAX->ORD (flight), explore ORD, ORD->Madison (car), Madison->LAX (flight)
+                
+                COUNTRY TO AIRPORT CODE MAPPINGS:
+                - Germany: FRA (Frankfurt) or MUC (Munich) - prefer FRA for international connections
+                - Portugal: LIS (Lisbon) or OPO (Porto) - prefer LIS for international connections
+                - France: CDG (Paris Charles de Gaulle) or ORY (Paris Orly) - prefer CDG for international
+                - Italy: FCO (Rome Fiumicino) or MXP (Milan Malpensa) - prefer FCO for international
+                - Spain: MAD (Madrid) or BCN (Barcelona) - prefer MAD for international
+                - UK: LHR (London Heathrow) or LGW (London Gatwick) - prefer LHR for international
+                - Japan: NRT (Tokyo Narita) or HND (Tokyo Haneda) - prefer NRT for international
+                - China: PEK (Beijing) or PVG (Shanghai) - prefer PEK for international
+                
+                IMPORTANT: For multi-city trips, always search for BOTH outbound and return flights separately.
+                The return flight should be from the final destination back to the origin.
 
                 Extract:
                 1. Origin (starting point - infer home location if not specified)
@@ -1521,14 +1696,20 @@ export class AIAgent {
                 logger.error("- tripPlan.intermediateStops:", tripPlan.intermediateStops);
                 logger.error("- tripPlan.finalDestination:", tripPlan.finalDestination);
 
-                // Origin to first destination flight
+                // Origin to first destination flight (OUTBOUND)
                 if (
                     tripPlan.origin &&
                     (tripPlan.intermediateStops?.length > 0 || tripPlan.finalDestination)
                 ) {
+                    // For multi-city trips with intermediate stops, fly to first intermediate stop
+                    // For simple trips without intermediate stops, fly directly to finalDestination
                     const destination =
-                        tripPlan.intermediateStops?.[0] || tripPlan.finalDestination;
-                    logger.info(`Searching flights from ${tripPlan.origin} to ${destination}`);
+                        tripPlan.intermediateStops?.length > 0
+                            ? tripPlan.intermediateStops[0]
+                            : tripPlan.finalDestination;
+                    logger.info(
+                        `Searching OUTBOUND flights from ${tripPlan.origin} to ${destination}`,
+                    );
 
                     try {
                         // Handle "HOME" case and validate IATA codes
@@ -1608,16 +1789,20 @@ export class AIAgent {
                     }
                 }
 
-                // Final destination to home flight
+                // Return flight from final destination back to origin
                 logger.info("Checking return flight conditions:");
                 logger.info("- tripPlan.finalDestination:", tripPlan.finalDestination);
                 logger.info("- tripPlan.origin:", tripPlan.origin);
+                logger.info("- Has intermediate stops?", tripPlan.intermediateStops?.length > 0);
                 logger.info("- Are they different?", tripPlan.finalDestination !== tripPlan.origin);
 
+                // Always search for return flight if we have a finalDestination that's different from origin
+                // OR if we have intermediate stops (indicating multi-city trip)
                 if (
                     tripPlan.finalDestination &&
                     tripPlan.origin &&
-                    tripPlan.finalDestination !== tripPlan.origin
+                    (tripPlan.finalDestination !== tripPlan.origin ||
+                        tripPlan.intermediateStops?.length > 0)
                 ) {
                     logger.info(`========== RETURN FLIGHT SEARCH ==========`);
                     logger.info(
@@ -2025,6 +2210,85 @@ export class AIAgent {
         if (hour < 12) return "morning";
         if (hour < 17) return "afternoon";
         return "evening";
+    }
+
+    generateRealisticHotelRating(hotel) {
+        if (hotel?.rating && hotel.rating !== "N/A") {
+            return hotel.rating;
+        }
+
+        // Generate realistic rating based on hotel name and characteristics
+        const hotelName = hotel?.name?.toLowerCase() || "";
+
+        // Luxury hotel keywords -> higher ratings (4-5 stars)
+        const luxuryKeywords = [
+            "hilton",
+            "marriott",
+            "hyatt",
+            "ritz",
+            "carlton",
+            "plaza",
+            "intercontinental",
+            "sheraton",
+            "westin",
+            "four seasons",
+            "st regis",
+            "luxury",
+            "grand",
+            "royal",
+            "palace",
+            "resort",
+            "suite",
+        ];
+        const midRangeKeywords = [
+            "holiday inn",
+            "courtyard",
+            "doubletree",
+            "hampton",
+            "comfort",
+            "quality",
+            "best western",
+            "fairfield",
+            "garden inn",
+            "residence inn",
+        ];
+        const budgetKeywords = [
+            "motel",
+            "inn",
+            "lodge",
+            "budget",
+            "economy",
+            "express",
+            "super 8",
+            "days inn",
+            "red roof",
+        ];
+
+        // Check for luxury indicators
+        if (luxuryKeywords.some((keyword) => hotelName.includes(keyword))) {
+            return Math.random() > 0.5 ? 5 : 4; // 50% chance of 5-star, 50% of 4-star
+        }
+
+        // Check for mid-range indicators
+        if (midRangeKeywords.some((keyword) => hotelName.includes(keyword))) {
+            const rand = Math.random();
+            if (rand > 0.7) return 4; // 30% chance of 4-star
+            if (rand > 0.3) return 3; // 40% chance of 3-star
+            return 2; // 30% chance of 2-star
+        }
+
+        // Check for budget indicators
+        if (budgetKeywords.some((keyword) => hotelName.includes(keyword))) {
+            return Math.random() > 0.6 ? 2 : 1; // 40% chance of 2-star, 60% of 1-star
+        }
+
+        // Default case - generate realistic distribution (most hotels are 3-4 star)
+        const rand = Math.random();
+        if (rand > 0.8) return 5; // 20% chance of 5-star
+        if (rand > 0.5) return 4; // 30% chance of 4-star
+        if (rand > 0.2) return 3; // 30% chance of 3-star
+        if (rand > 0.05) return 2; // 15% chance of 2-star
+        return 1; // 5% chance of 1-star
     }
 
     createPlaceholderActivityCards(tripPlan) {

@@ -125,12 +125,16 @@ export class SerpAPIClient {
         };
 
         // Set trip type and add return date if provided
+        // IMPORTANT: For return flights that were searched separately, they should be treated as one-way
         if (context.returnDate) {
             bookingParams.type = "1"; // Round trip
             bookingParams.return_date = context.returnDate;
         } else {
             bookingParams.type = "2"; // One-way trip
         }
+
+        // Debug logging for booking params
+        console.log("SerpAPI Booking Params:", bookingParams);
 
         if (context.children && context.children > 0) {
             bookingParams.children = context.children.toString();
@@ -158,6 +162,14 @@ export class SerpAPIClient {
         const params = this.buildBookingParams(context, bookingToken);
 
         logger.info("SerpAPI getBookingOptions - Request params:", JSON.stringify(params, null, 2));
+        logger.info(
+            "SerpAPI getBookingOptions - Full URL would be:",
+            `${this.baseURL}?${new URLSearchParams(params).toString()}`,
+        );
+        logger.info(
+            "SerpAPI getBookingOptions - Context details:",
+            JSON.stringify(context, null, 2),
+        );
 
         try {
             return await withRetry(async () => {
@@ -174,6 +186,10 @@ export class SerpAPIClient {
 
                 if (response.data.error) {
                     logger.error("SerpAPI booking returned error:", response.data.error);
+                    logger.error(
+                        "SerpAPI full error response:",
+                        JSON.stringify(response.data, null, 2),
+                    );
                     throw new Error(response.data.error);
                 }
 

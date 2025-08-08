@@ -339,21 +339,38 @@ export function Card({
                     {(externalLinks?.website || externalLinks?.booking || bookingUrl) && (
                         <button
                             onClick={() => {
+                                console.log("=== FLIGHT BOOKING DEBUG ===");
+                                console.log("Type:", type);
+                                console.log("Has metadata:", !!metadata);
+                                console.log("Has searchContext:", !!metadata?.searchContext);
+                                console.log("Has bookingToken:", !!metadata?.bookingToken);
+                                console.log("Token length:", metadata?.bookingToken?.length);
+                                console.log("Uses fallback:", metadata?.usesFallbackBooking);
+                                console.log("Is return flight:", metadata?.isReturnFlight);
+                                console.log("External links:", externalLinks);
+                                console.log("Search context:", metadata?.searchContext);
+
                                 // Handle flight booking with new modal approach - only use modal if valid booking token exists
                                 if (
                                     type === "flight" &&
                                     metadata?.searchContext &&
                                     metadata?.bookingToken &&
-                                    onBookFlight
+                                    onBookFlight &&
+                                    !metadata?.usesFallbackBooking // Don't use modal for problematic return flights
                                 ) {
-                                    // Only use modal if we have a valid booking token
+                                    console.log("Using modal for booking");
+                                    // Only use modal if we have a valid booking token and it's not flagged for fallback
                                     onBookFlight(metadata.bookingToken, metadata.searchContext, {
                                         title,
                                         subtitle,
                                     });
                                 }
-                                // If no booking token, fallback to direct Google Flights URL
+                                // For return flights with problematic tokens or flights without booking tokens
                                 else if (type === "flight" && externalLinks?.booking) {
+                                    console.log(
+                                        "Opening fallback booking URL directly:",
+                                        externalLinks.booking,
+                                    );
                                     window.open(
                                         externalLinks.booking,
                                         "_blank",

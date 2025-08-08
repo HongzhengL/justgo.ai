@@ -9,6 +9,12 @@ export const fetchFlightBookingOptions = async (args, context) => {
         throw new HttpError(401, "User must be logged in to fetch booking options");
     }
 
+    logger.info("=== BOOKING OPTIONS REQUEST DEBUG ===");
+    logger.info("Booking token exists:", !!args.bookingToken);
+    logger.info("Booking token length:", args.bookingToken ? args.bookingToken.length : 0);
+    logger.info("Search context:", JSON.stringify(args.searchContext, null, 2));
+    logger.info("Is return flight:", args.searchContext?.isReturnFlight);
+
     // Handle missing or invalid booking tokens by returning fallback immediately
     if (!args.bookingToken || args.bookingToken === "INVALID_TOKEN_FALLBACK") {
         logger.info("Invalid or missing booking token, returning fallback URL");

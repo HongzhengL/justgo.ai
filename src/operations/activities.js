@@ -12,7 +12,10 @@ export const getActivities = async ({ location, date, timeOfDay, interests = [] 
                 interest.toLowerCase().includes("party"),
         ) && location.toLowerCase().includes("mumbai");
 
+    console.log("=== DEBUG getActivities ===");
     console.log("getActivities called with params:", { location, date, timeOfDay, interests });
+    console.log("Interests array:", interests);
+    console.log("Interests length:", interests.length);
     console.log("getActivities context:", context);
     console.log("context.user exists:", !!context?.user);
     console.log("OPENAI_API_KEY exists:", !!process.env.OPENAI_API_KEY);
@@ -100,26 +103,98 @@ export const getActivities = async ({ location, date, timeOfDay, interests = [] 
     }
 
     // AI-generated activities for all non-Mumbai-clubbing requests
+    const isRestaurantSearch = interests.some(
+        (interest) =>
+            interest.toLowerCase().includes("restaurant") ||
+            interest.toLowerCase().includes("dining") ||
+            interest.toLowerCase().includes("food") ||
+            interest.toLowerCase().includes("cuisine"),
+    );
+
+    console.log("=== CUISINE DETECTION DEBUG ===");
+    console.log("Is restaurant search:", isRestaurantSearch);
+    console.log("Interests:", interests);
+
     const interestPrompt =
         interests.length > 0
             ? `The traveler is specifically interested in: ${interests.join(", ")}. Focus ALL recommendations around these specific interests.`
             : "";
 
+    // Special handling for restaurant searches with cuisine types
+    const cuisineTypes = [
+        "indian",
+        "italian",
+        "chinese",
+        "japanese",
+        "thai",
+        "mexican",
+        "french",
+        "korean",
+        "vietnamese",
+        "mediterranean",
+        "greek",
+        "spanish",
+        "american",
+        "seafood",
+        "steakhouse",
+        "vegetarian",
+        "vegan",
+        "sushi",
+        "pizza",
+        "burgers",
+        "bbq",
+        "barbecue",
+        "german",
+    ];
+
+    const hasCuisineType = interests.some((interest) =>
+        cuisineTypes.some((cuisine) => interest.toLowerCase().includes(cuisine)),
+    );
+
+    console.log("Has cuisine type:", hasCuisineType);
+    console.log(
+        "Cuisine types found:",
+        cuisineTypes.filter((cuisine) =>
+            interests.some((interest) => interest.toLowerCase().includes(cuisine)),
+        ),
+    );
+
+    const searchTypePrompt = isRestaurantSearch
+        ? `IMPORTANT: This is a RESTAURANT SEARCH. ${hasCuisineType ? 'ONLY suggest restaurants that match the specific cuisine type requested. For example, if they ask for "German restaurants", only suggest actual German restaurants with authentic German cuisine.' : ""} Only suggest actual restaurants, cafes, or dining establishments. Do not include tourist attractions, museums, or general activities.`
+        : "";
+
     const prompt = `You are a knowledgeable local travel expert for ${location}. Suggest 5 REAL, SPECIFIC venues/activities for a traveler on ${date} during the ${timeOfDay}. ${interestPrompt}
+
+${searchTypePrompt}
 
 IMPORTANT REQUIREMENTS:
 - Use actual venue names, addresses, and real business information
-- For restaurants: Use real restaurant names, not generic "Local Restaurant"
+- For restaurants: Use real restaurant names that exist in ${location}
 - For museums/attractions: Use actual museum/site names
 - For activities: Use real tour companies, activity centers, or venues
 - Include realistic pricing in local currency
-- Provide actual business websites, booking platforms, or contact information
+- For booking URLs, use ONLY these reliable platforms:
+  * For restaurants: Use Zomato, OpenTable, or Google Maps links
+  * For activities: Use GetYourGuide, Viator, or official venue websites
 - Timing should reflect actual operating hours
 
-Examples of GOOD responses:
-- "Louvre Museum" (not "Famous Art Museum")
+${
+    isRestaurantSearch
+        ? `CRITICAL for restaurant bookings:
+- For INDIAN cities (Mumbai, Delhi, Bangalore, etc.): Use Zomato links like "https://www.zomato.com/mumbai/restaurant-name"
+- For US cities: Use Google Maps search like "https://www.google.com/maps/search/restaurant+name+city" 
+- For European cities: Use Google Maps search
+- Do NOT create fake OpenTable, Zomato, or restaurant website links
+- Use real restaurant names that exist in ${location}
+- Examples: 
+  * India: "https://www.zomato.com/mumbai/trishna-fort"
+  * US: "https://www.google.com/maps/search/Gramercy+Tavern+New+York"
+  * Europe: "https://www.google.com/maps/search/Le+Comptoir+du+Relais+Paris"`
+        : `Examples of GOOD responses:
+- "Louvre Museum" (not "Famous Art Museum") 
 - "Joe's Pizza Brooklyn" (not "Popular Pizza Place")
-- "Central Park Bike Tours by Bike Rental Central Park" (not "Bike Tour Experience")
+- "Central Park Bike Tours by Bike Rental Central Park" (not "Bike Tour Experience")`
+}
 
 Return pure JSON array, each object with id,title,subtitle,timing,price,bookingUrl,externalLinks.`;
 
@@ -154,5 +229,82 @@ Return pure JSON array, each object with id,title,subtitle,timing,price,bookingU
         console.error("JSON parse error:", e.message);
         throw new HttpError(500, "AI response error: Invalid JSON format");
     }
+
+    // Fix booking URLs if they're fake or broken
+    if (isRestaurantSearch) {
+        console.log("Fixing restaurant booking URLs...");
+        data = data.map((item) => {
+            // Create a reliable fallback booking URL
+            let fallbackUrl;
+            const locationLower = location.toLowerCase();
+
+            // Only use Zomato for Indian cities
+            if (
+                locationLower.includes("mumbai") ||
+                locationLower.includes("delhi") ||
+                locationLower.includes("bangalore") ||
+                locationLower.includes("chennai") ||
+                locationLower.includes("kolkata") ||
+                locationLower.includes("hyderabad") ||
+                locationLower.includes("pune") ||
+                locationLower.includes("ahmedabad") ||
+                locationLower.includes("india")
+            ) {
+                // For Indian cities, use Zomato search
+                const restaurantSlug = item.title
+                    .toLowerCase()
+                    .replace(/\s+/g, "-")
+                    .replace(/[^a-z0-9-]/g, "");
+                fallbackUrl = `https://www.zomato.com/${locationLower.includes("mumbai") ? "mumbai" : "delhi"}/${restaurantSlug}`;
+            } else {
+                // For all other cities (US, Europe, etc.), use Google Maps search
+                const searchQuery = encodeURIComponent(`${item.title} ${location} restaurant`);
+                fallbackUrl = `https://www.google.com/maps/search/${searchQuery}`;
+            }
+
+            // Check if the bookingUrl is inappropriate for the location
+            const isFakeUrl =
+                !item.bookingUrl ||
+                item.bookingUrl.includes("localhost") ||
+                item.bookingUrl.includes("example.com") ||
+                item.bookingUrl.includes("placeholder") ||
+                item.bookingUrl.includes("restaurant-name") ||
+                item.bookingUrl.length < 10 ||
+                !item.bookingUrl.startsWith("http");
+
+            // IMPORTANT: Also replace inappropriate URLs for the location
+            const isZomatoForNonIndianCity =
+                item.bookingUrl.includes("zomato.com") &&
+                !(
+                    locationLower.includes("mumbai") ||
+                    locationLower.includes("delhi") ||
+                    locationLower.includes("bangalore") ||
+                    locationLower.includes("chennai") ||
+                    locationLower.includes("kolkata") ||
+                    locationLower.includes("hyderabad") ||
+                    locationLower.includes("pune") ||
+                    locationLower.includes("ahmedabad") ||
+                    locationLower.includes("india")
+                );
+
+            // Also replace OpenTable URLs since they often lead to 404s for non-existent restaurants
+            const isOpenTableUrl = item.bookingUrl.includes("opentable.com");
+
+            if (isFakeUrl || isZomatoForNonIndianCity || isOpenTableUrl) {
+                const reason = isZomatoForNonIndianCity
+                    ? "inappropriate Zomato"
+                    : isOpenTableUrl
+                      ? "OpenTable"
+                      : "fake";
+                console.log(
+                    `Replacing ${reason} URL for ${item.title}: ${item.bookingUrl || "none"} -> ${fallbackUrl}`,
+                );
+                item.bookingUrl = fallbackUrl;
+            }
+
+            return item;
+        });
+    }
+
     return data;
 };
