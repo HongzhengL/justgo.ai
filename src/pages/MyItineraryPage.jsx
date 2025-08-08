@@ -97,7 +97,7 @@ export function MyItineraryPage() {
     };
 
     const handleBookHotel = (hotel, offer) => {
-        logger.info('Hotel booking initiated:', { hotel: hotel.title, offer });
+        logger.info("Hotel booking initiated:", { hotel: hotel.title, offer });
         setSelectedHotel(hotel);
         setSelectedHotelOffer(offer);
         setIsHotelBookingModalOpen(true);
@@ -292,34 +292,60 @@ export function MyItineraryPage() {
                                                                 ));
 
                                                         if (isReturn) {
-                                                            categories.returnFlights.push({ ...card, amount });
+                                                            categories.returnFlights.push({
+                                                                ...card,
+                                                                amount,
+                                                            });
                                                         } else {
-                                                            categories.outboundFlights.push({ ...card, amount });
+                                                            categories.outboundFlights.push({
+                                                                ...card,
+                                                                amount,
+                                                            });
                                                         }
                                                     } else if (
                                                         card.type === "hotel" ||
                                                         card.additionalInfo?.hotelId ||
                                                         card.details?.hotelId ||
                                                         (card.title &&
-                                                            (card.title.toLowerCase().includes("hotel") ||
-                                                                card.title.toLowerCase().includes("resort")))
+                                                            (card.title
+                                                                .toLowerCase()
+                                                                .includes("hotel") ||
+                                                                card.title
+                                                                    .toLowerCase()
+                                                                    .includes("resort")))
                                                     ) {
                                                         categories.hotels.push({ ...card, amount });
                                                     } else if (
                                                         card.type === "activity" ||
                                                         (card.title &&
-                                                            (card.title.toLowerCase().includes("activity") ||
-                                                                card.title.toLowerCase().includes("tour") ||
-                                                                card.title.toLowerCase().includes("attraction")))
+                                                            (card.title
+                                                                .toLowerCase()
+                                                                .includes("activity") ||
+                                                                card.title
+                                                                    .toLowerCase()
+                                                                    .includes("tour") ||
+                                                                card.title
+                                                                    .toLowerCase()
+                                                                    .includes("attraction")))
                                                     ) {
-                                                        categories.activities.push({ ...card, amount });
+                                                        categories.activities.push({
+                                                            ...card,
+                                                            amount,
+                                                        });
                                                     } else if (
                                                         card.type === "rental_car" ||
                                                         (card.title &&
-                                                            (card.title.toLowerCase().includes("car rental") ||
-                                                                card.title.toLowerCase().includes("vehicle")))
+                                                            (card.title
+                                                                .toLowerCase()
+                                                                .includes("car rental") ||
+                                                                card.title
+                                                                    .toLowerCase()
+                                                                    .includes("vehicle")))
                                                     ) {
-                                                        categories.rentalCars.push({ ...card, amount });
+                                                        categories.rentalCars.push({
+                                                            ...card,
+                                                            amount,
+                                                        });
                                                     }
                                                 }
                                             }
@@ -329,40 +355,44 @@ export function MyItineraryPage() {
 
                                         // Get cheapest outbound flight
                                         if (categories.outboundFlights.length > 0) {
-                                            const cheapest = categories.outboundFlights.reduce((min, flight) =>
-                                                flight.amount < min.amount ? flight : min,
+                                            const cheapest = categories.outboundFlights.reduce(
+                                                (min, flight) =>
+                                                    flight.amount < min.amount ? flight : min,
                                             );
                                             total += cheapest.amount;
                                         }
 
                                         // Get cheapest return flight
                                         if (categories.returnFlights.length > 0) {
-                                            const cheapest = categories.returnFlights.reduce((min, flight) =>
-                                                flight.amount < min.amount ? flight : min,
+                                            const cheapest = categories.returnFlights.reduce(
+                                                (min, flight) =>
+                                                    flight.amount < min.amount ? flight : min,
                                             );
                                             total += cheapest.amount;
                                         }
 
                                         // Get cheapest hotel
                                         if (categories.hotels.length > 0) {
-                                            const cheapest = categories.hotels.reduce((min, hotel) =>
-                                                hotel.amount < min.amount ? hotel : min,
+                                            const cheapest = categories.hotels.reduce(
+                                                (min, hotel) =>
+                                                    hotel.amount < min.amount ? hotel : min,
                                             );
                                             total += cheapest.amount;
                                         }
 
                                         // Get cheapest activity
                                         if (categories.activities.length > 0) {
-                                            const cheapest = categories.activities.reduce((min, activity) =>
-                                                activity.amount < min.amount ? activity : min,
+                                            const cheapest = categories.activities.reduce(
+                                                (min, activity) =>
+                                                    activity.amount < min.amount ? activity : min,
                                             );
                                             total += cheapest.amount;
                                         }
 
                                         // Get cheapest car rental
                                         if (categories.rentalCars.length > 0) {
-                                            const cheapest = categories.rentalCars.reduce((min, car) =>
-                                                car.amount < min.amount ? car : min,
+                                            const cheapest = categories.rentalCars.reduce(
+                                                (min, car) => (car.amount < min.amount ? car : min),
                                             );
                                             total += cheapest.amount;
                                         }
@@ -424,9 +454,9 @@ export function MyItineraryPage() {
                     hotel={selectedHotel}
                     offer={selectedHotelOffer}
                     guestInfo={{
-                        firstName: user?.firstName || '',
-                        lastName: user?.lastName || '',
-                        email: user?.email || ''
+                        firstName: user?.firstName || "",
+                        lastName: user?.lastName || "",
+                        email: user?.email || "",
                     }}
                     onBookingComplete={() => setIsHotelBookingModalOpen(false)}
                     autoFillEnabled={true}

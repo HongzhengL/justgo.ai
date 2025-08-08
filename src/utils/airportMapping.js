@@ -105,7 +105,10 @@ export function extractDestinationCityCode(flightParams) {
     }
 
     // Handle error cases from AI parameter extraction
-    if (flightParams.arrival.includes("ERROR:") || flightParams.arrival.includes("Cannot determine")) {
+    if (
+        flightParams.arrival.includes("ERROR:") ||
+        flightParams.arrival.includes("Cannot determine")
+    ) {
         return null;
     }
 

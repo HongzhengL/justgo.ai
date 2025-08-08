@@ -35,9 +35,16 @@ export class AIAgent {
                 examples: ["Find flights from NYC to Paris", "Book a flight to Tokyo"],
             },
             place_search: {
-                description: "User wants to find places like restaurants, activities, attractions, things to do (NOT hotels)",
+                description:
+                    "User wants to find places like restaurants, activities, attractions, things to do (NOT hotels)",
                 requiredParams: ["destination"],
-                examples: ["Things to do in Rome", "What can I do in Portugal", "Activities in Paris", "Attractions in Barcelona", "Show me restaurants in Tokyo"],
+                examples: [
+                    "Things to do in Rome",
+                    "What can I do in Portugal",
+                    "Activities in Paris",
+                    "Attractions in Barcelona",
+                    "Show me restaurants in Tokyo",
+                ],
             },
             hotel_search: {
                 description: "User specifically wants to search for hotels in a destination",
@@ -468,18 +475,26 @@ export class AIAgent {
             // Check if specific activities were mentioned - if so, search for activities too
             let activityResults = [];
             if (parameters.activities && parameters.activities.length > 0) {
-                logger.info("Specific activities mentioned, searching for activity recommendations:", parameters.activities);
-                
+                logger.info(
+                    "Specific activities mentioned, searching for activity recommendations:",
+                    parameters.activities,
+                );
+
                 const tripPlan = {
                     destination: parameters.destination,
                     destinations: [parameters.destination],
                     outboundDate: parameters.outboundDate,
-                    activities: parameters.activities
+                    activities: parameters.activities,
                 };
-                
+
                 try {
-                    activityResults = await this.createRealActivityCards(tripPlan, conversationContext);
-                    logger.info(`Activity search completed: ${activityResults.length} results found`);
+                    activityResults = await this.createRealActivityCards(
+                        tripPlan,
+                        conversationContext,
+                    );
+                    logger.info(
+                        `Activity search completed: ${activityResults.length} results found`,
+                    );
                 } catch (error) {
                     logger.error("Activity search failed:", error);
                 }
@@ -585,15 +600,15 @@ export class AIAgent {
 
             // Implement place search for activities/attractions
             logger.info("Implementing place search for activities and attractions");
-            
+
             // Create a trip plan object for the activity search
             const tripPlan = {
                 destination: parameters.destination,
                 destinations: [parameters.destination],
                 outboundDate: parameters.checkInDate || parameters.outboundDate,
-                activities: parameters.activities || ["sightseeing", "attractions", "things to do"]
+                activities: parameters.activities || ["sightseeing", "attractions", "things to do"],
             };
-            
+
             // Use the existing createRealActivityCards method
             const results = await this.createRealActivityCards(tripPlan, conversationContext);
 
@@ -722,7 +737,10 @@ export class AIAgent {
 
             // Execute multi-service search for comprehensive trip planning
             logger.info("Executing comprehensive trip search for:", tripPlan);
-            const tripResults = await this.executeComprehensiveTripSearch(tripPlan, conversationContext);
+            const tripResults = await this.executeComprehensiveTripSearch(
+                tripPlan,
+                conversationContext,
+            );
 
             // Log trip results summary
             logger.info("Trip results received:", {
@@ -1385,7 +1403,7 @@ export class AIAgent {
 
             // Fallback parsing for common patterns
             const lowerMessage = message.toLowerCase();
-            
+
             // Handle LAX -> ORD -> Madison -> LAX pattern
             if (
                 lowerMessage.includes("lax") &&
@@ -1393,9 +1411,9 @@ export class AIAgent {
                 lowerMessage.includes("madison")
             ) {
                 logger.info("Using fallback parsing for LAX -> ORD -> Madison -> LAX pattern");
-                
+
                 // Use future dates that are valid (current date is early August 2025)
-                let startDate = "2025-08-15"; 
+                let startDate = "2025-08-15";
                 let endDate = "2025-08-19";
 
                 // Simple date extraction
@@ -1423,7 +1441,7 @@ export class AIAgent {
                     },
                 };
             }
-            
+
             // Handle LAX/Yosemite/SFO pattern
             else if (
                 lowerMessage.includes("lax") &&
@@ -1899,20 +1917,29 @@ export class AIAgent {
 
     async createRealActivityCards(tripPlan, context) {
         try {
-            logger.info("createRealActivityCards called with tripPlan:", JSON.stringify(tripPlan, null, 2));
-            logger.info("createRealActivityCards called with context:", context ? "context exists" : "no context");
-            
+            logger.info(
+                "createRealActivityCards called with tripPlan:",
+                JSON.stringify(tripPlan, null, 2),
+            );
+            logger.info(
+                "createRealActivityCards called with context:",
+                context ? "context exists" : "no context",
+            );
+
             // Check for destination in different possible properties
             // For multi-city trips, we want the final destination, not the origin
-            const destination = tripPlan?.finalDestination || tripPlan?.destinations?.[tripPlan?.destinations?.length - 1] || tripPlan?.destination;
-            
+            const destination =
+                tripPlan?.finalDestination ||
+                tripPlan?.destinations?.[tripPlan?.destinations?.length - 1] ||
+                tripPlan?.destination;
+
             logger.info("Available destination options:");
             logger.info("- tripPlan.destination:", tripPlan?.destination);
-            logger.info("- tripPlan.finalDestination:", tripPlan?.finalDestination);  
+            logger.info("- tripPlan.finalDestination:", tripPlan?.finalDestination);
             logger.info("- tripPlan.destinations:", tripPlan?.destinations);
             logger.info("- tripPlan.origin:", tripPlan?.origin);
             logger.info("- Selected destination:", destination);
-            
+
             if (!tripPlan || !destination) {
                 logger.info("No tripPlan or destination, using placeholder activities");
                 logger.info("tripPlan exists:", !!tripPlan);
@@ -1923,7 +1950,7 @@ export class AIAgent {
             }
 
             const location = destination;
-            const date = tripPlan.outboundDate || new Date().toISOString().split('T')[0];
+            const date = tripPlan.outboundDate || new Date().toISOString().split("T")[0];
             const timeOfDay = this.determineTimeOfDay(tripPlan);
 
             logger.info(`Getting real activities for ${location} on ${date} during ${timeOfDay}`);
@@ -1931,19 +1958,22 @@ export class AIAgent {
 
             // Call the real getActivities operation
             logger.info("Context structure for getActivities:", context);
-            
+
             // Ensure we have proper context with user for the Wasp action
             const actionContext = {
                 user: context?.user || { id: 1 }, // Fallback user ID for the operation
-                ...context
+                ...context,
             };
             logger.info("Calling getActivities with actionContext user:", actionContext.user);
-            
+
             const interests = tripPlan.activities || [];
             logger.info("Activity interests being passed to getActivities:", interests);
-            
-            const realActivities = await getActivities({ location, date, timeOfDay, interests }, actionContext);
-            
+
+            const realActivities = await getActivities(
+                { location, date, timeOfDay, interests },
+                actionContext,
+            );
+
             logger.info("getActivities returned:", realActivities);
 
             // Transform the OpenAI activities into our card format
@@ -1953,13 +1983,15 @@ export class AIAgent {
                 title: activity.title,
                 subtitle: activity.subtitle,
                 bookingUrl: activity.bookingUrl, // Add booking URL from OpenAI response
-                price: activity.price ? {
-                    amount: parseInt(activity.price.replace(/\D/g, '')) || 50,
-                    currency: "USD",
-                } : {
-                    amount: 50,
-                    currency: "USD",
-                },
+                price: activity.price
+                    ? {
+                          amount: parseInt(activity.price.replace(/\D/g, "")) || 50,
+                          currency: "USD",
+                      }
+                    : {
+                          amount: 50,
+                          currency: "USD",
+                      },
                 details: {
                     category: "Experience",
                     timing: activity.timing,
@@ -2237,25 +2269,25 @@ export class AIAgent {
 
             // Build system message with time context
             const hasActivities = activityResults && activityResults.length > 0;
-            const activityText = hasActivities 
-                ? `3. Highlights that you also found hotel options and activity recommendations based on their interests in the destination city` 
+            const activityText = hasActivities
+                ? `3. Highlights that you also found hotel options and activity recommendations based on their interests in the destination city`
                 : `3. Highlights that you also found hotel options in the destination city`;
-            
+
             const encouragementText = hasActivities
                 ? `4. Encourages them to look at the flight, hotel, and activity results cards`
                 : `4. Encourages them to look at both flight and hotel results cards`;
 
-            const baseSystemMessage = `You are a helpful travel assistant. The user searched for flights${hasActivities ? ' with specific activity interests' : ''} and you found comprehensive travel options.
+            const baseSystemMessage = `You are a helpful travel assistant. The user searched for flights${hasActivities ? " with specific activity interests" : ""} and you found comprehensive travel options.
                 Generate a conversational response that:
-                1. Acknowledges their flight search request${hasActivities ? ' and specific activity interests (like clubbing, nightlife, etc.)' : ''}
+                1. Acknowledges their flight search request${hasActivities ? " and specific activity interests (like clubbing, nightlife, etc.)" : ""}
                 2. Mentions the flight options you found
                 ${activityText}
                 ${encouragementText}
                 5. Offers to help with next steps like booking or finding more options
 
                 Keep it conversational and helpful. The actual search results will be displayed as cards below your message.
-                Be specific about the destination city when mentioning hotels${hasActivities ? ' and activities' : ''}.
-                ${hasActivities ? 'Mention that the activity recommendations are tailored to their specific interests.' : ''}
+                Be specific about the destination city when mentioning hotels${hasActivities ? " and activities" : ""}.
+                ${hasActivities ? "Mention that the activity recommendations are tailored to their specific interests." : ""}
             `;
 
             const systemMessage = timeContext
@@ -2276,10 +2308,10 @@ export class AIAgent {
                             Parameters extracted: ${JSON.stringify(parameters)}
                             Flight results found: ${flightResults.length}
                             Hotel results found: ${hotelResults.length}
-                            ${hasActivities ? `Activity results found: ${activityResults.length} (tailored to interests: ${parameters.activities?.join(', ')})` : ''}
+                            ${hasActivities ? `Activity results found: ${activityResults.length} (tailored to interests: ${parameters.activities?.join(", ")})` : ""}
                             Destination city: ${cityName}
 
-                            Generate a helpful response mentioning ${hasActivities ? 'flights, hotels, and activities' : 'both flights and hotels'}.
+                            Generate a helpful response mentioning ${hasActivities ? "flights, hotels, and activities" : "both flights and hotels"}.
                         `,
                     },
                 ],
