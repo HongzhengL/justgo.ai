@@ -24,7 +24,7 @@ app aiTravelPlanner {
     onAuthSucceededRedirectTo: "/dashboard"
   },
   emailSender: {
-    provider: SMTP,
+    provider: Dummy,
     defaultFrom: {
       name: "AI Travel Planner",
       email: "noreply@aitravelplanner.com"
@@ -187,6 +187,11 @@ action clearConversation {
 action processVoiceMessage {
   fn: import { processVoiceMessage } from "@src/operations/voice.js",
   entities: [User, Conversation]
+}
+
+action getActivities {
+  fn: import { getActivities } from "@src/operations/activities.js",
+  entities: [User]
 }
 
 // Hotel booking operations

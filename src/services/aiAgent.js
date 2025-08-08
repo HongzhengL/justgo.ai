@@ -5,6 +5,7 @@ import { travelAPI } from "../api/index.js";
 import { TimeContextManager } from "./timeContextManager.js";
 import { SystemMessageBuilder } from "../utils/systemMessageBuilder.js";
 import { extractDestinationCityCode, formatCityName } from "../utils/airportMapping.js";
+import { getActivities } from "../operations/activities.js";
 import logger from "../utils/logger.js";
 
 export class AIAgent {
@@ -672,7 +673,7 @@ export class AIAgent {
 
             // Execute multi-service search for comprehensive trip planning
             logger.info("Executing comprehensive trip search for:", tripPlan);
-            const tripResults = await this.executeComprehensiveTripSearch(tripPlan);
+            const tripResults = await this.executeComprehensiveTripSearch(tripPlan, conversationContext);
 
             // Log trip results summary
             logger.info("Trip results received:", {
@@ -1375,7 +1376,7 @@ export class AIAgent {
         }
     }
 
-    async executeComprehensiveTripSearch(tripPlan) {
+    async executeComprehensiveTripSearch(tripPlan, context = null) {
         try {
             logger.info("========== STARTING COMPREHENSIVE TRIP SEARCH ==========");
             logger.info(
@@ -1740,8 +1741,8 @@ export class AIAgent {
             results.rentalCars = this.createPlaceholderRentalCarCards(tripPlan);
 
             // Always create activities for destinations mentioned
-            logger.info("Creating activity options...");
-            results.activities = this.createPlaceholderActivityCards(tripPlan);
+            logger.info("Creating real activity options...");
+            results.activities = await this.createRealActivityCards(tripPlan, context);
 
             logger.info("Comprehensive trip search completed:", {
                 flights: results.flights.length,
@@ -1759,7 +1760,7 @@ export class AIAgent {
                 flights: [],
                 hotels: [],
                 rentalCars: this.createPlaceholderRentalCarCards(tripPlan || {}),
-                activities: this.createPlaceholderActivityCards(tripPlan || {}),
+                activities: await this.createRealActivityCards(tripPlan || {}, context),
             };
         }
     }
@@ -1799,6 +1800,101 @@ export class AIAgent {
                 timestamp: new Date().toISOString(),
             },
         }));
+    }
+
+    async createRealActivityCards(tripPlan, context) {
+        try {
+            logger.info("createRealActivityCards called with tripPlan:", JSON.stringify(tripPlan, null, 2));
+            logger.info("createRealActivityCards called with context:", context ? "context exists" : "no context");
+            
+            // Check for destination in different possible properties
+            // For multi-city trips, we want the final destination, not the origin
+            const destination = tripPlan?.finalDestination || tripPlan?.destinations?.[tripPlan?.destinations?.length - 1] || tripPlan?.destination;
+            
+            logger.info("Available destination options:");
+            logger.info("- tripPlan.destination:", tripPlan?.destination);
+            logger.info("- tripPlan.finalDestination:", tripPlan?.finalDestination);  
+            logger.info("- tripPlan.destinations:", tripPlan?.destinations);
+            logger.info("- tripPlan.origin:", tripPlan?.origin);
+            logger.info("- Selected destination:", destination);
+            
+            if (!tripPlan || !destination) {
+                logger.info("No tripPlan or destination, using placeholder activities");
+                logger.info("tripPlan exists:", !!tripPlan);
+                logger.info("tripPlan.destination:", tripPlan?.destination);
+                logger.info("tripPlan.destinations:", tripPlan?.destinations);
+                logger.info("tripPlan.finalDestination:", tripPlan?.finalDestination);
+                return this.createPlaceholderActivityCards(tripPlan);
+            }
+
+            const location = destination;
+            const date = tripPlan.outboundDate || new Date().toISOString().split('T')[0];
+            const timeOfDay = this.determineTimeOfDay(tripPlan);
+
+            logger.info(`Getting real activities for ${location} on ${date} during ${timeOfDay}`);
+            logger.info("About to call getActivities with params:", { location, date, timeOfDay });
+
+            // Call the real getActivities operation
+            logger.info("Context structure for getActivities:", context);
+            
+            // Ensure we have proper context with user for the Wasp action
+            const actionContext = {
+                user: context?.user || { id: 1 }, // Fallback user ID for the operation
+                ...context
+            };
+            logger.info("Calling getActivities with actionContext user:", actionContext.user);
+            
+            const realActivities = await getActivities({ location, date, timeOfDay }, actionContext);
+            
+            logger.info("getActivities returned:", realActivities);
+
+            // Transform the OpenAI activities into our card format
+            return realActivities.map((activity, index) => ({
+                id: activity.id || `activity-${index}`,
+                type: "activity",
+                title: activity.title,
+                subtitle: activity.subtitle,
+                bookingUrl: activity.bookingUrl, // Add booking URL from OpenAI response
+                price: activity.price ? {
+                    amount: parseInt(activity.price.replace(/\D/g, '')) || 50,
+                    currency: "USD",
+                } : {
+                    amount: 50,
+                    currency: "USD",
+                },
+                details: {
+                    category: "Experience",
+                    timing: activity.timing,
+                    duration: "2-4 hours",
+                    includes: "As described",
+                },
+                essentialDetails: {
+                    timing: activity.timing,
+                    price: activity.price || "Contact for pricing",
+                    duration: "2-4 hours",
+                    rating: "4.5/5",
+                },
+                externalLinks: activity.externalLinks || [],
+                metadata: {
+                    provider: "OpenAI Activities",
+                    confidence: 0.9,
+                    timestamp: new Date().toISOString(),
+                },
+            }));
+        } catch (error) {
+            logger.error("Failed to get real activities:", error.message);
+            logger.error("Full error details:", error);
+            logger.error("Error stack:", error.stack);
+            // Fallback to placeholder activities
+            return this.createPlaceholderActivityCards(tripPlan);
+        }
+    }
+
+    determineTimeOfDay(tripPlan) {
+        const hour = new Date().getHours();
+        if (hour < 12) return "morning";
+        if (hour < 17) return "afternoon";
+        return "evening";
     }
 
     createPlaceholderActivityCards(tripPlan) {
