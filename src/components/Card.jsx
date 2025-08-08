@@ -386,7 +386,9 @@ export function Card({
                                 ? "Book Flight"
                                 : type === "hotel" || additionalInfo?.hotelId
                                   ? "Book Hotel"
-                                  : "Go to Website"}
+                                  : type === "activity" && bookingUrl
+                                    ? "Book Activity"
+                                    : "Go to Website"}
                         </button>
                     )}
                     {(type === "hotel" || additionalInfo?.hotelId) &&

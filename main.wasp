@@ -189,6 +189,11 @@ action processVoiceMessage {
   entities: [User, Conversation]
 }
 
+action getActivities {
+  fn: import { getActivities } from "@src/operations/activities.js",
+  entities: [User]
+}
+
 // Hotel booking operations
 action bookHotelWithAI {
   fn: import { bookHotelWithAI } from "@src/operations/hotelBooking.js",

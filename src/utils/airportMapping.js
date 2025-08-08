@@ -35,6 +35,8 @@ const HOTEL_CITY_MAP = {
     GIG: "RIO",
     EZE: "BUE", // South America
     ARN: "STO", // Stockholm
+    LIS: "LIS", // Lisbon
+    OPO: "OPO", // Porto
 };
 
 // Common city names to city codes for hotel search
@@ -59,6 +61,9 @@ const HOTEL_CITY_NAME_MAP = {
     "rio de janeiro": "RIO",
     "buenos aires": "BUE",
     stockholm: "STO",
+    portugal: "LIS", // Default Portugal to Lisbon
+    lisbon: "LIS",
+    porto: "OPO",
 };
 
 /**
@@ -99,14 +104,32 @@ export function extractDestinationCityCode(flightParams) {
         return null;
     }
 
-    // First try airport code mapping
+    // Handle error cases from AI parameter extraction
+    if (
+        flightParams.arrival.includes("ERROR:") ||
+        flightParams.arrival.includes("Cannot determine")
+    ) {
+        return null;
+    }
+
+    // First try city name mapping (more flexible for hotel searches)
+    const cityFromName = getCityCodeFromName(flightParams.arrival);
+    if (cityFromName) {
+        return cityFromName;
+    }
+
+    // Then try airport code mapping
     const cityCode = getHotelCityCode(flightParams.arrival);
     if (cityCode) {
         return cityCode;
     }
 
-    // If not found, try city name mapping
-    return getCityCodeFromName(flightParams.arrival);
+    // If it's a 3-letter code, assume it's already a valid city/airport code
+    if (flightParams.arrival.length === 3 && /^[A-Z]{3}$/i.test(flightParams.arrival)) {
+        return flightParams.arrival.toUpperCase();
+    }
+
+    return null;
 }
 
 /**
@@ -133,6 +156,8 @@ export function formatCityName(cityCode) {
         TYO: "Tokyo",
         SIN: "Singapore",
         DXB: "Dubai",
+        LIS: "Lisbon",
+        OPO: "Porto",
         // Add more as needed
     };
 

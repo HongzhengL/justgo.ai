@@ -4,7 +4,7 @@
  * Enhanced with stealth techniques to bypass booking.com detection
  */
 
-import { chromium } from "playwright";
+// import { chromium } from "playwright";
 import logger from "../utils/logger.js";
 
 // Anti-detection configurations

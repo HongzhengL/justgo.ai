@@ -2,7 +2,7 @@
  * REAL AGENTIC Browser Automation - Actually clicks buttons and fills forms
  */
 
-import { chromium } from "playwright";
+// import { chromium } from "playwright";
 import logger from "../utils/logger.js";
 
 export class SimpleBrowserAutomation {
