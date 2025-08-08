@@ -47,8 +47,6 @@ prisma/dev.db-journal
 # Dev container
 .devcontainer/.env
 
-migrations/
-
 .claude/
 CLAUDE.md
 
