@@ -6,6 +6,7 @@ import { Link } from "wasp/client/router";
 import { OrganizedCardList } from "../components/OrganizedCardList.jsx";
 import { InfoModal } from "../components/InfoModal.jsx";
 import { BookingOptionsModal } from "../components/BookingOptionsModal.jsx";
+import { HotelBookingModal } from "../components/HotelBookingModal.jsx";
 import { ConfirmationModal } from "../components/ConfirmationModal.jsx";
 import AppLayout from "../components/layout/AppLayout.jsx";
 import useInfoModal from "../hooks/useInfoModal.js";
@@ -29,6 +30,10 @@ export function MyItineraryPage() {
     const [selectedSearchContext, setSelectedSearchContext] = useState(null);
     const [selectedFlightInfo, setSelectedFlightInfo] = useState(null);
 
+    // Hotel booking modal states
+    const [isHotelBookingModalOpen, setIsHotelBookingModalOpen] = useState(false);
+    const [selectedHotel, setSelectedHotel] = useState(null);
+    const [selectedHotelOffer, setSelectedHotelOffer] = useState(null);
     // Convert itinerary items to card format
     const allCards =
         itineraries?.flatMap(
@@ -91,6 +96,12 @@ export function MyItineraryPage() {
         setIsBookingModalOpen(true);
     };
 
+    const handleBookHotel = (hotel, offer) => {
+        logger.info('Hotel booking initiated:', { hotel: hotel.title, offer });
+        setSelectedHotel(hotel);
+        setSelectedHotelOffer(offer);
+        setIsHotelBookingModalOpen(true);
+    };
     if (!user) {
         return (
             <AppLayout>
@@ -222,6 +233,7 @@ export function MyItineraryPage() {
                                 onMoreInfo={handleMoreInfo}
                                 onAddToItinerary={handleRemoveFromItinerary}
                                 onBookFlight={handleBookFlight}
+                                onBookHotel={handleBookHotel}
                                 addToItineraryText="Remove from Itinerary"
                                 addToItineraryIcon="Remove"
                             />
@@ -274,6 +286,7 @@ export function MyItineraryPage() {
                         onGoToWebsite={handleGoToWebsite}
                         onAddToItinerary={handleRemoveFromItinerary}
                         onBookFlight={handleBookFlight}
+                        onBookHotel={handleBookHotel}
                         addToItineraryText="Remove from Itinerary"
                         addToItineraryIcon="Remove"
                     />
@@ -296,6 +309,28 @@ export function MyItineraryPage() {
                     onCancel={cancelRemove}
                     confirmButtonColor="#dc3545"
                     icon=""
+                />
+
+                <BookingOptionsModal
+                    isOpen={isBookingModalOpen}
+                    onClose={() => setIsBookingModalOpen(false)}
+                    bookingToken={selectedBookingToken}
+                    searchContext={selectedSearchContext}
+                    flightInfo={selectedFlightInfo}
+                />
+
+                <HotelBookingModal
+                    isOpen={isHotelBookingModalOpen}
+                    onClose={() => setIsHotelBookingModalOpen(false)}
+                    hotel={selectedHotel}
+                    offer={selectedHotelOffer}
+                    guestInfo={{
+                        firstName: user?.firstName || '',
+                        lastName: user?.lastName || '',
+                        email: user?.email || ''
+                    }}
+                    onBookingComplete={() => setIsHotelBookingModalOpen(false)}
+                    autoFillEnabled={true}
                 />
 
                 {/* Floating Cost Summary */}
