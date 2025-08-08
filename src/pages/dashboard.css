@@ -148,21 +148,44 @@
 /* Item 10: Typing indicator and loading state classes */
 .typing-indicator {
     display: flex;
-    gap: 4px;
-    padding: 0.75rem 1rem;
-    background-color: #f8f9fa;
-    border: 1px solid #e9ecef;
-    border-radius: 12px;
+    gap: 6px;
+    padding: 1rem 1.25rem;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border: 1px solid #dee2e6;
+    border-radius: 20px;
     align-self: flex-start;
     max-width: 70%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(4px);
+    position: relative;
+    align-items: center;
+    justify-content: center;
+}
+
+.typing-indicator::before {
+    content: "AI is thinking...";
+    position: absolute;
+    left: -100px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.75rem;
+    color: #666;
+    opacity: 0.8;
+    white-space: nowrap;
+    font-weight: 500;
 }
 
 .typing-dot {
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
-    background-color: #999;
-    animation: pulse 1.5s infinite;
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    animation: bounce-typing 1.4s infinite ease-in-out;
+    box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+}
+
+.typing-dot:nth-child(1) {
+    animation-delay: 0s;
 }
 
 .typing-dot:nth-child(2) {
@@ -171,6 +194,17 @@
 
 .typing-dot:nth-child(3) {
     animation-delay: 0.4s;
+}
+
+@keyframes bounce-typing {
+    0%, 60%, 100% {
+        transform: translateY(0);
+        opacity: 0.5;
+    }
+    30% {
+        transform: translateY(-12px);
+        opacity: 1;
+    }
 }
 
 /* Helper text styling */
@@ -211,6 +245,29 @@
 
     .typing-indicator {
         max-width: 85%;
+        padding: 0.75rem 1rem;
+        gap: 5px;
+    }
+    
+    .typing-indicator::before {
+        left: -80px;
+        font-size: 0.7rem;
+    }
+    
+    .typing-dot {
+        width: 8px;
+        height: 8px;
+    }
+    
+    @keyframes bounce-typing {
+        0%, 60%, 100% {
+            transform: translateY(0);
+            opacity: 0.5;
+        }
+        30% {
+            transform: translateY(-8px);
+            opacity: 1;
+        }
     }
 }
 
@@ -252,9 +309,108 @@
 @media (prefers-reduced-motion: reduce) {
     .chat-input,
     .chat-send-button,
-    .typing-dot {
+    .typing-dot,
+    .scroll-button {
         transition: none;
         animation: none;
+    }
+    
+    .typing-dot {
+        opacity: 0.7;
+    }
+}
+
+/* Chat Navigation Buttons */
+.chat-navigation-buttons {
+    position: fixed;
+    right: 2rem;
+    bottom: 8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    z-index: 1000;
+}
+
+.scroll-button {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    border: none;
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: white;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.scroll-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 123, 255, 0.4);
+    background: linear-gradient(135deg, #0056b3, #004494);
+}
+
+.scroll-button:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+.scroll-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: 0 2px 6px rgba(0, 123, 255, 0.2);
+}
+
+.scroll-top {
+    animation: bounce-up 2s infinite;
+}
+
+.scroll-bottom {
+    animation: bounce-down 2s infinite;
+}
+
+@keyframes bounce-up {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(-4px);
+    }
+    60% {
+        transform: translateY(-2px);
+    }
+}
+
+@keyframes bounce-down {
+    0%, 20%, 50%, 80%, 100% {
+        transform: translateY(0);
+    }
+    40% {
+        transform: translateY(4px);
+    }
+    60% {
+        transform: translateY(2px);
+    }
+}
+
+/* Mobile responsive navigation */
+@media (max-width: 768px) {
+    .chat-navigation-buttons {
+        right: 1rem;
+        bottom: 6rem;
+    }
+    
+    .scroll-button {
+        width: 2.5rem;
+        height: 2.5rem;
+        font-size: 1rem;
     }
 }
 

@@ -269,6 +269,8 @@ export default class ParameterMappingService {
             portugal: "LIS", // Lisbon - main Portugal airport
             lisbon: "LIS",
             porto: "OPO",
+            madison: "MSN", // Madison, Wisconsin
+            milwaukee: "MKE", // Milwaukee, Wisconsin
         };
 
         // Check if it's a city name that needs conversion

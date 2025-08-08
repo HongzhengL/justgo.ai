@@ -265,14 +265,113 @@ export function MyItineraryPage() {
                                     }}
                                 >
                                     Total estimated cost:{" "}
-                                    {allCards
-                                        .reduce((total, card) => {
-                                            return total + (card.price?.amount || 0);
-                                        }, 0)
-                                        .toLocaleString("en-US", {
-                                            style: "currency",
-                                            currency: allCards[0]?.price?.currency || "USD",
-                                        })}
+                                    {(() => {
+                                        // Use same logic as FloatingCostSummary for consistency
+                                        const categories = {
+                                            outboundFlights: [],
+                                            returnFlights: [],
+                                            hotels: [],
+                                            activities: [],
+                                            rentalCars: [],
+                                        };
+
+                                        allCards.forEach((card) => {
+                                            if (card.price?.amount) {
+                                                const amount = parseFloat(card.price.amount);
+                                                if (amount > 0) {
+                                                    if (card.type === "flight") {
+                                                        const title = card.title || "";
+                                                        const isReturn =
+                                                            title.includes("→") &&
+                                                            (title.includes("SFO → ORD") ||
+                                                                title.includes("LAX → ORD") ||
+                                                                title.includes("LIS → CDG") ||
+                                                                title.includes("LIS → ORD") ||
+                                                                title.match(
+                                                                    /[A-Z]{3}\s*→\s*(ORD|JFK|LAX|CDG|LHR|BOS|SEA|DEN|ATL|MIA)/,
+                                                                ));
+
+                                                        if (isReturn) {
+                                                            categories.returnFlights.push({ ...card, amount });
+                                                        } else {
+                                                            categories.outboundFlights.push({ ...card, amount });
+                                                        }
+                                                    } else if (
+                                                        card.type === "hotel" ||
+                                                        card.additionalInfo?.hotelId ||
+                                                        card.details?.hotelId ||
+                                                        (card.title &&
+                                                            (card.title.toLowerCase().includes("hotel") ||
+                                                                card.title.toLowerCase().includes("resort")))
+                                                    ) {
+                                                        categories.hotels.push({ ...card, amount });
+                                                    } else if (
+                                                        card.type === "activity" ||
+                                                        (card.title &&
+                                                            (card.title.toLowerCase().includes("activity") ||
+                                                                card.title.toLowerCase().includes("tour") ||
+                                                                card.title.toLowerCase().includes("attraction")))
+                                                    ) {
+                                                        categories.activities.push({ ...card, amount });
+                                                    } else if (
+                                                        card.type === "rental_car" ||
+                                                        (card.title &&
+                                                            (card.title.toLowerCase().includes("car rental") ||
+                                                                card.title.toLowerCase().includes("vehicle")))
+                                                    ) {
+                                                        categories.rentalCars.push({ ...card, amount });
+                                                    }
+                                                }
+                                            }
+                                        });
+
+                                        let total = 0;
+
+                                        // Get cheapest outbound flight
+                                        if (categories.outboundFlights.length > 0) {
+                                            const cheapest = categories.outboundFlights.reduce((min, flight) =>
+                                                flight.amount < min.amount ? flight : min,
+                                            );
+                                            total += cheapest.amount;
+                                        }
+
+                                        // Get cheapest return flight
+                                        if (categories.returnFlights.length > 0) {
+                                            const cheapest = categories.returnFlights.reduce((min, flight) =>
+                                                flight.amount < min.amount ? flight : min,
+                                            );
+                                            total += cheapest.amount;
+                                        }
+
+                                        // Get cheapest hotel
+                                        if (categories.hotels.length > 0) {
+                                            const cheapest = categories.hotels.reduce((min, hotel) =>
+                                                hotel.amount < min.amount ? hotel : min,
+                                            );
+                                            total += cheapest.amount;
+                                        }
+
+                                        // Get cheapest activity
+                                        if (categories.activities.length > 0) {
+                                            const cheapest = categories.activities.reduce((min, activity) =>
+                                                activity.amount < min.amount ? activity : min,
+                                            );
+                                            total += cheapest.amount;
+                                        }
+
+                                        // Get cheapest car rental
+                                        if (categories.rentalCars.length > 0) {
+                                            const cheapest = categories.rentalCars.reduce((min, car) =>
+                                                car.amount < min.amount ? car : min,
+                                            );
+                                            total += cheapest.amount;
+                                        }
+
+                                        return total;
+                                    })().toLocaleString("en-US", {
+                                        style: "currency",
+                                        currency: allCards[0]?.price?.currency || "USD",
+                                    })}
                                 </p>
                             </div>
                         </>
