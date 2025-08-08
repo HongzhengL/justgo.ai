@@ -37,6 +37,13 @@ const HOTEL_CITY_MAP = {
     ARN: "STO", // Stockholm
     LIS: "LIS", // Lisbon
     OPO: "OPO", // Porto
+    // Major Indian airports
+    BOM: "BOM", // Mumbai
+    DEL: "DEL", // Delhi
+    BLR: "BLR", // Bangalore
+    MAA: "MAA", // Chennai
+    CCU: "CCU", // Kolkata
+    HYD: "HYD", // Hyderabad
 };
 
 // Common city names to city codes for hotel search
@@ -64,6 +71,13 @@ const HOTEL_CITY_NAME_MAP = {
     portugal: "LIS", // Default Portugal to Lisbon
     lisbon: "LIS",
     porto: "OPO",
+    // Major Indian cities
+    mumbai: "BOM",
+    delhi: "DEL",
+    bangalore: "BLR",
+    chennai: "MAA",
+    kolkata: "CCU",
+    hyderabad: "HYD",
 };
 
 /**

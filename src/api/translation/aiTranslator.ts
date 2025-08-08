@@ -338,7 +338,7 @@ Return only valid JSON array.`;
                     provider: "SerpAPI",
                     confidence: calculateFlightConfidence(flight),
                     timestamp: new Date().toISOString(),
-                    bookingToken: flight.booking_token,
+                    bookingToken: flight.departure_token || flight.booking_token,
                 },
             };
         });
